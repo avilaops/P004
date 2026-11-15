@@ -20,8 +20,8 @@ export function proxy(request: NextRequest) {
   const hostPublico = (request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? request.nextUrl.host).toLowerCase();
   const host = hostPublico.replace(/:\d+$/, "");
   const { pathname } = request.nextUrl;
-  // Render receives its technical Host; route handlers must see the public host
-  // supplied by the Cloudflare ingress, as tenant resolution already does.
+  // Os handlers recebem o host público encaminhado pelo proxy de entrada,
+  // assim como a resolução do tenant.
   const cabecalhos = new Headers(request.headers);
   cabecalhos.delete("x-plataforma");
   cabecalhos.set("host", hostPublico);

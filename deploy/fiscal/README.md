@@ -16,10 +16,11 @@ XML sem DTD/entidades, modelo55 e protocolo100 pertencente à mesma chave.
 Respostas privadas/no-store. Os PDFs permanecem em memória; cache e isolamento
 dos arquivos são responsabilidade das rotas existentes e do R2 privado.
 
-Python3.13.18 e dependências com hashes aprovados no GitHub CI. No Render a
-etapa de preparação instala somente wheels com `--no-compile`; testes e builds
-da aplicação executam exclusivamente no CI. `render-resources.json` registra
-configuração sem credenciais; publicação deve fixar o commit aprovado.
+Python3.13.18 e dependências com hashes aprovados no GitHub CI. A preparação
+instala somente wheels com `--no-compile`; testes e builds da aplicação executam
+exclusivamente no CI. O serviço privado não depende de um provedor de hospedagem;
+publicação deve fixar o commit aprovado. A aplicação também aceita o serviço
+interno `http://fiscal-avilaops-com-web:8000` na rede privada do servidor.
 
 Biblioteca dinâmica: [BrazilFiscalReport1.3.1](https://github.com/Engenere/BrazilFiscalReport/tree/v1.3.1),
 LGPLv3, código-fonte e licença no upstream e metadados da distribuição instalada.

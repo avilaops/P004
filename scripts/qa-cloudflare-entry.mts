@@ -22,25 +22,25 @@ try {
   }
   assert.ok(ready, 'Runtime aprovado inicia');
   for (const path of ['/', '/plataforma/ajuda']) {
-    const platform = await fetch(origin + path, { headers: { host: 'backend-render.example', 'x-forwarded-host': 'lojas.avilaops.com' } });
+    const platform = await fetch(origin + path, { headers: { host: 'backend.example', 'x-forwarded-host': 'lojas.avilaops.com' } });
     assert.equal(platform.status, 200, 'Páginas da plataforma funcionam também após uma reescrita interna');
     const html = await platform.text();
     assert.match(html, /<h1/);
     assert.doesNotMatch(html, /Nenhuma loja responde por este endereço\./);
     if (path === '/plataforma/ajuda') assert.ok(html.includes(helpText));
   }
-  const response = await fetch(origin + '/api/painel/entrar/iniciar-sso', { redirect: 'manual', headers: { host: 'backend-render.example', 'x-forwarded-host': 'lojas.avilaops.com', 'x-forwarded-proto': 'https' } });
+  const response = await fetch(origin + '/api/painel/entrar/iniciar-sso', { redirect: 'manual', headers: { host: 'backend.example', 'x-forwarded-host': 'lojas.avilaops.com', 'x-forwarded-proto': 'https' } });
   assert.equal(response.status, 307, 'SSO deve reconhecer o host público atrás do Worker');
   assert.equal(response.headers.get('location'), 'https://lojas.avilaops.com/api/painel/entrar/sso');
   assert.ok(response.headers.getSetCookie().some(c => c.includes('HttpOnly') && c.includes('Secure')));
-  const wrong = await fetch(origin + '/api/painel/entrar/iniciar-sso', { redirect: 'manual', headers: { host: 'backend-render.example', 'x-forwarded-host': 'demo.lojas.avilaops.com' } });
+  const wrong = await fetch(origin + '/api/painel/entrar/iniciar-sso', { redirect: 'manual', headers: { host: 'backend.example', 'x-forwarded-host': 'demo.lojas.avilaops.com' } });
   assert.equal(wrong.status, 404, 'SSO continua restrito ao domínio da plataforma');
-  const blocked = await fetch(origin + '/sobre', { headers: { host: 'backend-render.example', 'x-forwarded-host': slug + '.lojas.avilaops.com', 'x-plataforma': '1' } });
+  const blocked = await fetch(origin + '/sobre', { headers: { host: 'backend.example', 'x-forwarded-host': slug + '.lojas.avilaops.com', 'x-plataforma': '1' } });
   assert.match(await blocked.text(), /Nenhuma loja responde por este endereço\./, 'Marcador forjado não contorna o bloqueio de uma loja encerrada');
-  const forbidden = await fetch(origin + '/plataforma/ajuda', { headers: { host: 'backend-render.example', 'x-forwarded-host': active.slug + '.lojas.avilaops.com', 'x-plataforma': '1' } });
+  const forbidden = await fetch(origin + '/plataforma/ajuda', { headers: { host: 'backend.example', 'x-forwarded-host': active.slug + '.lojas.avilaops.com', 'x-plataforma': '1' } });
   const forbiddenHtml = await forbidden.text();
   const rendered = forbiddenHtml.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
-  const denial = await fetch(origin + '/nao-encontrado', { headers: { host: 'backend-render.example', 'x-forwarded-host': active.slug + '.lojas.avilaops.com' } });
+  const denial = await fetch(origin + '/nao-encontrado', { headers: { host: 'backend.example', 'x-forwarded-host': active.slug + '.lojas.avilaops.com' } });
   const denialHtml = (await denial.text()).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
   // notFound() may replace a streamed document before its h1 reaches the HTML.
   // Require the same denial as its direct route, including its tenant metadata,
