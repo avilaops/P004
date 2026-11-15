@@ -13,9 +13,9 @@ GET privado por permissão fiscal e seção no detalhe do pedido.
 - [x] Implementar contrato puro `fiscal-pedido-contrato.ts`, sem cálculo fiscal.
 - [x] Implementar leitura `fiscal-pedido.ts` e GET protegido por tenant/permissão.
 - [x] Exibir conferência e links de correção do catálogo somente ao dono.
-- [ ] Completar edição de NCM/CEST no formulário e contrato do catálogo.
-- [ ] Cobrir leitura sem efeitos, isolamento e jornada responsiva no CI.
-- [ ] Revisar, integrar, publicar e registrar evidências no Linear/controle.
+- [x] Completar edição de NCM/CEST no formulário e contrato do catálogo.
+- [x] Cobrir leitura sem efeitos, isolamento e jornada responsiva no CI.
+- [x] Revisar, integrar, publicar e registrar evidências no Linear/controle.
 
 ## Restrições
 
@@ -32,3 +32,15 @@ explícita do proprietário. Nenhuma operação fiscal externa executada.
 Revisão encontrou os campos NCM/CEST no modelo, mas ausentes no formulário e no
 schema de edição. Regressão adicionada em `admin-schemas.test.ts` antes da
 correção, para que o link de pendência permita corrigir e atualizar a conferência.
+
+## Entrega
+
+PR268, versão `4fe4d40b982538864bacdf359c31576906b6ac68`. CI final43698281827 e
+produção43698926994 aprovados, produção na tentativa2. Home pública200com versão
+exata; rota privada401JSON/no-storesem sessão. Jornada confirmou dono, gerente403,
+outro tenant404, leitura sem efeitos e correção NCM/CEST com retorno ao pedido,
+novo hash e preço comprado preservado. Conferência393/1440px sem vazamento lateral.
+
+A emissão permanece indisponível no contrato atual. Nenhum código do ERP ou
+documento fiscal real foi alterado. Evidências em
+`evidencias/fiscal-conferencia-pedido-2026-11-15.md`.

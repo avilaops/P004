@@ -18,10 +18,10 @@
       "objective": "Permitir revisão do snapshot comercial, totais e classificação atual, sem alterar ERP ou fingir emissão disponível.",
       "assignee": "codex",
       "priority": "alta",
-      "status": "em-andamento",
+      "status": "concluida",
       "acceptanceCriteria": ["Conferência privada acessível somente com permissão fiscal.", "Preço/descrição do pedido separados da classificação atual do catálogo.", "Totais exatos e pendências acionáveis, sem chamadas de emissão.", "Leitura consistente por tenant e ausência de efeitos comprovadas no CI.", "Navegador, CI e publicação verificados."],
       "environment": "GitHub CI isolado e servidor SSH",
-      "evidence": "Proprietário reiterou alterações somente no Lojas. PR268; RED43696155490 por contrato ausente e43696270463 por serviço ausente. ERP permaneceu intacto nesta sessão; checkout P003 contém alterações de terceiros preservadas. Plano docs/superpowers/plans/2026-11-15-fiscal-pedido.md."
+      "evidence": "PR268 integrado em4fe4d40b982538864bacdf359c31576906b6ac68. CI43698281827 e produção43698926994 aprovados, produção na tentativa2 após timeout de finalização. Home pública200com versão exata; API privada401JSON/no-storesem sessão. Navegador comprovou dono, gerente403, outro tenant404, leitura sem efeitos e correção NCM/CEST com retorno, hash atualizado e preço comprado preservado;393/1440px sem overflow. RED43696155490,43696270463 e regressão de campos descartados43697635335. Proprietário reiterou alterações somente no Lojas; nenhuma alteração minha no ERP nem emissão real. Evidências em evidencias/fiscal-conferencia-pedido-2026-11-15.md."
     },
     {
       "id": "REMOVER-RENDER-20261115",
