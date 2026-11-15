@@ -34,6 +34,9 @@ type Janela = Window & {
   dataLayer?: unknown[];
   /** Gravado por Pixels.tsx no HTML, antes de qualquer evento: a loja usa GTM? */
   __lojaPixels?: { gtm?: boolean };
+  __avilaManaged?: boolean;
+  __avilaMeasurement?: { track: (name: string, parameters: Record<string, unknown>) => boolean };
+  __avilaMeasurementQueue?: Array<{ name: string; parameters: Record<string, unknown>; path: string }>;
 };
 
 const reais = (centavos: number) => Number((centavos / 100).toFixed(2));
@@ -169,7 +172,17 @@ function disparar(nomes: { ga4: string; meta: string; tiktok: string }, itens: I
     // dataLayer e o contêiner decide o que fazer com ele; chamar `gtag('event')`
     // junto faria o mesmo gatilho disparar duas vezes. Sem GTM, o gtag.js do
     // GA4/Ads é quem lê, e ele só entende a chamada `gtag`.
-    if (w.__lojaPixels?.gtm) {
+    if (w.__avilaManaged) {
+      if (permissoesDaEscolha(lerConsentimentoAtual()).medicao) {
+        const parameters = {
+          currency: 'BRL', value: reais(valor), items: paraGa4(itens),
+          ...(extra.transacao ? { transaction_id: extra.transacao, confirmed: nomes.ga4 === 'purchase' } : {}),
+          ...(extra.frete != null ? { shipping: reais(extra.frete) } : {}),
+        };
+        if (w.__avilaMeasurement) w.__avilaMeasurement.track(nomes.ga4, parameters);
+        else if ((w.__avilaMeasurementQueue ??= []).length < 30) w.__avilaMeasurementQueue.push({ name: nomes.ga4, parameters, path: w.location.pathname });
+      }
+    } else if (w.__lojaPixels?.gtm) {
       // O dataLayer existe desde o HTML (Pixels.tsx); isto é só rede de proteção.
       (w.dataLayer ??= []);
       for (const entrada of entradasDoDataLayer(nomes.ga4, itens, valor, { transacao: extra.transacao, frete: extra.frete, cupom: extra.cupom })) w.dataLayer.push(entrada);

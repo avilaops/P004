@@ -55,7 +55,9 @@ export default function Pixels({ p }: { p: PixelsDaLoja }) {
           o marcador só aparece depois do `consent default`, então nenhum
           evento entra na fila antes dele. */}
       {(p.gtmId || gtag) && <script dangerouslySetInnerHTML={{ __html: inicioDoDataLayer }} />}
-      {p.gtmId && (
+      {p.medicaoGerenciada && <script dangerouslySetInnerHTML={{ __html: 'window.__avilaManaged=true;window.__avilaMeasurementQueue=window.__avilaMeasurementQueue||[];' }} />}
+      {p.medicaoGerenciada && <Script id="avila-measurement" type="module" src="/measurement/entry.mjs" strategy="afterInteractive" />}
+      {p.gtmId && !p.medicaoGerenciada && (
         <Script id="gtm" strategy="afterInteractive">
           {scriptDoGtm(p)}
         </Script>
