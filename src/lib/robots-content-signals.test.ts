@@ -19,20 +19,20 @@ test("texto mantém caminhos privados, grupos de robôs e sitemaps", () => {
     { userAgent: "*", allow: "/", disallow: ["/conta$", "/conta/", "/api/"] },
     { userAgent: ["GPTBot", "Google-Extended"], disallow: "/" },
   ], sitemap: ["https://loja.example/sitemap.xml", "https://loja.example/sitemap-produtos.xml"] }, { busca: true, entradaIa: true, treinamento: false });
-  assert.match(texto, /^User-Agent: \*\nContent-Signal: search=yes, ai-input=yes, ai-train=no\nAllow: \/\n/);
+  assert.match(texto, /^User-Agent: \*\nAllow: \/\n/);
   assert.match(texto, /Disallow: \/conta\$\nDisallow: \/conta\/\nDisallow: \/api\//);
-  assert.match(texto, /User-Agent: GPTBot\nUser-Agent: Google-Extended\nContent-Signal: search=yes, ai-input=yes, ai-train=no\nDisallow: \/\n/);
-  assert.equal((texto.match(/Content-Signal:/g) ?? []).length, 2);
+  assert.match(texto, /User-Agent: GPTBot\nUser-Agent: Google-Extended\nDisallow: \/\n/);
+  assert.doesNotMatch(texto, /Content-Signal:/i);
   assert.ok(texto.endsWith("Sitemap: https://loja.example/sitemap-produtos.xml\n"));
 });
 
-test("plataforma pode declarar as três categorias liberadas sem perder as rotas de acesso", () => {
+test("plataforma mantém as rotas de acesso sem emitir Content-Signal", () => {
   const texto = textoRobotsComSinais({ rules: { userAgent: "*", allow: "/", disallow: ["/painel", "/entrar"] } }, { busca: true, entradaIa: true, treinamento: true });
-  assert.match(texto, /Content-Signal: search=yes, ai-input=yes, ai-train=yes/);
+  assert.doesNotMatch(texto, /Content-Signal:/i);
   assert.match(texto, /Disallow: \/painel\nDisallow: \/entrar\n/);
 });
 
-test("host desconhecido continua fechado com as três categorias negadas", () => {
+test("host desconhecido continua fechado sem diretivas adicionais", () => {
   const texto = textoRobotsComSinais({ rules: { userAgent: "*", disallow: "/" } }, { busca: false, entradaIa: false, treinamento: false });
-  assert.equal(texto, "User-Agent: *\nContent-Signal: search=no, ai-input=no, ai-train=no\nDisallow: /\n");
+  assert.equal(texto, "User-Agent: *\nDisallow: /\n");
 });

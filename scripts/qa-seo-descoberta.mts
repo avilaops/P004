@@ -57,7 +57,7 @@ try {
   const token = emitirToken(alfa.slug);
   const tokenOperador = emitirToken(alfa.slug, operador.id);
   const robotsAntes = await (await pedir(alfa.slug, "/robots.txt")).text();
-  assert.match(robotsAntes, /Content-Signal: search=yes, ai-input=yes, ai-train=no/);
+  assert.doesNotMatch(robotsAntes, /Content-Signal:/i);
   assert.match(robotsAntes, /Disallow: \/conta\$/);
   assert.match(robotsAntes, /User-Agent: GPTBot/);
   assert.ok(robotsAntes.includes(`Sitemap: https://${alfa.slug}.localhost/sitemap-imagens.xml`));
@@ -83,12 +83,14 @@ try {
   await prisma.tenant.update({ where: { id: beta.id }, data: { status: "ATIVA" } });
   resultados.push({ caso: "sitemap_imagens_http_isolamento_e_visibilidade", passou: true });
   assert.equal((await patch(token, { permiteTreinamentoIa: true })).status, 200);
-  assert.match(await (await pedir(alfa.slug, "/robots.txt")).text(), /Content-Signal: search=yes, ai-input=yes, ai-train=yes/);
+  const robotsTreinamento = await (await pedir(alfa.slug, "/robots.txt")).text();
+  assert.doesNotMatch(robotsTreinamento, /Content-Signal:/i);
+  assert.doesNotMatch(robotsTreinamento, /User-Agent: GPTBot/);
   assert.equal((await patch(token, { permiteTreinamentoIa: false })).status, 200);
   const plataforma = await fetch(origem + "/robots.txt");
   assert.match(plataforma.headers.get("content-type") ?? "", /text\/plain/);
-  assert.match(await plataforma.text(), /Content-Signal: search=yes, ai-input=yes, ai-train=yes/);
-  assert.match(await (await pedir(`ausente-${sufixo}`, "/robots.txt")).text(), /Content-Signal: search=no, ai-input=no, ai-train=no\nDisallow: \/\n/);
+  assert.doesNotMatch(await plataforma.text(), /Content-Signal:/i);
+  assert.equal(await (await pedir(`ausente-${sufixo}`, "/robots.txt")).text(), "User-Agent: *\nDisallow: /\n");
   assert.equal((await patch(tokenOperador, { configuracaoSeo: { tituloInicio: "Tentativa sem permissão" } })).status, 403);
   assert.equal((await patch(token, { configuracaoSeo: { limiteDestaques: 999 } })).status, 422);
 
