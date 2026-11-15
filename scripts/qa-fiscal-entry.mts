@@ -131,6 +131,43 @@ try {
   await page.screenshot({ path: output + "/mobile.png", fullPage: true });
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth));
   assert.equal(erros.length, 0, erros.join("; "));
+  const pedido = await prisma.pedido.create({ data: { tenantId: loja.id, referencia: `qa-fiscal-${randomUUID()}`, status: "PAGO", clienteNome: "Comprador QA", clienteDocumento: "52998224725", clienteEmail: "qa@example.test", clienteTelefone: "11999999999", freteNome: "Retirada", freteCentavos: 0, subtotalCentavos: 10000, totalCentavos: 10000, meioPagamento: "pix", pagamentoStatus: "approved", itens: { create: { produtoId: produtos[0].id, varianteId: variantes[0].id, nome: "Peça comprada QA", quantidade: 1, precoUnitarioCentavos: 10000 } } } });
+  const fiscalPath = `/api/painel/pedidos/${pedido.id}/fiscal`;
+  const comandosAntes = await prisma.comandoEstoque.count({ where: { tenantId: loja.id } });
+  assert.equal((await fetch(base + fiscalPath)).status, 401);
+  const operador = await prisma.operadorLoja.create({ data: { tenantId: loja.id, nome: "Gerente QA", email: "gerente@example.test", senhaHash: "hash-sintetico-sem-login", papel: "GERENTE" } });
+  const cookieGerente = `lojas_sessao=${emitirToken(loja.slug, operador.id)}`;
+  assert.equal((await fetch(base + fiscalPath, { headers: { cookie: cookieGerente } })).status, 403);
+  const anotherOrder = await prisma.pedido.create({ data: { tenantId: outra.id, referencia: `qa-fiscal-outro-${randomUUID()}`, clienteNome: "Outra empresa QA", clienteDocumento: "52998224725", clienteEmail: "qa@example.test", clienteTelefone: "11999999999", freteNome: "Retirada", freteCentavos: 0, subtotalCentavos: 0, totalCentavos: 0, meioPagamento: "pix" } });
+  assert.equal((await fetch(base + `/api/painel/pedidos/${anotherOrder.id}/fiscal`, { headers: { cookie } })).status, 404);
+  await page.goto(base + `/painel/pedidos/${pedido.id}`);
+  await page.getByRole("button", { name: "Conferir dados fiscais", exact: true }).click();
+  await page.getByRole("status").filter({ hasText: "Conferência disponível" }).waitFor();
+  await page.getByText("Pendências para revisão", { exact: true }).waitFor();
+  assert.ok(await page.getByRole("link", { name: "Abrir cadastro" }).count());
+  for (const width of [393, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), `Pedido fiscal sem vazamento em${width}px`);
+    await page.screenshot({ path: `${output}/pedido-${width}.png`, fullPage: true });
+  }
+  const consultaFiscal = await fetch(base + fiscalPath, { headers: { cookie } });
+  assert.equal(consultaFiscal.status, 200);
+  assert.match(consultaFiscal.headers.get("cache-control") ?? "", /no-store/);
+  const snapshot = await consultaFiscal.json();
+  assert.equal(snapshot.emissaoDisponivel, false);
+  assert.equal(snapshot.dados.itens[0].nome, "Peça comprada QA");
+  assert.equal(JSON.stringify(snapshot).includes("senhaHash"), false);
+  await page.getByRole("button", { name: "Atualizar conferência fiscal", exact: true }).click();
+  await page.getByRole("status").filter({ hasText: "Conferência disponível" }).waitFor();
+  assert.equal(await prisma.comandoEstoque.count({ where: { tenantId: loja.id } }), comandosAntes);
+  assert.equal((await prisma.pedido.findUniqueOrThrow({ where: { id: pedido.id } })).atualizadoEm.getTime(), pedido.atualizadoEm.getTime());
+  const contextoGerente = await browser.newContext();
+  await contextoGerente.addCookies([{ name: "lojas_sessao", value: emitirToken(loja.slug, operador.id), url: base }]);
+  const paginaGerente = await contextoGerente.newPage();
+  await paginaGerente.goto(base + `/painel/pedidos/${pedido.id}`);
+  assert.equal(await paginaGerente.getByRole("button", { name: "Conferir dados fiscais", exact: true }).count(), 0);
+  await contextoGerente.close();
+  assert.equal(erros.length, 0, erros.join("; "));
   console.log(JSON.stringify({ fiscalEntryBrowser: "pass", duplicateEntry: "prevented", tenantIsolation: "pass" }));
 } finally {
   await browser.close();

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ArrowLeft, Printer } from "lucide-react";
 import { Secao, brl, inputClasse } from "./campos";
 import FichaPedido from "./FichaPedido";
+import ConferenciaFiscalPedido from "./ConferenciaFiscalPedido";
 import type { PedidoView } from "./PainelLoja";
 
 const PEDIDO: Record<string, string> = {
@@ -39,9 +40,10 @@ const COR: Record<string, string> = {
  * mandar a alguém. Aqui `/painel/pedidos/<id>` abre direto, recarrega, volta e
  * pode ser mandado por WhatsApp para quem vai embalar.
  */
-export default function PedidoDetalhe({ pedido, loja }: {
+export default function PedidoDetalhe({ pedido, loja, podeConferirFiscal = false }: {
   pedido: PedidoView & { cotacoesFrete?: unknown };
   loja: { nome: string; razaoSocial: string | null; cnpj: string | null };
+  podeConferirFiscal?: boolean;
 }) {
   const [rastreio, setRastreio] = useState(pedido.rastreio ?? "");
   const [ocupado, setOcupado] = useState(false);
@@ -268,6 +270,8 @@ export default function PedidoDetalhe({ pedido, loja }: {
           <div className="flex justify-between text-xs text-muted-foreground"><dt>Referência</dt><dd>{pedido.referencia}</dd></div>
         </dl>
       </Secao>
+
+      {podeConferirFiscal && <ConferenciaFiscalPedido pedidoId={pedido.id} />}
 
       <Secao titulo="Histórico" descricao="Ações, origem e autoria registradas em ordem cronológica.">
         {pedido.eventos?.length ? (

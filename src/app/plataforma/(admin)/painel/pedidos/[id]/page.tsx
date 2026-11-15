@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { sessaoDoPainel } from "@/lib/sessao";
+import { permite } from "@/lib/operadores";
 import CabecalhoSecao from "@/components/painel/CabecalhoSecao";
 import PedidoDetalhe from "@/components/painel/PedidoDetalhe";
 
@@ -32,6 +33,7 @@ export default async function Pagina({ params }: { params: Promise<{ id: string 
     <>
       <CabecalhoSecao titulo={`Pedido #${pedido.numero}`} descricao={pedido.clienteNome} />
       <PedidoDetalhe
+        podeConferirFiscal={permite(sessao.papel, "fiscal") && permite(sessao.papel, "pedidos")}
         loja={{ nome: loja.nome, razaoSocial: loja.razaoSocial, cnpj: loja.cnpj }}
         pedido={{
           id: pedido.id,

@@ -9,10 +9,10 @@ GET privado por permissão fiscal e seção no detalhe do pedido.
 
 ## Tarefas
 
-- [ ] Observar RED dos casos de totais, classificação, documento e hash no CI.
-- [ ] Implementar contrato puro `fiscal-pedido-contrato.ts`, sem cálculo fiscal.
-- [ ] Implementar leitura `fiscal-pedido.ts` e GET protegido por tenant/permissão.
-- [ ] Exibir conferência e links de correção do catálogo somente ao dono.
+- [x] Observar RED dos casos de totais, classificação, documento e hash no CI.
+- [x] Implementar contrato puro `fiscal-pedido-contrato.ts`, sem cálculo fiscal.
+- [x] Implementar leitura `fiscal-pedido.ts` e GET protegido por tenant/permissão.
+- [x] Exibir conferência e links de correção do catálogo somente ao dono.
 - [ ] Cobrir leitura sem efeitos, isolamento e jornada responsiva no CI.
 - [ ] Revisar, integrar, publicar e registrar evidências no Linear/controle.
 
@@ -21,3 +21,9 @@ GET privado por permissão fiscal e seção no detalhe do pedido.
 - Não alterar ERP, emitir documentos ou movimentar dados reais como teste.
 - Builds e testes somente no GitHub CI; preservar dados e arquivos alheios.
 - Distinguir preço do pedido, cadastro atual e tributação ainda não revisada.
+
+## Progresso
+
+PR268. RED confirmado em43696155490 por ausência do contrato e43696270463 por
+ausência do serviço. Implementação permanece somente no Lojas, conforme resposta
+explícita do proprietário. Nenhuma operação fiscal externa executada.

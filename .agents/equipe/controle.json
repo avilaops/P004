@@ -13,6 +13,17 @@
   ],
   "tasks": [
     {
+      "id": "FISCAL-PEDIDO-20261115",
+      "title": "Conferir dados e pendências fiscais do pedido no Lojas",
+      "objective": "Permitir revisão do snapshot comercial, totais e classificação atual, sem alterar ERP ou fingir emissão disponível.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": ["Conferência privada acessível somente com permissão fiscal.", "Preço/descrição do pedido separados da classificação atual do catálogo.", "Totais exatos e pendências acionáveis, sem chamadas de emissão.", "Leitura consistente por tenant e ausência de efeitos comprovadas no CI.", "Navegador, CI e publicação verificados."],
+      "environment": "GitHub CI isolado e servidor SSH",
+      "evidence": "Proprietário reiterou alterações somente no Lojas. PR268; RED43696155490 por contrato ausente e43696270463 por serviço ausente. ERP permaneceu intacto nesta sessão; checkout P003 contém alterações de terceiros preservadas. Plano docs/superpowers/plans/2026-11-15-fiscal-pedido.md."
+    },
+    {
       "id": "REMOVER-RENDER-20261115",
       "title": "Remover infraestrutura antiga do Render",
       "objective": "Retirar jobs, scripts e credenciais obsoletos, preservando o destino SSH e as dependências fiscais ativas.",

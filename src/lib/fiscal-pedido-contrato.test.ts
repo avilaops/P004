@@ -21,6 +21,8 @@ test("conferência mantém centavos e identifica snapshot comercial sem prometer
   assert.match(r.resumoHash, /^[a-f0-9]{64}$/);
   assert.equal(r.resumoHash, conferirPedidoFiscal(dados()).resumoHash);
   assert.ok(r.pendencias.some(p => p.codigo === "EMISSAO_INDISPONIVEL"));
+  assert.ok(r.pendencias.some(p => p.codigo === "ERP_NAO_CONFIGURADO"));
+  assert.equal(conferirPedidoFiscal(dados(), { consultaErpConfigurada: true }).pendencias.some(p => p.codigo === "ERP_NAO_CONFIGURADO"), false);
   assert.ok(!r.pendencias.some(p => p.codigo === "TOTAIS_DIVERGENTES"));
   const outro = dados(); outro.itens[0].classificacaoAtual.ncm = "40112000";
   assert.notEqual(r.resumoHash, conferirPedidoFiscal(outro).resumoHash);
@@ -44,4 +46,13 @@ test("classificação ausente, CPF inválido e pedido cancelado ficam acionávei
   assert.ok(codigos.includes("ITEM_NCM"));
   assert.ok(codigos.includes("DESTINATARIO_DOCUMENTO"));
   assert.ok(codigos.includes("PEDIDO_SITUACAO"));
+});
+
+test("cancelamento parcial e endereço ausente pedem revisão sem reduzir a compra", () => {
+  const base = dados();
+  const resultado = conferirPedidoFiscal({ ...base, destinatario: { ...base.destinatario, endereco: null }, itens: base.itens.map(i => ({ ...i, quantidadeCancelada: 1 })) });
+  assert.equal(resultado.dados.itens[0].quantidade, 2);
+  assert.equal(resultado.dados.itens[0].totalCentavos, 20000);
+  assert.ok(resultado.pendencias.some(p => p.codigo === "ITEM_MOVIMENTACAO"));
+  assert.ok(resultado.pendencias.some(p => p.codigo === "DESTINATARIO_ENDERECO"));
 });
