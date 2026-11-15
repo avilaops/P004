@@ -134,7 +134,9 @@ try {
   const pedido = await prisma.pedido.create({ data: { tenantId: loja.id, referencia: `qa-fiscal-${randomUUID()}`, status: "PAGO", clienteNome: "Comprador QA", clienteDocumento: "52998224725", clienteEmail: "qa@example.test", clienteTelefone: "11999999999", freteNome: "Retirada", freteCentavos: 0, subtotalCentavos: 10000, totalCentavos: 10000, meioPagamento: "pix", pagamentoStatus: "approved", itens: { create: { produtoId: produtos[0].id, varianteId: variantes[0].id, nome: "Peça comprada QA", quantidade: 1, precoUnitarioCentavos: 10000 } } } });
   const fiscalPath = `/api/painel/pedidos/${pedido.id}/fiscal`;
   const comandosAntes = await prisma.comandoEstoque.count({ where: { tenantId: loja.id } });
-  assert.equal((await fetch(base + fiscalPath)).status, 401);
+  const fiscalAnonimo = await fetch(base + fiscalPath);
+  assert.equal(fiscalAnonimo.status, 401);
+  assert.match(fiscalAnonimo.headers.get("cache-control") ?? "", /no-store/);
   const operador = await prisma.operadorLoja.create({ data: { tenantId: loja.id, nome: "Gerente QA", email: "gerente@example.test", senhaHash: "hash-sintetico-sem-login", papel: "GERENTE" } });
   const cookieGerente = `lojas_sessao=${emitirToken(loja.slug, operador.id)}`;
   assert.equal((await fetch(base + fiscalPath, { headers: { cookie: cookieGerente } })).status, 403);
