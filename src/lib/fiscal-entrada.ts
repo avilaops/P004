@@ -4,18 +4,20 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { ErroApi } from "./api-resposta";
 import { fiscalErpConfigurado } from "./erp-fiscal";
-import { eventoCancelaNota, interpretarNotaEntrada, normalizarDocumentoEntrada, type NotaEntrada } from "./fiscal-entrada-xml";
+import { eventoCancelaNota, interpretarNotaEntrada, normalizarDocumentoEntrada, type NotaEntrada, type ItemNotaEntrada } from "./fiscal-entrada-xml";
 import { movimentarEstoqueMultilocalNaTransacao, type ReciboMovimento } from "./estoque-multilocal";
-import { travarProduto } from "./catalogo-escrita";
+import { travarProduto, salvarProdutoNoCatalogoNaTransacao } from "./catalogo-escrita";
 
 type Tx = Prisma.TransactionClient;
-export type ReciboEntradaFiscal = { tipo: "ENTRADA_NFE"; id: string; chave: string; numero: string; documentoId: string; confirmadoEm: string; ator: string; local: string; itens: Array<{ numero: number; varianteId: string; quantidade: number; descricaoFiscal: string; unidadeFiscal: string; quantidadeFiscal: string; movimento: ReciboMovimento }> };
+export type ReciboEntradaFiscal = { tipo: "ENTRADA_NFE"; id: string; chave: string; numero: string; documentoId: string; confirmadoEm: string; ator: string; local: string; fornecedor?: { id: string; documento: string; nome: string }; itens: Array<{ numero: number; varianteId: string; quantidade: number; descricaoFiscal: string; unidadeFiscal: string; quantidadeFiscal: string; custoTotalCentavos?: number; fiscal?: ItemNotaEntrada; movimento: ReciboMovimento }> };
 export type ConferenciaEntradaFiscal = { documentoId: string; modo: "LOCAL" | "ERP"; erpUrl: string | null; nota: NotaEntrada | null; recibo: ReciboEntradaFiscal | null; impedimento: string | null };
 const ORIGEM = "fiscal:entrada-nfe";
 const comandoSchema = z.object({
   confirmacao: z.literal(true), local: z.string().trim().min(1).max(80).regex(/^[a-z0-9][a-z0-9_-]*$/),
-  itens: z.array(z.object({ numero: z.number().int().min(1).max(990), varianteId: z.string().min(1).max(100), quantidade: z.number().int().min(1).max(10_000_000) }).strict()).min(1).max(990),
-}).strict().refine(c => new Set(c.itens.map(i => i.numero)).size === c.itens.length, "Item fiscal repetido.");
+  confirmarFornecedor: z.literal(true).optional(),
+  itens: z.array(z.object({ numero: z.number().int().min(1).max(990), varianteId: z.string().min(1).max(100), quantidade: z.number().int().min(1).max(10_000_000), custoTotalCentavos: z.number().int().min(0).max(2_147_483_647).optional() }).strict()).min(1).max(990),
+}).strict().refine(c => new Set(c.itens.map(i => i.numero)).size === c.itens.length, "Item fiscal repetido.")
+  .refine(c => c.confirmarFornecedor ? c.itens.every(i => i.custoTotalCentavos !== undefined) : c.itens.every(i => i.custoTotalCentavos === undefined), "Confirme fornecedor e custos de todos os itens juntos.");
 const chaveDoComando = (chave: string) => `nfe-entrada:${chave}`;
 
 async function documentoDaLoja(tx: Tx, tenantId: string, id: string) {
@@ -61,10 +63,44 @@ export async function prepararEntradaFiscal(tenantId: string, id: string) {
   return contexto(prisma, tenantId, id);
 }
 
+const produtoDaNotaSchema = z.object({ confirmacao: z.literal(true), numero: z.number().int().min(1).max(990), nome: z.string().trim().min(1).max(180), precoCentavos: z.number().int().min(0).max(2_147_483_647) }).strict();
+
+/** Cadastro independente da entrada; retry do mesmo item nunca cria outro produto. */
+export async function criarProdutoDaNota(tenantId: string, documentoId: string, entrada: unknown) {
+  const lido = produtoDaNotaSchema.safeParse(entrada);
+  if (!lido.success) throw new ErroApi("parametro_invalido", "Confirme item, nome e preço de venda em centavos para cadastrar o produto.");
+  const comando = lido.data;
+  const resumoHash = createHash("sha256").update(JSON.stringify(comando)).digest("hex");
+  return prisma.$transaction(async tx => {
+    const documento = await documentoDaLoja(tx, tenantId, documentoId);
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${JSON.stringify([tenantId, chaveDoComando(documento.chave ?? documento.id)])}, 0))`;
+    const estado = await contexto(tx, tenantId, documentoId);
+    if (estado.impedimento || !estado.nota) throw new ErroApi("conflito", estado.impedimento ?? "XML completo necessário.");
+    const fiscal = estado.nota.itens.find(i => i.numero === comando.numero);
+    if (!fiscal) throw new ErroApi("parametro_invalido", "Item não encontrado nesta NF-e.");
+    const chave = estado.nota.chave;
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${JSON.stringify([tenantId, "cadastro-nfe", chave, comando.numero])}, 0))`;
+    const anterior = await tx.cadastroProdutoFiscal.findUnique({ where: { tenantId_chave_numero: { tenantId, chave, numero: comando.numero } } });
+    let varianteId: string;
+    if (anterior) {
+      if (anterior.resumoHash !== resumoHash) throw new ErroApi("conflito", "Este item já criou um produto com outros dados. Localize-o em Produtos.");
+      varianteId = anterior.varianteId;
+    } else {
+      if (estado.recibo) throw new ErroApi("conflito", "A entrada desta nota já foi concluída. Use o cadastro de Produtos.");
+      const produto = await salvarProdutoNoCatalogoNaTransacao(tx, tenantId, null, { nome: comando.nome, slug: `produto-${randomUUID()}`, precoCentavos: comando.precoCentavos, estoque: 0, ativo: true }, { origem: "fiscal:cadastro-confirmado" });
+      const variante = await tx.variante.findFirstOrThrow({ where: { tenantId, produtoId: produto.id, padrao: true } });
+      varianteId = variante.id;
+      await tx.cadastroProdutoFiscal.create({ data: { tenantId, chave, numero: comando.numero, resumoHash, varianteId } });
+    }
+    const variante = await tx.variante.findFirstOrThrow({ where: { tenantId, id: varianteId }, include: { produto: { select: { nome: true, ativo: true } } } });
+    return { id: variante.id, produtoId: variante.produtoId, nome: variante.produto.nome, variacao: variante.nome, sku: variante.sku, gtin: variante.gtin, ativo: variante.produto.ativo };
+  }, { timeout: 20_000 });
+}
+
 export async function confirmarEntradaFiscal(tenantId: string, id: string, entrada: unknown, ator: string): Promise<ReciboEntradaFiscal> {
   const lido = comandoSchema.safeParse(entrada);
   if (!lido.success) throw new ErroApi("parametro_invalido", "Confirme os produtos, unidades inteiras e local de estoque de todos os itens.");
-  const comando = { local: lido.data.local, itens: [...lido.data.itens].sort((a, b) => a.numero - b.numero) };
+  const comando = { local: lido.data.local, itens: [...lido.data.itens].sort((a, b) => a.numero - b.numero), ...(lido.data.confirmarFornecedor ? { confirmarFornecedor: true } : {}) };
   const resumoHash = createHash("sha256").update(JSON.stringify(comando)).digest("hex");
   return prisma.$transaction(async tx => {
     const documento = await documentoDaLoja(tx, tenantId, id);
@@ -80,6 +116,12 @@ export async function confirmarEntradaFiscal(tenantId: string, id: string, entra
     const estado = await contexto(tx, tenantId, documento.id);
     if (estado.impedimento || !estado.nota) throw new ErroApi("conflito", estado.impedimento ?? "XML completo necessário para entrada.");
     const nota = estado.nota;
+    let fornecedor: ReciboEntradaFiscal["fornecedor"];
+    if (lido.data.confirmarFornecedor) {
+      if (!/^(?:\d{11}|[A-Z0-9]{12}\d{2})$/.test(nota.fornecedor.documento) || !nota.fornecedor.nome) throw new ErroApi("conflito", "Confira a identificação do fornecedor antes de registrar a entrada.");
+      const cadastro = await tx.fornecedorLoja.upsert({ where: { tenantId_documento: { tenantId, documento: nota.fornecedor.documento } }, create: { tenantId, documento: nota.fornecedor.documento, nome: nota.fornecedor.nome }, update: {} });
+      fornecedor = { id: cadastro.id, documento: nota.fornecedor.documento, nome: nota.fornecedor.nome };
+    }
     if (comando.itens.length !== nota.itens.length || comando.itens.some(i => !nota.itens.some(n => n.numero === i.numero))) throw new ErroApi("parametro_invalido", "Confira todos os itens da nota; não há recebimento parcial nesta confirmação.");
     const ids = [...new Set(comando.itens.map(i => i.varianteId))];
     const variantes = await tx.variante.findMany({ where: { tenantId, id: { in: ids }, ativo: true, produto: { ativo: true } }, select: { id: true, produtoId: true } });
@@ -98,11 +140,21 @@ export async function confirmarEntradaFiscal(tenantId: string, id: string, entra
       if (ocupado) throw new ErroApi("conflito", "Um item desta NF-e já possui comando de estoque; confira o histórico antes de continuar.");
       const movimento = await movimentarEstoqueMultilocalNaTransacao(tx, tenantId, chaveItem, { tipo: "entrada", varianteId: item.varianteId, local: comando.local, quantidade: item.quantidade, motivo: `Entrada NF-e ${nota.numero} item${item.numero} · ${nota.chave}` }, ORIGEM);
       const fiscal = nota.itens.find(i => i.numero === item.numero)!;
-      itens.push({ ...item, descricaoFiscal: fiscal.descricao, unidadeFiscal: fiscal.unidade, quantidadeFiscal: fiscal.quantidade, movimento });
+      itens.push({ ...item, descricaoFiscal: fiscal.descricao, unidadeFiscal: fiscal.unidade, quantidadeFiscal: fiscal.quantidade, ...(fornecedor ? { fiscal } : {}), movimento });
     }
     itens.sort((a, b) => a.numero - b.numero);
-    const recibo: ReciboEntradaFiscal = { tipo: "ENTRADA_NFE", id: randomUUID(), chave: nota.chave, numero: nota.numero, documentoId: documento.id, confirmadoEm: new Date().toISOString(), ator: ator.slice(0, 120), local: comando.local, itens };
+    const recibo: ReciboEntradaFiscal = { tipo: "ENTRADA_NFE", id: randomUUID(), chave: nota.chave, numero: nota.numero, documentoId: documento.id, confirmadoEm: new Date().toISOString(), ator: ator.slice(0, 120), local: comando.local, ...(fornecedor ? { fornecedor } : {}), itens };
     await tx.comandoEstoque.create({ data: { id: recibo.id, tenantId, chave, resumoHash, origem: ORIGEM, resultado: recibo as unknown as Prisma.InputJsonValue } });
     return recibo;
   }, { timeout: 30_000 });
+}
+
+/** Histórico derivado dos recibos imutáveis; não depende do custo atual do catálogo. */
+export async function historicoCustosFiscais(tenantId: string, varianteId: string) {
+  if (!await prisma.variante.findFirst({ where: { tenantId, id: varianteId }, select: { id: true } })) throw new ErroApi("nao_encontrado", "Variante não encontrada nesta loja.");
+  const registros = await prisma.comandoEstoque.findMany({ where: { tenantId, origem: ORIGEM, resultado: { path: ["itens"], array_contains: [{ varianteId }] } }, orderBy: [{ criadoEm: "desc" }, { id: "desc" }], take: 20, select: { resultado: true } });
+  return registros.flatMap(r => {
+    const recibo = r.resultado as unknown as ReciboEntradaFiscal;
+    return recibo.itens.filter(i => i.varianteId === varianteId && i.custoTotalCentavos !== undefined).map(i => ({ reciboId: recibo.id, numero: recibo.numero, chave: recibo.chave, confirmadoEm: recibo.confirmadoEm, fornecedor: recibo.fornecedor ?? null, quantidade: i.quantidade, custoTotalCentavos: i.custoTotalCentavos!, item: i.numero }));
+  });
 }
