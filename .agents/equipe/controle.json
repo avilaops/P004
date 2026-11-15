@@ -13,6 +13,22 @@
   ],
   "tasks": [
     {
+      "id": "SITEMAP-IMAGENS-LOJAS-20261115",
+      "title": "Publicar sitemap de imagens por loja",
+      "objective": "Permitir descoberta das imagens públicas do catálogo e anunciar o sitemap no robots, começando pela Bereta Rodas.",
+      "assignee": "codex",
+      "priority": "normal",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Sitemap XML dinâmico por tenant no domínio canônico, com imagens distintas e sem conteúdo de outra loja.",
+        "Robots anuncia sitemap principal e imagens; lojas não públicas e hosts desconhecidos não publicam o arquivo.",
+        "Fotos representativas mantêm classificação e avisos; ilustrações e origens desconhecidas ficam fora.",
+        "Testes, tipos e build no GitHub CI; HTTP e XML da Bereta verificados após publicação."
+      ],
+      "environment": "worktree isolado, GitHub CI e produção",
+      "evidence": "PR #263. Plano em docs/superpowers/plans/2026-11-15-sitemap-imagens.md. Regressões enviadas no commit c5fbe16; CI RED 43678914333 em execução."
+    },
+    {
       "id": "CONTENT-SIGNALS-20261114",
       "title": "Declarar Content Signals na plataforma e nas lojas",
       "objective": "Expressar busca, entrada de IA e treinamento preservando bloqueios e a escolha do lojista.",

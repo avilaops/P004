@@ -64,7 +64,8 @@ export function regrasRobots(t: Tenant): MetadataRoute.Robots {
   if (!t.permiteTreinamentoIa) {
     rules.push({ userAgent: [...CRAWLERS_DE_TREINAMENTO], disallow: "/" });
   }
-  return { rules, sitemap: `${urlDaLoja(t)}/sitemap.xml` };
+  const base = urlDaLoja(t);
+  return { rules, sitemap: [`${base}/sitemap.xml`, `${base}/sitemap-imagens.xml`] };
 }
 
 export type EstadoDescoberta = {

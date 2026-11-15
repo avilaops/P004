@@ -154,5 +154,5 @@ function temCookieNosso(request: NextRequest): boolean {
 }
 
 export const config = {
-  matcher: ["/((?!_next/|favicon.ico|robots.txt|sitemap.xml|llms.txt|llms-full.txt|site.webmanifest|lojas-mark.svg|media/|uploads/).*)"],
+  matcher: ["/((?!_next/|favicon.ico|robots.txt|sitemap.xml|sitemap-imagens.xml|llms.txt|llms-full.txt|site.webmanifest|lojas-mark.svg|media/|uploads/).*)"],
 };

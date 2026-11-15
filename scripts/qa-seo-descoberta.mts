@@ -60,6 +60,28 @@ try {
   assert.match(robotsAntes, /Content-Signal: search=yes, ai-input=yes, ai-train=no/);
   assert.match(robotsAntes, /Disallow: \/conta\$/);
   assert.match(robotsAntes, /User-Agent: GPTBot/);
+  assert.ok(robotsAntes.includes(`Sitemap: https://${alfa.slug}.localhost/sitemap-imagens.xml`));
+  await salvarProdutoNoCatalogo(alfa.id, null, { nome: "Foto de série QA", slug: "foto-serie-qa", precoCentavos: 1000, imagens: ["https://cdn.example/alfa.webp?a=1&b=2"], imagemOrigem: "representativa", imagemFamilia: "serie-qa" }, { origem: "qa-seo" });
+  await salvarProdutoNoCatalogo(beta.id, null, { nome: "Foto Beta QA", slug: "foto-beta-qa", precoCentavos: 1000, imagens: ["https://cdn.example/beta.webp"], imagemOrigem: "propria" }, { origem: "qa-seo" });
+  const imagensAlfa = await pedir(alfa.slug, "/sitemap-imagens.xml");
+  assert.equal(imagensAlfa.status, 200);
+  assert.match(imagensAlfa.headers.get("content-type") ?? "", /application\/xml/);
+  const xmlAlfa = await imagensAlfa.text();
+  assert.ok(xmlAlfa.includes(`https://${alfa.slug}.localhost/produtos/foto-serie-qa`));
+  assert.ok(xmlAlfa.includes("https://cdn.example/alfa.webp?a=1&amp;b=2"));
+  assert.ok(!xmlAlfa.includes("beta.webp"));
+  const xmlBeta = await (await pedir(beta.slug, "/sitemap-imagens.xml")).text();
+  assert.ok(xmlBeta.includes("beta.webp"));
+  assert.ok(!xmlBeta.includes("alfa.webp"));
+  assert.equal((await pedir(`ausente-${sufixo}`, "/sitemap-imagens.xml")).status, 404);
+  const baseSemLoja = await fetch(origem + "/sitemap-imagens.xml");
+  assert.equal(baseSemLoja.status, 404, `Domínio-base: ${await baseSemLoja.text()}`);
+  for (const status of ["CANCELADA", "PROVISIONANDO"] as const) {
+    await prisma.tenant.update({ where: { id: beta.id }, data: { status } });
+    assert.equal((await pedir(beta.slug, "/sitemap-imagens.xml")).status, 404);
+  }
+  await prisma.tenant.update({ where: { id: beta.id }, data: { status: "ATIVA" } });
+  resultados.push({ caso: "sitemap_imagens_http_isolamento_e_visibilidade", passou: true });
   assert.equal((await patch(token, { permiteTreinamentoIa: true })).status, 200);
   assert.match(await (await pedir(alfa.slug, "/robots.txt")).text(), /Content-Signal: search=yes, ai-input=yes, ai-train=yes/);
   assert.equal((await patch(token, { permiteTreinamentoIa: false })).status, 200);
