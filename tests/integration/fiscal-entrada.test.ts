@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { prisma } from "../../src/lib/db";
 import { alterarAtivoEmLote, salvarProdutoNoCatalogo } from "../../src/lib/catalogo-escrita";
-import { prepararEntradaFiscal, confirmarEntradaFiscal } from "../../src/lib/fiscal-entrada";
+import { prepararEntradaFiscal, confirmarEntradaFiscal, historicoCustosFiscais } from "../../src/lib/fiscal-entrada";
 import * as entradaFiscal from "../../src/lib/fiscal-entrada";
 
 const db = new URL(process.env.DATABASE_URL ?? "http://invalid");
@@ -43,6 +43,8 @@ test("fornecedor e custos confirmados pertencem ao recibo e repetição não os 
   const outra = await fixture();
   const outroRecibo = await confirmar(outra, { ...corpo, itens: outra.corpo.itens.map(i => ({ ...i, custoTotalCentavos: 100 })) });
   assert.notEqual((outroRecibo as unknown as typeof snapshot).fornecedor.id, snapshot.fornecedor.id);
+  assert.equal((await historicoCustosFiscais(f.tenant.id, f.variantes[0].id))[0].custoTotalCentavos, 10300);
+  await assert.rejects(() => historicoCustosFiscais(outra.tenant.id, f.variantes[0].id));
 });
 
 test("cadastro pela NF-e exige confirmação e cria uma única variante sem receber estoque", async () => {
@@ -54,8 +56,38 @@ test("cadastro pela NF-e exige confirmação e cria uma única variante sem rece
   assert.equal(a.id, b.id);
   assert.equal(await fisico(f.tenant.id, a.id), 0);
   assert.equal(await prisma.razaoEstoque.count({ where: { tenantId: f.tenant.id, origem: "fiscal:entrada-nfe" } }), 0);
+  const variante = await prisma.variante.findUniqueOrThrow({ where: { id: a.id }, include: { produto: true, preco: true } });
+  assert.equal(variante.preco?.valorCentavos, 12000);
+  assert.equal(variante.produto.slug.includes(CHAVE), false);
+  await assert.rejects(() => criar(f.tenant.id, f.documento.id, { ...corpo, precoCentavos: 13000 }), /outros dados/);
   const outra = await fixture();
   await assert.rejects(() => criar(outra.tenant.id, f.documento.id, corpo));
+});
+
+test("falha de entrada desfaz fornecedor; custos incompletos e decimais são recusados", async () => {
+  const f = await fixture();
+  const corpo = { ...f.corpo, confirmarFornecedor: true, itens: f.corpo.itens.map(i => ({ ...i, custoTotalCentavos: 100 })) };
+  await prisma.saldoEstoque.updateMany({ where: { tenantId: f.tenant.id }, data: { fisico: null } });
+  await assert.rejects(() => confirmar(f, corpo), /não controla estoque/);
+  assert.equal(await prisma.fornecedorLoja.count({ where: { tenantId: f.tenant.id } }), 0);
+  await assert.rejects(() => confirmar(f, { ...corpo, itens: [corpo.itens[0], f.corpo.itens[1]] }));
+  await assert.rejects(() => confirmar(f, { ...corpo, itens: corpo.itens.map(i => ({ ...i, custoTotalCentavos: 0.5 })) }));
+  assert.equal(await prisma.comandoEstoque.count({ where: { tenantId: f.tenant.id } }), 0);
+});
+
+test("mesmo fornecedor exato é reutilizado e novas compras preservam os custos anteriores", async () => {
+  const f = await fixture();
+  const corpo = { ...f.corpo, confirmarFornecedor: true, itens: f.corpo.itens.map(i => ({ ...i, custoTotalCentavos: 200 })) };
+  const a = await confirmar(f, corpo);
+  const chave = CHAVE.slice(0, -1) + "8";
+  const outro = await prisma.documentoFiscalLoja.create({ data: { tenantId: f.tenant.id, cnpj: f.tenant.cnpj!, chave, nsu: "000000000000009", schema: "procNFe_v4.00.xsd", xml: XML.replaceAll(CHAVE, chave).replaceAll("FORNECEDOR SINTETICO QA", "NOME FISCAL NOVO") } });
+  const b = await confirmar(f, { ...corpo, itens: corpo.itens.map(i => ({ ...i, custoTotalCentavos: 300 })) }, outro.id);
+  assert.equal(a.fornecedor?.id, b.fornecedor?.id);
+  assert.equal(a.fornecedor?.nome, "FORNECEDOR SINTETICO QA");
+  assert.equal(b.fornecedor?.nome, "NOME FISCAL NOVO");
+  const custos = await historicoCustosFiscais(f.tenant.id, f.variantes[0].id);
+  assert.deepEqual(custos.map(c => c.custoTotalCentavos), [300, 200]);
+  assert.equal(await prisma.fornecedorLoja.count({ where: { tenantId: f.tenant.id } }), 1);
 });
 
 test("abrir conferência não altera estoque e confirmar duas vezes tem um único efeito", async () => {

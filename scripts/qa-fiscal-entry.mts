@@ -37,7 +37,7 @@ try {
   assert.equal((await prepared.json()).nota.itens.length, 2);
   assert.equal((await fetch(base + path)).status, 401);
   assert.equal((await fetch(base + `/api/painel/fiscal/documentos/${foreign.id}/entrada-estoque`, { headers: { cookie } })).status, 404);
-  const corpo = { confirmacao: true, local: "principal", itens: [{ numero: 1, varianteId: variantes[0].id, quantidade: 2 }, { numero: 2, varianteId: variantes[1].id, quantidade: 1 }] };
+  const corpo = { confirmacao: true, confirmarFornecedor: true, local: "principal", itens: [{ numero: 1, varianteId: variantes[0].id, quantidade: 2, custoTotalCentavos: 10000 }, { numero: 2, varianteId: variantes[1].id, quantidade: 1, custoTotalCentavos: 2500 }] };
   assert.equal((await fetch(base + path, { method: "POST", headers: { origin: "https://localhost", "content-type": "application/json" }, body: JSON.stringify(corpo) })).status, 401);
   assert.equal((await fetch(base + `/api/painel/fiscal/documentos/${foreign.id}/entrada-estoque`, { method: "POST", headers: { cookie, origin: "https://localhost", "content-type": "application/json" }, body: JSON.stringify(corpo) })).status, 404);
   const blocked = await fetch(base + path, { method: "POST", headers: { cookie, origin: "https://other.example", "content-type": "application/json" }, body: JSON.stringify(corpo) });
@@ -67,6 +67,7 @@ try {
     await page.setViewportSize(n === 1 ? { width: 393, height: 852 } : { width: 1440, height: 1100 });
     await dialog.getByLabel(`Buscar produto do item ${n}`).fill(`Produto fiscal QA ${n}`);
     await dialog.getByRole("button", { name: new RegExp(`Selecionar Produto fiscal QA ${n}`) }).click();
+    await dialog.getByLabel(`Custo total de aquisição do item ${n} (R$)`).fill(n === 1 ? "100,00" : "25,00");
   }
   await mkdir(output, { recursive: true });
   await page.screenshot({ path: output + "/desktop.png", fullPage: true });
@@ -75,7 +76,7 @@ try {
   await dialog.getByRole("combobox", { name: /^Local de estoque/ }).fill("principal");
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth));
   await page.screenshot({ path: output + "/mobile-form.png", fullPage: true });
-  await dialog.getByLabel("Conferi os produtos, quantidades e local de estoque").check();
+  await dialog.getByLabel("Conferi os produtos, quantidades e local de estoque, o fornecedor identificado pelo documento e os custos de aquisição").check();
   const invalidos = await dialog.locator("form").evaluate(form => Array.from((form as HTMLFormElement).elements).filter(e => e instanceof HTMLInputElement && !e.validity.valid).map(e => ({ name: (e as HTMLInputElement).name, value: (e as HTMLInputElement).value, message: (e as HTMLInputElement).validationMessage })));
   assert.deepEqual(invalidos, [], "A conferência preenchida precisa passar pela validação do navegador");
   const respostaConfirmacao = page.waitForResponse(r => new URL(r.url()).pathname === path && r.request().method() === "POST");
@@ -89,6 +90,11 @@ try {
   const retry = await fetch(base + path, { method: "POST", headers: { cookie, origin: "https://localhost", "content-type": "application/json" }, body: JSON.stringify(corpo) });
   assert.equal(retry.status, 200);
   assert.equal(await prisma.razaoEstoque.count({ where: { tenantId: loja.id, origem: "fiscal:entrada-nfe" } }), 2);
+  const custos = await fetch(base + `/api/painel/fiscal/entrada-estoque/custos?varianteId=${variantes[0].id}`, { headers: { cookie } });
+  assert.equal(custos.status, 200);
+  const historico = await custos.json();
+  assert.equal(historico.itens[0].custoTotalCentavos, 10000);
+  assert.equal(historico.itens[0].fornecedor.documento, "12345678000195");
   await page.setViewportSize({ width: 393, height: 852 });
   await page.screenshot({ path: output + "/mobile.png", fullPage: true });
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth));

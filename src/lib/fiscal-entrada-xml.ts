@@ -2,7 +2,8 @@ import { XMLParser, XMLValidator } from "fast-xml-parser";
 import { ErroApi } from "./api-resposta";
 
 type Bloco = Record<string, unknown>;
-export type ItemNotaEntrada = { numero: number; codigo: string | null; gtin: string | null; descricao: string; unidade: string; quantidade: string; valorUnitario: string; valorTotal: string; ncm: string | null; cfop: string | null };
+export type TributoNotaEntrada = { tipo: string; codigo: string | null; base: string | null; aliquota: string | null; valor: string | null };
+export type ItemNotaEntrada = { numero: number; codigo: string | null; gtin: string | null; descricao: string; unidade: string; quantidade: string; valorUnitario: string; valorTotal: string; ncm: string | null; cest: string | null; cfop: string | null; desconto: string; frete: string; seguro: string; outrasDespesas: string; tributos: TributoNotaEntrada[] };
 export type NotaEntrada = { chave: string; numero: string; serie: string; ambiente: string; emitidaEm: string; fornecedor: { documento: string; nome: string }; destinatario: { documento: string; nome: string }; total: string; itens: ItemNotaEntrada[] };
 const parser = new XMLParser({ ignoreAttributes: false, removeNSPrefix: true, parseTagValue: false, processEntities: false });
 const invalida = () => new ErroApi("conflito", "A conferência exige XML completo de NF-e autorizada, com identificação e itens válidos.");
@@ -18,6 +19,33 @@ function decimal(valor: unknown, positivo = false) {
   return dado;
 }
 export const normalizarDocumentoEntrada = (valor: string) => valor.toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+function tributosDeclarados(valor: unknown): TributoNotaEntrada[] {
+  if (valor === undefined) return [];
+  const imposto = bloco(valor);
+  const tipos = [
+    ["ICMS", "vBC", "pICMS", "vICMS"], ["IPI", "vBC", "pIPI", "vIPI"],
+    ["II", "vBC", "", "vII"], ["PIS", "vBC", "pPIS", "vPIS"],
+    ["COFINS", "vBC", "pCOFINS", "vCOFINS"],
+  ];
+  const resultado: TributoNotaEntrada[] = [];
+  const numero = (dado: unknown) => dado === undefined ? null : decimal(dado);
+  for (const [tipo, base, aliquota, valor] of tipos) {
+    if (imposto[tipo] === undefined) continue;
+    const grupo = bloco(imposto[tipo]);
+    const detalhes = tipo === "II" ? grupo : Object.values(grupo).find(v => v && typeof v === "object" && !Array.isArray(v));
+    if (!detalhes) continue;
+    const dados = bloco(detalhes);
+    const codigo = opcional(dados.CST ?? dados.CSOSN);
+    resultado.push({ tipo, codigo, base: numero(dados[base]), aliquota: numero(dados[aliquota]), valor: numero(dados[valor]) });
+    if (tipo === "ICMS") {
+      for (const [nome, campoBase, campoAliquota, campoValor] of [["ICMS ST", "vBCST", "pICMSST", "vICMSST"], ["FCP", "vBCFCP", "pFCP", "vFCP"], ["FCP ST", "vBCFCPST", "pFCPST", "vFCPST"]]) {
+        if (dados[campoValor] !== undefined) resultado.push({ tipo: nome, codigo, base: numero(dados[campoBase]), aliquota: numero(dados[campoAliquota]), valor: numero(dados[campoValor]) });
+      }
+    }
+  }
+  return resultado;
+}
 
 export function interpretarNotaEntrada(xml: string): NotaEntrada {
   if (!xml || Buffer.byteLength(xml) > 12 * 1024 * 1024 || /<!DOCTYPE|<!ENTITY/i.test(xml) || XMLValidator.validate(xml) !== true) throw invalida();
@@ -36,7 +64,7 @@ export function interpretarNotaEntrada(xml: string): NotaEntrada {
     if (!Number.isInteger(numero) || numero < 1 || numero > 990 || numeros.has(numero) || !texto(produto.xProd) || !texto(produto.uCom)) throw invalida();
     numeros.add(numero);
     const gtin = opcional(produto.cEAN);
-    return { numero, codigo: opcional(produto.cProd), gtin: gtin === "SEM GTIN" ? null : gtin, descricao: texto(produto.xProd), unidade: texto(produto.uCom), quantidade: decimal(produto.qCom, true), valorUnitario: decimal(produto.vUnCom), valorTotal: decimal(produto.vProd), ncm: opcional(produto.NCM), cfop: opcional(produto.CFOP) };
+    return { numero, codigo: opcional(produto.cProd), gtin: gtin === "SEM GTIN" ? null : gtin, descricao: texto(produto.xProd), unidade: texto(produto.uCom), quantidade: decimal(produto.qCom, true), valorUnitario: decimal(produto.vUnCom), valorTotal: decimal(produto.vProd), ncm: opcional(produto.NCM), cest: opcional(produto.CEST), cfop: opcional(produto.CFOP), desconto: decimal(produto.vDesc ?? "0.00"), frete: decimal(produto.vFrete ?? "0.00"), seguro: decimal(produto.vSeg ?? "0.00"), outrasDespesas: decimal(produto.vOutro ?? "0.00"), tributos: tributosDeclarados(linha.imposto) };
   });
   const numero = texto(ide.nNF), serie = texto(ide.serie), emitidaEm = texto(ide.dhEmi ?? ide.dEmi);
   const fornecedor = { documento: normalizarDocumentoEntrada(texto(emitente.CNPJ ?? emitente.CPF)), nome: texto(emitente.xNome) };
