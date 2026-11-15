@@ -143,7 +143,7 @@ export default function Fiscal() {
     }
   }
 
-  async function manifestar(doc: Estado["documentos"][number], tipo: "CIENCIA" | "CONFIRMACAO" | "DESCONHECIMENTO" | "NAO_REALIZADA") {
+  async function manifestar(doc: Estado["documentos"][number], tipoManifestacao: "CIENCIA" | "CONFIRMACAO" | "DESCONHECIMENTO" | "NAO_REALIZADA") {
     const efeitos = {
       CIENCIA: "registra que você tomou conhecimento da emissão; não confirma a compra.",
       CONFIRMACAO: "confirma que a operação ocorreu e produz efeito fiscal.",
@@ -151,19 +151,22 @@ export default function Fiscal() {
       NAO_REALIZADA: "declara que a operação conhecida não foi realizada.",
     } as const;
     let justificativa: string | undefined;
-    if (tipo === "NAO_REALIZADA") {
+    if (tipoManifestacao === "NAO_REALIZADA") {
       justificativa = window.prompt("Informe a justificativa fiscal (15 a 255 caracteres):")?.trim();
       if (!justificativa) return;
     }
-    if (!window.confirm(`Confirma o envio real à SEFAZ? Esta ação ${efeitos[tipo]}`)) return;
+    if (!window.confirm(`Confirma o envio real à SEFAZ? Esta ação ${efeitos[tipoManifestacao]}`)) return;
     setOcupado(`manifestacao:${doc.id}`); setErro(""); setMensagem("");
     try {
-      const resposta = await fetch(`/api/painel/fiscal/documentos/${doc.id}/manifestacao`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tipo, justificativa, confirmacao: true }) });
+      const resposta = await fetch(`/api/painel/fiscal/documentos/${doc.id}/manifestacao`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tipo: tipoManifestacao, justificativa, confirmacao: true }) });
       const resultado = await resposta.json();
       if (!resposta.ok) throw new Error(resultado.erro ?? "A SEFAZ não confirmou a manifestação.");
-      setMensagem(resultado.aceita ? `Manifestação aceita pela SEFAZ. Protocolo ${resultado.protocolo}. A busca do XML completo foi executada.` : `Manifestação não aceita: ${resultado.codigo} — ${resultado.motivo}`);
+      setMensagem(resultado.aceita ? `Manifestação aceita pela SEFAZ. Protocolo ${resultado.protocolo}. A disponibilidade do XML completo será apresentada na lista.` : `Manifestação ${resultado.status?.toLowerCase().replaceAll("_", " ") ?? "não aceita"}: ${resultado.codigo ?? "sem código"} • ${resultado.motivo ?? "Consulte o estado antes de repetir."}`);
       setPagina(1);
-      const atualizada = await fetch(`/api/painel/fiscal?tipo=${tipo === "CIENCIA" ? "nfe-recebidas" : tipo}`).then((r) => r.json());
+      const parametros = new URLSearchParams({ busca, tipo, pagina: "1", inicio, fim, arquivos: somenteDisponiveis ? "disponiveis" : "todos" });
+      const consulta = await fetch(`/api/painel/fiscal?${parametros}`);
+      const atualizada = await consulta.json();
+      if (!consulta.ok) throw new Error(atualizada.erro ?? "Manifestação enviada. Não foi possível atualizar a lista; consulte antes de repetir.");
       setEstado(atualizada);
     } catch (e) { setErro(e instanceof Error ? e.message : "Falha ao manifestar."); }
     finally { setOcupado(null); }
