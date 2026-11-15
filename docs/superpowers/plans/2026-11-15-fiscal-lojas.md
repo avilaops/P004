@@ -23,7 +23,7 @@ ao recibo imutável na mesma transação da entrada.
 - [x] Cadastro explícito de produto pela conferência usando catálogo canônico.
 - [x] UI detalhada e histórico de recebimento/custo; ampliar QA responsiva.
 - [x] Conferir contrato ERP para emissão e registrar dependências comprovadas.
-- [ ] CI verde, revisão do diff, PR e evidências no Linear/controle.
+- [x] CI verde, revisão do diff, PR e evidências no Linear/controle.
 
 ## Progresso
 
@@ -35,3 +35,13 @@ RED:43691594347(campos fiscais/fornecedor/custos) e43691725289(cadastro ausente)
 Primeiro GREEN parcial8de363d: unitários, integração PostgreSQL em três partes,
 lint, tipos e contratos aprovados em43692294861. Build/navegador em andamento.
 Incremento seguinte amplia navegador para cadastro de produto e cinco larguras.
+
+Entrega do recebimento concluída: PR265 integrado em
+`20ddb6603d57da7a7baf62183714835bfc30d971`. CI final do PR43692768983 e produção
+43693482933 aprovados, produção na tentativa3. Backup pré-migração conferido,
+duas tabelas aditivas aplicadas, fumaça aprovada e versão pública conferida.
+Fornecedor, produtos e custos foram verificados no navegador sintético em
+360,393,768,1280e1440px. Nenhuma entrada ou manifestação real de teste.
+
+O texto do GREEN parcial acima é histórico. Emissão de pedidos permanece
+dependente da AVL-250; este plano não declara o módulo fiscal inteiro concluído.

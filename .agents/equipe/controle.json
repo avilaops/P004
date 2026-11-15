@@ -18,10 +18,10 @@
       "objective": "Retirar jobs, scripts e credenciais obsoletos, preservando o destino SSH e as dependências fiscais ativas.",
       "assignee": "codex",
       "priority": "alta",
-      "status": "em-andamento",
+      "status": "concluida",
       "acceptanceCriteria": ["Deploy exclusivamente pelo destino SSH ativo.", "Nenhuma configuração executável aponta para o Render.", "R2, PostgreSQL, host por tenant e DANFE preservados.", "CI, publicação e limpeza das credenciais documentados."],
       "environment": "GitHub CI e servidor SSH",
-      "evidence": "Destino DEPLOY_TARGET=ssh conferido em15/11/2026. Remoção em branch chore/remover-render. Plano docs/superpowers/plans/2026-11-15-remover-render.md. Nenhum banco ou acervo externo apagado."
+      "evidence": "PR267 integrado em a3a3456293d65e37e44a42e0c844da54bbd87be9. CI PR43694069556 e produção43694671482 aprovados, produção na tentativa2 após a transferência inicial atingir1min com imagem já baixada. Deploy SSH e fumaça aprovados; home pública200com data-dpl-id exato e health200/banco ok. Segredos RENDER_API_KEY/RENDER_DATABASE_URL e variável RENDER_SERVICE_ID removidos; listagens de repositório e production sem RENDER_*. Nenhum job ou configuração executável Render restante; R2, PostgreSQL e DANFE preservados. Evidências em evidencias/fiscal-e-remocao-render-2026-11-15.md. Nenhum banco ou acervo externo apagado."
     },
     {
       "id": "FISCAL-CONCLUSAO-20261115",
@@ -29,7 +29,8 @@
       "objective": "Concluir conferência de recebimento, fornecedor exato, cadastro confirmado de produto e custos históricos da AVL-254; verificar dependências reais da emissão AVL-240.",
       "assignee": "codex",
       "priority": "alta",
-      "status": "em-andamento",
+      "status": "bloqueada",
+      "blocker": "Recebimento operacional publicado. A emissão de pedidos da AVL-240 ainda depende do contrato de escrita e da homologação da AVL-250 no ERP, fora do escopo autorizado de alterar somente Lojas.",
       "acceptanceCriteria": [
         "Destinatário, itens, CEST, descontos, despesas e tributos declarados visíveis.",
         "Fornecedor por documento exato e custos preservados no recibo imutável da entrada.",
@@ -37,8 +38,8 @@
         "CI PostgreSQL e navegador responsivo aprovados, com versão e evidências.",
         "Emissão não é declarada pronta sem contrato autorizado e homologação do ERP."
       ],
-      "environment": "GitHub CI isolado; nenhuma operação fiscal ou entrada real de teste",
-      "evidence": "PR265. RED confirmado nos jobs132743486717 e132743486745 da execução43691594347; cadastro ausente confirmado no job132744578647 da execução43691725289. Implementação8de363d em validação. ERP local P003 expõe apenas GET em /api/v1/notas-recebidas e arquivos para a credencial de serviço; emissão permanece dependente de AVL-250. Nenhuma publicação deste incremento."
+      "environment": "GitHub CI isolado e produção SSH; nenhuma operação fiscal ou entrada real de teste",
+      "evidence": "Recebimento entregue no PR265, versão20ddb6603d57da7a7baf62183714835bfc30d971. CI PR43692768983 e produção43693482933 aprovados, produção na tentativa3. Backup pré-migração32.686.040bytes conferido; migração20261115080000_fiscal_fornecedor_cadastro aplicada. Home pública200com versão exata; API nova de custos401JSONsem sessão. Navegador: cadastro sem entrada automática, recebimento idempotente, fornecedor/custos e360/393/768/1280/1440px. Evidências em evidencias/fiscal-e-remocao-render-2026-11-15.md. Emissão continua bloqueada pelo ERP; nenhuma emissão ou manifestação real realizada."
     },
     {
       "id": "ROBOTS-SEM-CONTENT-SIGNAL-20261115",
