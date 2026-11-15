@@ -17,14 +17,15 @@
       "title": "Remover Content-Signal e publicar chave IndexNow fornecida",
       "objective": "Atender à decisão do proprietário após o Bing indicar sintaxe desconhecida, mantendo as regras e os dois sitemaps da Bereta.",
       "assignee": "codex",
-      "status": "em-andamento",
+      "status": "concluida",
       "acceptanceCriteria": [
         "Robots da plataforma e das lojas sem Content-Signal, com Allow/Disallow e sitemaps preservados.",
         "Arquivo público UTF-8 da chave IndexNow fornecida pelo proprietário e envio das URLs canônicas da Bereta.",
         "CI, publicação e respostas HTTP verificadas."
       ],
       "environment": "GitHub CI e produção",
-      "evidence": "Screenshot do Bing Webmaster Tools fornecido pelo proprietário. Correção do gerador comum, expectativas existentes e arquivo público de verificação preparados; sem build ou teste local."
+      "evidence": "PR264, commit79176aacd0f97e94f0caa47ef0b08ac4f28ca643. CI PR43688745797 aprovada e produção43689330624 aprovada na tentativa2, incluindo smoke. Avilaops.com commit9255dfa, Pages43688756688 e verificação43688756693 aprovados. Robots públicos sem Content-Signal e com os dois sitemaps. Chave IndexNow pública validada com HTTP200 e Bingbot; 6.483 URLs aceitas em https://www.bing.com/indexnow com HTTP200. Resultado em docs/evidencias/robots-indexnow-20261115/resultado.json.",
+      "review": "Revisão independente sem bloqueios. Nenhum build ou teste local. A decisão do proprietário nesta sessão substitui a emissão anterior de Content-Signal."
     },
     {
       "id": "SITEMAP-IMAGENS-LOJAS-20261115",
