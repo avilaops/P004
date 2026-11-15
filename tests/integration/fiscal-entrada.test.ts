@@ -28,6 +28,22 @@ async function fixture() {
 const confirmar = (f: Awaited<ReturnType<typeof fixture>>, corpo: unknown = f.corpo, id = f.documento.id) => confirmarEntradaFiscal(f.tenant.id, id, corpo, "qa:dono");
 const fisico = async (tenantId: string, varianteId: string) => (await prisma.saldoEstoque.findUniqueOrThrow({ where: { tenantId_varianteId_local: { tenantId, varianteId, local: "principal" } } })).fisico;
 
+test("fornecedor e custos confirmados pertencem ao recibo e repetição não os altera", async () => {
+  const f = await fixture();
+  const corpo = { ...f.corpo, confirmarFornecedor: true, itens: f.corpo.itens.map((i, n) => ({ ...i, custoTotalCentavos: n === 0 ? 10300 : 2500 })) };
+  const recibo = await confirmar(f, corpo);
+  const snapshot = recibo as unknown as { fornecedor: { documento: string; nome: string; id: string }; itens: Array<{ custoTotalCentavos: number }> };
+  assert.equal(snapshot.fornecedor.documento, "12345678000195");
+  assert.equal(snapshot.fornecedor.nome, "FORNECEDOR SINTETICO QA");
+  assert.ok(snapshot.fornecedor.id);
+  assert.deepEqual(snapshot.itens.map(i => i.custoTotalCentavos), [10300, 2500]);
+  assert.deepEqual(await confirmar(f, corpo), recibo);
+  await assert.rejects(() => confirmar(f, { ...corpo, itens: corpo.itens.map(i => ({ ...i, custoTotalCentavos: 1 })) }), /diferente|já/i);
+  const outra = await fixture();
+  const outroRecibo = await confirmar(outra, { ...corpo, itens: outra.corpo.itens.map(i => ({ ...i, custoTotalCentavos: 100 })) });
+  assert.notEqual((outroRecibo as unknown as typeof snapshot).fornecedor.id, snapshot.fornecedor.id);
+});
+
 test("abrir conferência não altera estoque e confirmar duas vezes tem um único efeito", async () => {
   const f = await fixture();
   const estado = await prepararEntradaFiscal(f.tenant.id, f.documento.id);
