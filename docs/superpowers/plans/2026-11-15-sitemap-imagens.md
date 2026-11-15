@@ -19,9 +19,9 @@ O arquivo é dinâmico e não depende de cópias estáticas do catálogo.
 - [x] Registrar regressões de XML, deduplicação, origem, protocolo e robots.
 - [x] Observar RED no GitHub CI; não executar testes ou builds locais.
 - [x] Implementar gerador, handler e indicação no robots.
-- [ ] Conferir isolamento por tenant e caminhos públicos na revisão.
-- [ ] Aprovar suíte, tipos e build no GitHub CI e publicar pelo fluxo existente.
-- [ ] Verificar HTTP, XML, imagens e robots em beretarodas.com.
+- [x] Conferir isolamento por tenant e caminhos públicos na revisão.
+- [x] Aprovar suíte, tipos e build no GitHub CI e publicar pelo fluxo existente.
+- [x] Verificar HTTP, XML, imagens e robots em beretarodas.com.
 
 ## Limites e evidências
 
@@ -43,3 +43,21 @@ Causa confirmada: `qa-cotacoes-b2b.mts` cria uma loja com `dominios: ["localhost
 no mesmo banco usado pelo QA seguinte. O handler agora recusa explicitamente
 o domínio-base antes de resolver tenant; a expectativa 404 foi preservada.
 Revisão independente confirmou a causa e não encontrou outros bloqueios.
+
+## Publicação verificada
+
+- PR [263](https://github.com/avilaops/P004/pull/263), commit de produção
+  `fe1270ac69c5a5c455cbce9357e4aa9c48b8a7f5`.
+- CI do PR [43679740664](https://github.com/avilaops/P004/actions/runs/43679740664)
+  e produção [43680300739](https://github.com/avilaops/P004/actions/runs/43680300739)
+  aprovadas integralmente, incluindo navegador e smoke de publicação.
+- Robots público 200 com os dois sitemaps e checkout bloqueado.
+- XML de imagens 200, válido: 899 imagens distintas em 899 páginas canônicas.
+- Sitemap principal 200: 6.483 páginas, sem alteração do catálogo.
+- Amostra de três imagens 200 `image/webp`; página de produto amostrada 200.
+- Resultado estruturado em
+  `docs/evidencias/bereta-sitemap-imagens-20261115/resultado.json`.
+
+O gerador não particiona catálogos com mais de 50 mil páginas com imagem;
+o catálogo verificado está abaixo desse limite. Google Search Console não
+faz parte desta publicação e permanece sob configuração do proprietário.

@@ -1,0 +1,37 @@
+{
+  "data": "2026-11-15",
+  "ambiente": "producao",
+  "dominio": "https://beretarodas.com",
+  "commit": "fe1270ac69c5a5c455cbce9357e4aa9c48b8a7f5",
+  "pullRequest": 263,
+  "ciPullRequest": { "run": 43679740664, "conclusion": "success" },
+  "ciProducao": { "run": 43680300739, "conclusion": "success" },
+  "robots": {
+    "status": 200,
+    "checkoutBloqueado": true,
+    "sitemaps": [
+      "https://beretarodas.com/sitemap.xml",
+      "https://beretarodas.com/sitemap-imagens.xml"
+    ]
+  },
+  "sitemapImagens": {
+    "status": 200,
+    "xmlValido": true,
+    "bytes": 199529,
+    "paginas": 899,
+    "imagens": 899,
+    "imagensUnicas": 899,
+    "paginasNoDominioCanonico": true
+  },
+  "sitemapPrincipal": { "status": 200, "paginas": 6483, "paginasNoDominioCanonico": true },
+  "imagensAmostradas": [
+    { "url": "https://lojas.avilaops.com/uploads/bereta-rodas/mw7p8i2m-eb194be6.webp", "status": 200, "contentType": "image/webp" },
+    { "url": "https://lojas.avilaops.com/uploads/bereta-rodas/mw7p8idv-e0534f7d.webp", "status": 200, "contentType": "image/webp" },
+    { "url": "https://lojas.avilaops.com/uploads/bereta-rodas/mw7p8ijh-a79aa880.webp", "status": 200, "contentType": "image/webp" }
+  ],
+  "paginaAmostrada": {
+    "url": "https://beretarodas.com/produtos/pneu-195-50-16-accelera-alpha-84v-1049",
+    "status": 200
+  },
+  "searchConsole": "Configuracao assumida pelo proprietario; nenhuma propriedade ou sitemap submetido nesta entrega."
+}

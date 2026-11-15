@@ -18,7 +18,7 @@
       "objective": "Permitir descoberta das imagens públicas do catálogo e anunciar o sitemap no robots, começando pela Bereta Rodas.",
       "assignee": "codex",
       "priority": "normal",
-      "status": "em-andamento",
+      "status": "concluida",
       "acceptanceCriteria": [
         "Sitemap XML dinâmico por tenant no domínio canônico, com imagens distintas e sem conteúdo de outra loja.",
         "Robots anuncia sitemap principal e imagens; lojas não públicas e hosts desconhecidos não publicam o arquivo.",
@@ -26,7 +26,8 @@
         "Testes, tipos e build no GitHub CI; HTTP e XML da Bereta verificados após publicação."
       ],
       "environment": "worktree isolado, GitHub CI e produção",
-      "evidence": "PR #263. Plano em docs/superpowers/plans/2026-11-15-sitemap-imagens.md. Regressões enviadas no commit c5fbe16; CI RED 43678914333 em execução."
+      "evidence": "PR #263 integrado no commit fe1270ac69c5a5c455cbce9357e4aa9c48b8a7f5. CI do PR 43679740664 e produção 43680300739 aprovadas. HTTP público em 15/11/2026: robots anuncia os dois sitemaps; sitemap-imagens.xml válido com 899 imagens distintas em 899 páginas; sitemap principal preserva 6.483 URLs. Três imagens e uma página amostradas retornaram 200. Evidência em docs/evidencias/bereta-sitemap-imagens-20261115/resultado.json.",
+      "review": "Revisão independente sem bloqueios. QA HTTP compilado confirmou isolamento entre tenants, hosts desconhecidos, domínio-base e visibilidade de lojas."
     },
     {
       "id": "CONTENT-SIGNALS-20261114",
