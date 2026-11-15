@@ -13,6 +13,20 @@
   ],
   "tasks": [
     {
+      "id": "ROBOTS-SEM-CONTENT-SIGNAL-20261115",
+      "title": "Remover Content-Signal e publicar chave IndexNow fornecida",
+      "objective": "Atender à decisão do proprietário após o Bing indicar sintaxe desconhecida, mantendo as regras e os dois sitemaps da Bereta.",
+      "assignee": "codex",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Robots da plataforma e das lojas sem Content-Signal, com Allow/Disallow e sitemaps preservados.",
+        "Arquivo público UTF-8 da chave IndexNow fornecida pelo proprietário e envio das URLs canônicas da Bereta.",
+        "CI, publicação e respostas HTTP verificadas."
+      ],
+      "environment": "GitHub CI e produção",
+      "evidence": "Screenshot do Bing Webmaster Tools fornecido pelo proprietário. Correção do gerador comum, expectativas existentes e arquivo público de verificação preparados; sem build ou teste local."
+    },
+    {
       "id": "SITEMAP-IMAGENS-LOJAS-20261115",
       "title": "Publicar sitemap de imagens por loja",
       "objective": "Permitir descoberta das imagens públicas do catálogo e anunciar o sitemap no robots, começando pela Bereta Rodas.",

@@ -5,7 +5,7 @@ import { sinaisConteudoLoja, textoRobotsComSinais } from "@/lib/robots-content-s
 
 export const dynamic = "force-dynamic";
 
-/** Mesmas regras por host, com Content Signals vinculados à política da loja. */
+/** Regras por host e sitemaps, sem diretivas adicionais não reconhecidas pelo Bing. */
 export async function GET() {
   const h = await headers();
   const host = (h.get("x-forwarded-host") ?? h.get("host") ?? "").toLowerCase().replace(/:\d+$/, "");
