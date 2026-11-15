@@ -22,6 +22,7 @@ test("classificação fiscal do catálogo preserva zeros, admite limpeza e recus
   const parcial = ProdutoEntradaSchema.partial();
   assert.deepEqual(parcial.parse({ ncm: "04011010", cest: "0100100" }), { ncm: "04011010", cest: "0100100" });
   assert.deepEqual(parcial.parse({ ncm: null, cest: null }), { ncm: null, cest: null });
+  assert.deepEqual(parcial.parse({ ncm: "", cest: "" }), { ncm: null, cest: null });
   for (const entrada of [{ ncm: "4011.10.00" }, { ncm: "4011100" }, { cest: "01.001.00" }, { cest: "100100" }]) assert.equal(parcial.safeParse(entrada).success, false);
 });
 

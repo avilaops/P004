@@ -14,7 +14,7 @@ import { detalharErro } from "@/lib/erro-de-formulario";
 const medida = (chave: string, valor: string) =>
   valor.trim() ? { [chave]: Number.parseFloat(valor.replace(",", ".")) } : {};
 
-interface Form { tarja: string; principioAtivo: string; apresentacao: string; registroAnvisa: string; tipoMedicamento: string; versaoCatalogo:number; temVariacoes:boolean; mpn:string; identificadoresEstado:string; googleProductCategory:string; imagemOrigem:string; imagemFamilia:string; imagemConfirmada:boolean; correspondenciaImagem:"nao_confirmada"|"confirmada"|"rejeitada"; nome: string; categoria: string; marca: string; sku: string; gtin: string; preco: string; precoDe: string; descricaoCurta: string; descricao: string; imagens: string[]; destaque: boolean; ativo: boolean; disponibilidade: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string; codigoOriginal: string; codigosEquivalentes: string; compatibilidade: LinhaCompat[]; camposPersonalizados: Record<string, string> }
+interface Form { ncm: string; cest: string; tarja: string; principioAtivo: string; apresentacao: string; registroAnvisa: string; tipoMedicamento: string; versaoCatalogo:number; temVariacoes:boolean; mpn:string; identificadoresEstado:string; googleProductCategory:string; imagemOrigem:string; imagemFamilia:string; imagemConfirmada:boolean; correspondenciaImagem:"nao_confirmada"|"confirmada"|"rejeitada"; nome: string; categoria: string; marca: string; sku: string; gtin: string; preco: string; precoDe: string; descricaoCurta: string; descricao: string; imagens: string[]; destaque: boolean; ativo: boolean; disponibilidade: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string; codigoOriginal: string; codigosEquivalentes: string; compatibilidade: LinhaCompat[]; camposPersonalizados: Record<string, string> }
 /** Linha do editor de compatibilidade: texto livre até salvar (ano vazio = sem limite). */
 interface LinhaCompat { marca: string; modelo: string; anoDe: string; anoAte: string }
 
@@ -63,6 +63,7 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
         camposPersonalizados: lerValores(p.camposPersonalizados), imagemOrigem:p.imagemOrigem??"propria", imagemFamilia:p.imagemFamilia??"", imagemConfirmada:p.midias?.[0]?.correspondencia === "confirmada", correspondenciaImagem:p.midias?.[0]?.correspondencia ?? "nao_confirmada",
         versaoCatalogo:p.versaoCatalogo, temVariacoes:p.opcoes.length>0, mpn:p.mpn??"", identificadoresEstado:p.identificadoresEstado??"desconhecido", googleProductCategory:p.googleProductCategory??"",
         nome: p.nome, categoria: p.categoria ?? "", marca: p.marca ?? "", sku: p.sku ?? "", gtin: p.gtin ?? "",
+        ncm: p.ncm ?? "", cest: p.cest ?? "",
         preco: (p.precoCentavos / 100).toFixed(2).replace(".", ","), precoDe: p.precoDeCentavos != null ? (p.precoDeCentavos / 100).toFixed(2).replace(".", ",") : "",
         descricaoCurta: p.descricaoCurta ?? "", descricao: p.descricao ?? "", imagens: p.imagens ?? [],
         destaque: p.destaque, ativo: p.ativo,
@@ -108,6 +109,7 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
         body: JSON.stringify({
           id: produtoId, versaoCatalogo:f.versaoCatalogo, mpn:f.temVariacoes?undefined:(f.mpn||null), identificadoresEstado:f.temVariacoes?undefined:f.identificadoresEstado, googleProductCategory:f.googleProductCategory.trim() || null, nome: f.nome, categoria: f.categoria, marca: f.marca || undefined, sku: f.temVariacoes?undefined:f.sku, gtin:f.temVariacoes?undefined:f.gtin.trim(), precoCentavos:f.temVariacoes?undefined:preco,
           ...(!f.temVariacoes ? { precoDeCentavos: precoDe ?? null } : {}),
+          ncm: f.ncm.trim() || null, cest: f.cest.trim() || null,
           descricaoCurta: f.descricaoCurta || undefined, descricao: f.descricao || undefined, imagens: f.imagens, destaque: f.destaque, ativo: f.ativo,
           // A regra de o que pode ser declarado mora no lib, com o resto da
           // política de imagem — não aqui.
@@ -243,6 +245,16 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
           )}
         </div>
       )}
+
+      <div id="classificacao-fiscal" className="scroll-mt-20">
+        <Recolhivel titulo="Classificação fiscal" resumo="NCM e CEST do cadastro atual" aviso={!f.ncm.trim() ? "NCM não informado" : null}>
+          <p className="text-xs text-muted-foreground">Informe os códigos conferidos para este produto. O cadastro não calcula tributos nem confirma o enquadramento da operação fiscal.</p>
+          <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+            <Campo label="NCM" ajuda="8 dígitos, preservando os zeros iniciais. Vazio remove o código informado."><input id="catalogo-ncm" className={inputClasse} inputMode="numeric" maxLength={8} value={f.ncm} onChange={e => set("ncm", e.target.value)} /></Campo>
+            <Campo label="CEST" ajuda="7 dígitos quando informado. Vazio remove o código; a aplicabilidade exige revisão da operação."><input id="catalogo-cest" className={inputClasse} inputMode="numeric" maxLength={7} value={f.cest} onChange={e => set("cest", e.target.value)} /></Campo>
+          </div>
+        </Recolhivel>
+      </div>
 
       <Recolhivel titulo="Identificação" resumo="marca, SKU, GTIN, MPN" aviso={semIdentificador ? "sem GTIN nem MPN" : null}>
         <div className="grid min-w-0 gap-4 sm:grid-cols-2">

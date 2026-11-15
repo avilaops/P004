@@ -4,6 +4,9 @@ import { useState } from "react";
 import type { ConferenciaFiscalPedido as Conferencia } from "@/lib/fiscal-pedido-contrato";
 import { brl, Secao } from "./campos";
 
+const MEIOS: Record<string, string> = { pix: "Pix", cartao: "Cartão", boleto: "Boleto" };
+const PAGAMENTOS: Record<string, string> = { approved: "Aprovado", pending: "Aguardando pagamento", in_process: "Em análise", authorized: "Autorizado pelo meio de pagamento", rejected: "Recusado", cancelled: "Cancelado", refunded: "Reembolsado", charged_back: "Contestado" };
+
 export default function ConferenciaFiscalPedido({ pedidoId }: { pedidoId: string }) {
   const [dados, setDados] = useState<Conferencia | null>(null), [erro, setErro] = useState("");
   const [ocupado, setOcupado] = useState(false);
@@ -28,7 +31,7 @@ export default function ConferenciaFiscalPedido({ pedidoId }: { pedidoId: string
       <dl className="grid min-w-0 gap-3 text-sm sm:grid-cols-2">
         <div><dt className="text-muted-foreground">Emitente</dt><dd className="break-words">{base.emitente.nome} • {base.emitente.documento || "Documento não informado"}</dd></div>
         <div><dt className="text-muted-foreground">Destinatário</dt><dd className="break-words">{base.destinatario.nome} • {base.destinatario.documento || "Documento não informado"}</dd></div>
-        <div><dt className="text-muted-foreground">Pagamento registrado</dt><dd>{base.pagamento.meio || "Não informado"} • {base.pagamento.situacao ?? "Situação não informada"}</dd></div>
+        <div><dt className="text-muted-foreground">Pagamento registrado</dt><dd>{base.pagamento.meio ? MEIOS[base.pagamento.meio] ?? "Outro meio informado no pedido" : "Não informado"} • {base.pagamento.situacao ? PAGAMENTOS[base.pagamento.situacao] ?? "Situação a conferir" : "Situação não informada"}</dd></div>
         <div><dt className="text-muted-foreground">Frete</dt><dd className="break-words">{base.frete.nome} • {brl(base.frete.valorCentavos)}</dd></div>
         <div className="sm:col-span-2"><dt className="text-muted-foreground">Endereço comercial do destinatário</dt><dd className="break-words">{base.destinatario.endereco ? [base.destinatario.endereco.logradouro, base.destinatario.endereco.numero, base.destinatario.endereco.complemento, base.destinatario.endereco.bairro, base.destinatario.endereco.cidade, base.destinatario.endereco.uf, base.destinatario.endereco.cep].filter(Boolean).join(" • ") : "Não informado no pedido"}</dd></div>
       </dl>

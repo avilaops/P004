@@ -32,7 +32,7 @@ export function conferirPedidoFiscal(entrada: DadosPedidoFiscal, opcoes: { consu
   let linhasValidas = entrada.itens.length > 0;
   const itens = entrada.itens.map((item, indice) => {
     const campo = `itens.${indice}`;
-    const href = item.produtoId ? `/painel/produtos/${encodeURIComponent(item.produtoId)}` : "/painel/produtos";
+    const href = item.produtoId ? `/painel/produtos/${encodeURIComponent(item.produtoId)}#classificacao-fiscal` : "/painel/produtos";
     if (!item.produtoId || !item.varianteId) apontar("ITEM_VINCULO", campo, `Vincule o item ${indice + 1} a um produto e variante desta loja.`, "/painel/produtos");
     if (!/^\d{8}$/.test(item.classificacaoAtual?.ncm ?? "")) apontar("ITEM_NCM", `${campo}.classificacaoAtual.ncm`, `Confira o NCM atual do item ${indice + 1} no catálogo.`, href);
     if (item.classificacaoAtual?.cest && !/^\d{7}$/.test(item.classificacaoAtual.cest)) apontar("ITEM_CEST", `${campo}.classificacaoAtual.cest`, `Confira o CEST informado no item ${indice + 1}.`, href);

@@ -13,6 +13,7 @@ GET privado por permissão fiscal e seção no detalhe do pedido.
 - [x] Implementar contrato puro `fiscal-pedido-contrato.ts`, sem cálculo fiscal.
 - [x] Implementar leitura `fiscal-pedido.ts` e GET protegido por tenant/permissão.
 - [x] Exibir conferência e links de correção do catálogo somente ao dono.
+- [ ] Completar edição de NCM/CEST no formulário e contrato do catálogo.
 - [ ] Cobrir leitura sem efeitos, isolamento e jornada responsiva no CI.
 - [ ] Revisar, integrar, publicar e registrar evidências no Linear/controle.
 
@@ -27,3 +28,7 @@ GET privado por permissão fiscal e seção no detalhe do pedido.
 PR268. RED confirmado em43696155490 por ausência do contrato e43696270463 por
 ausência do serviço. Implementação permanece somente no Lojas, conforme resposta
 explícita do proprietário. Nenhuma operação fiscal externa executada.
+
+Revisão encontrou os campos NCM/CEST no modelo, mas ausentes no formulário e no
+schema de edição. Regressão adicionada em `admin-schemas.test.ts` antes da
+correção, para que o link de pendência permita corrigir e atualizar a conferência.

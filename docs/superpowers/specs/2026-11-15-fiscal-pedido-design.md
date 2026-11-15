@@ -13,6 +13,11 @@ com pendências para revisão. A classificação NCM/CEST vem do cadastro atual 
 Não escolher CFOP, calcular tributos, completar município por palpite ou
 transformar aprovação comercial em autorização fiscal.
 
+O link de correção abre a classificação fiscal no cadastro do produto. NCM
+admite8dígitos e CEST7dígitos; campos vazios são persistidos como nulos. A escrita
+usa a versão e o histórico do catálogo existentes, sem mudar o preço preservado
+no pedido. Esses campos são declarações de cadastro, não validação de enquadramento.
+
 O contrato local `avila.lojas.fiscal.pedido.v1` identifica pedido, versão dos
 dados e SHA-256 do snapshot projetado. O hash serve para detectar alterações;
 não é assinatura, autorização fiscal ou chave de idempotência de emissão.
