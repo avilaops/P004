@@ -75,7 +75,7 @@ try {
   assert.ok(!xmlBeta.includes("alfa.webp"));
   assert.equal((await pedir(`ausente-${sufixo}`, "/sitemap-imagens.xml")).status, 404);
   const baseSemLoja = await fetch(origem + "/sitemap-imagens.xml");
-  assert.equal(baseSemLoja.status, 404);
+  assert.equal(baseSemLoja.status, 404, `Domínio-base: ${await baseSemLoja.text()}`);
   for (const status of ["CANCELADA", "PROVISIONANDO"] as const) {
     await prisma.tenant.update({ where: { id: beta.id }, data: { status } });
     assert.equal((await pedir(beta.slug, "/sitemap-imagens.xml")).status, 404);

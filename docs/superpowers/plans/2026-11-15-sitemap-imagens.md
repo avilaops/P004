@@ -36,3 +36,10 @@ sitemap e módulo `sitemap-imagens` ausente. A parte 1/2 passou; a parte 2/2
 teve exatamente essas duas falhas (824 dos 826 testes passaram).
 Formato XML e teto de mil imagens por página conferidos na documentação
 [Google Search Central](https://developers.google.com/search/docs/crawling-indexing/sitemaps/image-sitemaps).
+
+CI 43679134798: unidades, PostgreSQL, tipos, lint e build passaram. QA HTTP
+confirmou XML e isolamento, mas domínio-base respondeu 200 em vez de 404.
+Causa confirmada: `qa-cotacoes-b2b.mts` cria uma loja com `dominios: ["localhost"]`
+no mesmo banco usado pelo QA seguinte. O handler agora recusa explicitamente
+o domínio-base antes de resolver tenant; a expectativa 404 foi preservada.
+Revisão independente confirmou a causa e não encontrou outros bloqueios.
