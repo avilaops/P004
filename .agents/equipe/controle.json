@@ -13,6 +13,23 @@
   ],
   "tasks": [
     {
+      "id": "FISCAL-CONCLUSAO-20261115",
+      "title": "Completar o módulo fiscal do Lojas",
+      "objective": "Concluir conferência de recebimento, fornecedor exato, cadastro confirmado de produto e custos históricos da AVL-254; verificar dependências reais da emissão AVL-240.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": [
+        "Destinatário, itens, CEST, descontos, despesas e tributos declarados visíveis.",
+        "Fornecedor por documento exato e custos preservados no recibo imutável da entrada.",
+        "Cadastro de produto confirmado e idempotente sem receber estoque.",
+        "CI PostgreSQL e navegador responsivo aprovados, com versão e evidências.",
+        "Emissão não é declarada pronta sem contrato autorizado e homologação do ERP."
+      ],
+      "environment": "GitHub CI isolado; nenhuma operação fiscal ou entrada real de teste",
+      "evidence": "PR265. RED confirmado nos jobs132743486717 e132743486745 da execução43691594347; cadastro ausente confirmado no job132744578647 da execução43691725289. Implementação8de363d em validação. ERP local P003 expõe apenas GET em /api/v1/notas-recebidas e arquivos para a credencial de serviço; emissão permanece dependente de AVL-250. Nenhuma publicação deste incremento."
+    },
+    {
       "id": "ROBOTS-SEM-CONTENT-SIGNAL-20261115",
       "title": "Remover Content-Signal e publicar chave IndexNow fornecida",
       "objective": "Atender à decisão do proprietário após o Bing indicar sintaxe desconhecida, mantendo as regras e os dois sitemaps da Bereta.",

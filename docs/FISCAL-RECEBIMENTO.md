@@ -1,5 +1,36 @@
 # Recebimento de NF-e
 
+## Conferência de fornecedor, produto e custos
+
+O recebimento local permite conferir o destinatário, CEST, descontos, frete,
+seguro, despesas e tributos declarados de cada item do XML. Esses valores não
+constituem cálculo tributário nem atribuem crédito fiscal.
+
+A confirmação de entrada registra o fornecedor pelo documento exato dentro da
+loja, sem procurar semelhança de nomes. O nome fiscal fica no recibo de cada
+compra, mesmo quando o cadastro já existia. Cada linha recebe o custo total de
+aquisição informado pelo operador, em centavos, e a quantidade física conferida.
+O custo unitário exibido é a divisão desses valores; não altera preço de venda.
+Custos, componentes do XML, fornecedor, estoque e recibo são gravados na mesma
+transação. Repetição com dados diferentes é recusada. Recibos antigos não são
+reescritos nem recebem custos presumidos. A conferência exibe os custos
+registrados nas últimas20entradas da variante selecionada.
+
+Quando falta um produto, a ação de cadastro exige nome, preço de venda e uma
+confirmação própria. Cria produto ativo com estoque inicial zero pela escrita
+canônica do catálogo, sem copiar SKU do fornecedor ou chave fiscal para dados
+públicos. Repetir o cadastro do mesmo item retorna a mesma variante. Dar entrada
+continua exigindo a confirmação separada de todos os produtos, quantidades,
+fornecedor, custos e local. CNPJs delegados ao ERP mantêm o bloqueio local.
+
+O contrato anterior de entrada continua aceito para clientes existentes sem
+fornecedor/custos; o painel passa a exigir os dois juntos. O histórico representa
+somente os valores efetivamente registrados, nunca estimativas retroativas.
+
+Emissão de pedidos (AVL-240) depende da integração de escrita AVL-250 e de
+homologação externa. A credencial atual de consulta de recebidas não dá esse
+acesso. Este incremento não implementa um motor emissor no Lojas.
+
 Em Configurações → Notas fiscais, o dono envia o certificado A1 (.pfx/.p12),
 senha e UF. O CNPJ é lido do certificado e deve coincidir com Dados da empresa.
 Certificados A3 não são suportados. A senha e o arquivo são cifrados juntos

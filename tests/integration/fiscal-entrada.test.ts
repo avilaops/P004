@@ -4,8 +4,7 @@ import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { prisma } from "../../src/lib/db";
 import { alterarAtivoEmLote, salvarProdutoNoCatalogo } from "../../src/lib/catalogo-escrita";
-import { prepararEntradaFiscal, confirmarEntradaFiscal, historicoCustosFiscais } from "../../src/lib/fiscal-entrada";
-import * as entradaFiscal from "../../src/lib/fiscal-entrada";
+import { prepararEntradaFiscal, confirmarEntradaFiscal, historicoCustosFiscais, criarProdutoDaNota } from "../../src/lib/fiscal-entrada";
 
 const db = new URL(process.env.DATABASE_URL ?? "http://invalid");
 if (!["localhost", "127.0.0.1"].includes(db.hostname) || db.port !== "5548" || !db.pathname.endsWith("_test")) throw new Error("QA exige PostgreSQL isolado :5548/*_test.");
@@ -49,7 +48,7 @@ test("fornecedor e custos confirmados pertencem ao recibo e repetição não os 
 
 test("cadastro pela NF-e exige confirmação e cria uma única variante sem receber estoque", async () => {
   const f = await fixture();
-  const criar = (entradaFiscal as unknown as { criarProdutoDaNota: (tenant: string, doc: string, corpo: unknown) => Promise<{ id: string }> }).criarProdutoDaNota;
+  const criar = criarProdutoDaNota;
   const corpo = { confirmacao: true, numero: 1, nome: "Produto conferido", precoCentavos: 12000 };
   await assert.rejects(() => criar(f.tenant.id, f.documento.id, { ...corpo, confirmacao: false }));
   const [a, b] = await Promise.all([criar(f.tenant.id, f.documento.id, corpo), criar(f.tenant.id, f.documento.id, corpo)]);

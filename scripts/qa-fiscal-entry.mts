@@ -36,6 +36,10 @@ try {
   assert.match(prepared.headers.get("cache-control") ?? "", /no-store/);
   assert.equal((await prepared.json()).nota.itens.length, 2);
   assert.equal((await fetch(base + path)).status, 401);
+  const cadastroPath = `/api/painel/fiscal/documentos/${doc.id}/produtos`;
+  const cadastroCorpo = JSON.stringify({ confirmacao: true, numero: 2, nome: "Novo acessório fiscal QA", precoCentavos: 3500 });
+  assert.equal((await fetch(base + cadastroPath, { method: "POST", headers: { origin: "https://localhost", "content-type": "application/json" }, body: cadastroCorpo })).status, 401);
+  assert.equal((await fetch(base + cadastroPath, { method: "POST", headers: { cookie, origin: "https://other.example", "content-type": "application/json" }, body: cadastroCorpo })).status, 403);
   assert.equal((await fetch(base + `/api/painel/fiscal/documentos/${foreign.id}/entrada-estoque`, { headers: { cookie } })).status, 404);
   const corpo = { confirmacao: true, confirmarFornecedor: true, local: "principal", itens: [{ numero: 1, varianteId: variantes[0].id, quantidade: 2, custoTotalCentavos: 10000 }, { numero: 2, varianteId: variantes[1].id, quantidade: 1, custoTotalCentavos: 2500 }] };
   assert.equal((await fetch(base + path, { method: "POST", headers: { origin: "https://localhost", "content-type": "application/json" }, body: JSON.stringify(corpo) })).status, 401);
@@ -59,14 +63,35 @@ try {
     const response = await route.fetch({ headers: { ...requestHeaders, origin: "https://localhost" } });
     await route.fulfill({ response });
   });
+  await page.route("**/api/painel/fiscal/documentos/*/produtos", async route => {
+    const requestHeaders = await route.request().allHeaders();
+    const response = await route.fetch({ headers: { ...requestHeaders, origin: "https://localhost" } });
+    await route.fulfill({ response });
+  });
   await page.goto(base + "/painel/configuracoes/fiscal");
   await page.getByRole("button", { name: "Conferir entrada da NF-e 123" }).click();
   const dialog = page.getByRole("dialog", { name: "Conferir entrada de estoque" });
   await dialog.waitFor();
   for (const n of [1, 2]) {
     await page.setViewportSize(n === 1 ? { width: 393, height: 852 } : { width: 1440, height: 1100 });
-    await dialog.getByLabel(`Buscar produto do item ${n}`).fill(`Produto fiscal QA ${n}`);
-    await dialog.getByRole("button", { name: new RegExp(`Selecionar Produto fiscal QA ${n}`) }).click();
+    if (n === 1) {
+      await dialog.getByLabel(`Buscar produto do item ${n}`).fill(`Produto fiscal QA ${n}`);
+      await dialog.getByRole("button", { name: new RegExp(`Selecionar Produto fiscal QA ${n}`) }).click();
+    } else {
+      await dialog.getByRole("button", { name: "Cadastrar novo produto para o item 2" }).click();
+      await dialog.getByLabel("Nome do novo produto do item 2").fill("Novo acessório fiscal QA");
+      await dialog.getByLabel("Preço de venda do item 2 (R$)").fill("35,00");
+      await dialog.getByLabel(/Confirmo um produto novo no catálogo/).check();
+      const respostaCadastro = page.waitForResponse(r => new URL(r.url()).pathname === cadastroPath && r.request().method() === "POST");
+      await dialog.getByRole("button", { name: "Criar e selecionar produto do item 2" }).click();
+      const cadastrado = await respostaCadastro;
+      assert.equal(cadastrado.status(), 200, await cadastrado.text());
+      const criado = await cadastrado.json();
+      corpo.itens[1].varianteId = criado.id;
+      variantes[1] = await prisma.variante.findUniqueOrThrow({ where: { id: criado.id } });
+      const saldoNovo = await prisma.saldoEstoque.findFirstOrThrow({ where: { tenantId: loja.id, varianteId: criado.id, local: "principal" } });
+      assert.equal(saldoNovo.fisico, 0, "Cadastrar produto não recebe estoque");
+    }
     await dialog.getByLabel(`Custo total de aquisição do item ${n} (R$)`).fill(n === 1 ? "100,00" : "25,00");
   }
   await mkdir(output, { recursive: true });
@@ -76,6 +101,11 @@ try {
   await dialog.getByRole("combobox", { name: /^Local de estoque/ }).fill("principal");
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth));
   await page.screenshot({ path: output + "/mobile-form.png", fullPage: true });
+  for (const width of [360, 393, 768, 1280, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    assert.ok(await dialog.evaluate(elemento => elemento.scrollWidth <= elemento.clientWidth), `Conferência sem vazamento lateral em${width}px`);
+    await page.screenshot({ path: `${output}/conferencia-${width}.png`, fullPage: true });
+  }
   await dialog.getByLabel("Conferi os produtos, quantidades e local de estoque, o fornecedor identificado pelo documento e os custos de aquisição").check();
   const invalidos = await dialog.locator("form").evaluate(form => Array.from((form as HTMLFormElement).elements).filter(e => e instanceof HTMLInputElement && !e.validity.valid).map(e => ({ name: (e as HTMLInputElement).name, value: (e as HTMLInputElement).value, message: (e as HTMLInputElement).validationMessage })));
   assert.deepEqual(invalidos, [], "A conferência preenchida precisa passar pela validação do navegador");
@@ -86,7 +116,7 @@ try {
   await dialog.getByRole("status").filter({ hasText: "Entrada registrada" }).waitFor();
   const saldos = await prisma.saldoEstoque.findMany({ where: { tenantId: loja.id, local: "principal" }, orderBy: { varianteId: "asc" } });
   assert.equal(saldos.find(s => s.varianteId === variantes[0].id)?.fisico, 7);
-  assert.equal(saldos.find(s => s.varianteId === variantes[1].id)?.fisico, 6);
+  assert.equal(saldos.find(s => s.varianteId === variantes[1].id)?.fisico, 1);
   const retry = await fetch(base + path, { method: "POST", headers: { cookie, origin: "https://localhost", "content-type": "application/json" }, body: JSON.stringify(corpo) });
   assert.equal(retry.status, 200);
   assert.equal(await prisma.razaoEstoque.count({ where: { tenantId: loja.id, origem: "fiscal:entrada-nfe" } }), 2);
@@ -95,6 +125,8 @@ try {
   const historico = await custos.json();
   assert.equal(historico.itens[0].custoTotalCentavos, 10000);
   assert.equal(historico.itens[0].fornecedor.documento, "12345678000195");
+  const custosAnonimos = await fetch(base + `/api/painel/fiscal/entrada-estoque/custos?varianteId=${variantes[0].id}`);
+  assert.equal(custosAnonimos.status, 401);
   await page.setViewportSize({ width: 393, height: 852 });
   await page.screenshot({ path: output + "/mobile.png", fullPage: true });
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth));

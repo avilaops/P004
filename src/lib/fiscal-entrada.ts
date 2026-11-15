@@ -72,6 +72,8 @@ export async function criarProdutoDaNota(tenantId: string, documentoId: string, 
   const comando = lido.data;
   const resumoHash = createHash("sha256").update(JSON.stringify(comando)).digest("hex");
   return prisma.$transaction(async tx => {
+    const documento = await documentoDaLoja(tx, tenantId, documentoId);
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${JSON.stringify([tenantId, chaveDoComando(documento.chave ?? documento.id)])}, 0))`;
     const estado = await contexto(tx, tenantId, documentoId);
     if (estado.impedimento || !estado.nota) throw new ErroApi("conflito", estado.impedimento ?? "XML completo necessário.");
     const fiscal = estado.nota.itens.find(i => i.numero === comando.numero);
