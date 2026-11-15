@@ -41,7 +41,8 @@
         "/pedido",
         "/conta",
         "/checkout"
-      ]
+      ],
+      "gatewayPath": "/avmetrics/"
     },
     {
       "category": "ecommerce",
@@ -61,7 +62,8 @@
         "/pedido",
         "/conta",
         "/checkout"
-      ]
+      ],
+      "gatewayPath": "/avmetrics/"
     },
     {
       "category": "ecommerce",
@@ -81,7 +83,8 @@
         "/pedido",
         "/conta",
         "/checkout"
-      ]
+      ],
+      "gatewayPath": "/avmetrics/"
     },
     {
       "category": "ecommerce",
@@ -121,7 +124,8 @@
         "/pedido",
         "/conta",
         "/checkout"
-      ]
+      ],
+      "gatewayPath": "/avmetrics/"
     },
     {
       "category": "ecommerce",
@@ -141,7 +145,8 @@
         "/pedido",
         "/conta",
         "/checkout"
-      ]
+      ],
+      "gatewayPath": "/avmetrics/"
     },
     {
       "category": "institucional",
@@ -156,7 +161,9 @@
       "routeStatus": "pending-inventory",
       "measurementId": "G-1RDXYS7THH",
       "property": "properties/564383925",
-      "stream": "properties/564383925/dataStreams/16344267120"
+      "stream": "properties/564383925/dataStreams/16344267120",
+      "consentAdapter": "zaraz",
+      "gatewayPath": "/avmetrics/"
     },
     {
       "category": "institucional",
@@ -345,7 +352,17 @@
       "routeStatus": "verified-source-proxy-and-public-html",
       "measurementId": "G-TPH4PY7RVN",
       "property": "properties/564384638",
-      "stream": "properties/564384638/dataStreams/16344256396"
+      "stream": "properties/564384638/dataStreams/16344256396",
+      "publicLocations": [
+        {
+          "hostname": "avilaops.com",
+          "prefixes": [
+            "/lojas",
+            "/en/lojas"
+          ]
+        }
+      ],
+      "gatewayPath": "/avmetrics/"
     },
     {
       "category": "redirecionamento",
@@ -410,7 +427,16 @@
       "routeStatus": "pending-inventory",
       "measurementId": "G-6H17Z6GW0F",
       "property": "properties/564375190",
-      "stream": "properties/564375190/dataStreams/16344299702"
+      "stream": "properties/564375190/dataStreams/16344299702",
+      "publicLocations": [
+        {
+          "hostname": "avilaops.com",
+          "prefixes": [
+            "/cms",
+            "/en/cms"
+          ]
+        }
+      ]
     },
     {
       "category": "saas",
@@ -449,7 +475,16 @@
       "routeStatus": "pending-inventory",
       "measurementId": "G-H8WNWY4KDX",
       "property": "properties/564391012",
-      "stream": "properties/564391012/dataStreams/16344246836"
+      "stream": "properties/564391012/dataStreams/16344246836",
+      "publicLocations": [
+        {
+          "hostname": "avilaops.com",
+          "prefixes": [
+            "/crm",
+            "/en/crm"
+          ]
+        }
+      ]
     },
     {
       "category": "saas",
@@ -462,7 +497,16 @@
       "routeStatus": "pending-inventory",
       "measurementId": "G-R0KTKLT0W9",
       "property": "properties/564391992",
-      "stream": "properties/564391992/dataStreams/16344254135"
+      "stream": "properties/564391992/dataStreams/16344254135",
+      "publicLocations": [
+        {
+          "hostname": "avilaops.com",
+          "prefixes": [
+            "/engops",
+            "/en/engops"
+          ]
+        }
+      ]
     },
     {
       "category": "saas",
@@ -475,7 +519,16 @@
       "routeStatus": "pending-inventory",
       "measurementId": "G-MF4X1T1D7F",
       "property": "properties/564312046",
-      "stream": "properties/564312046/dataStreams/16344289038"
+      "stream": "properties/564312046/dataStreams/16344289038",
+      "publicLocations": [
+        {
+          "hostname": "avilaops.com",
+          "prefixes": [
+            "/erp",
+            "/en/erp"
+          ]
+        }
+      ]
     },
     {
       "category": "saas",
@@ -488,7 +541,16 @@
       "routeStatus": "pending-inventory",
       "measurementId": "G-B4SL3FH4KV",
       "property": "properties/564370434",
-      "stream": "properties/564370434/dataStreams/16344305656"
+      "stream": "properties/564370434/dataStreams/16344305656",
+      "publicLocations": [
+        {
+          "hostname": "avilaops.com",
+          "prefixes": [
+            "/mail",
+            "/en/mail"
+          ]
+        }
+      ]
     },
     {
       "category": "saas",
@@ -516,7 +578,16 @@
       "routeStatus": "pending-inventory",
       "measurementId": "G-FWPCJY448E",
       "property": "properties/564385238",
-      "stream": "properties/564385238/dataStreams/16344321336"
+      "stream": "properties/564385238/dataStreams/16344321336",
+      "publicLocations": [
+        {
+          "hostname": "avilaops.com",
+          "prefixes": [
+            "/tms",
+            "/en/tms"
+          ]
+        }
+      ]
     },
     {
       "category": "sso",

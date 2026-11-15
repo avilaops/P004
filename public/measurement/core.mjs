@@ -12,9 +12,24 @@ export function resolveRoute(config, rawUrl) {
   let url;
   try { url = new URL(rawUrl); } catch { return null; }
   if (url.protocol !== 'https:' || url.username || url.password || RESERVED.test(url.pathname)) return null;
-  const site = config.sites.find(s => s.domain === url.hostname || s.aliases?.includes(url.hostname));
-  if (!site || BLOCKED.has(site.operation) || !MATCH_ID.test(site.measurementId || '')) return null;
-  let operation = site.operation;
+  const hostSite = config.sites.find(s => s.domain === url.hostname || s.aliases?.includes(url.hostname));
+  if (!hostSite || BLOCKED.has(hostSite.operation)) return null;
+  let site = hostSite;
+  let publicOverride = false;
+  let longest = -1;
+  for (const candidate of config.sites) {
+    if (BLOCKED.has(candidate.operation)) continue;
+    for (const location of candidate.publicLocations || []) {
+      if (location.hostname !== hostSite.domain) continue;
+      for (const prefix of location.prefixes) if (prefix.length > longest && matches(url.pathname, prefix)) {
+        site = candidate;
+        publicOverride = true;
+        longest = prefix.length;
+      }
+    }
+  }
+  if (!MATCH_ID.test(site.measurementId || '')) return null;
+  let operation = publicOverride ? 'institutional' : site.operation;
   if (operation === 'saas' || operation === 'platform') {
     if (site.applicationPrefixes?.some(prefix => matches(url.pathname, prefix))) {
       operation = site.operation;
@@ -24,8 +39,9 @@ export function resolveRoute(config, rawUrl) {
   }
   const containerId = config.operations[operation]?.id;
   if (!/^GTM-[A-Z0-9]{6,15}$/.test(containerId || '')) return null;
-  const privateRoute = site.privatePrefixes?.some(prefix => matches(url.pathname, prefix));
-  return { domain: site.domain, operation, area: privateRoute || operation === 'saas' || operation === 'platform' ? 'application' : 'public', measurementId: site.measurementId, containerId };
+  const privateRoute = !publicOverride && site.privatePrefixes?.some(prefix => matches(url.pathname, prefix));
+  const gatewayPath = /^\/[a-zA-Z0-9]{1,98}\/$/.test(hostSite.gatewayPath || '') ? hostSite.gatewayPath : null;
+  return { domain: site.domain, operation, area: privateRoute || operation === 'saas' || operation === 'platform' ? 'application' : 'public', measurementId: site.measurementId, containerId, ...(hostSite.consentAdapter ? { consentAdapter: hostSite.consentAdapter } : {}), ...(gatewayPath ? { gatewayPath } : {}) };
 }
 
 export function sanitizeUrl(rawUrl, area = 'public') {

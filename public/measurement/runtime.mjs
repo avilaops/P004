@@ -4,6 +4,8 @@ export function installMeasurement(config, options = {}) {
   if (window.__avilaMeasurement) return window.__avilaMeasurement;
   const initial = resolveRoute(config, location.href);
   if (!initial) return { setConsent() {}, track() {} };
+  const site = config.sites.find(site => site.domain === initial.domain);
+  const adapter = options.consentAdapter || initial.consentAdapter || site.consentAdapter || (initial.operation === 'ecommerce' || initial.domain === 'lojas.avilaops.com' ? 'loja' : 'avila');
   const loaded = new Set();
   const ids = new Set(config.sites.map(s => s.measurementId).filter(Boolean));
   let consent = false;
@@ -32,12 +34,23 @@ export function installMeasurement(config, options = {}) {
 
   function loadContainer(id) {
     if (loaded.has(id)) return;
+    if (window.google_tag_manager?.[id]) { loaded.add(id); return; }
     loaded.add(id);
     window.dataLayer.push({ 'gtm.start': Date.now(), event: 'gtm.js' });
     const script = document.createElement('script');
     script.async = true;
     script.dataset.avilaGtm = id;
-    script.src = 'https://www.googletagmanager.com/gtm.js?id=' + encodeURIComponent(id);
+    const direct = 'https://www.googletagmanager.com/gtm.js?id=' + encodeURIComponent(id);
+    const gateway = resolveRoute(config, location.href)?.gatewayPath;
+    script.src = gateway ? gateway + '?id=' + encodeURIComponent(id) : direct;
+    if (gateway) script.onerror = () => {
+      script.onerror = null;
+      const fallback = document.createElement('script');
+      fallback.async = true;
+      fallback.dataset.avilaGtm = id;
+      fallback.src = direct;
+      document.head.append(fallback);
+    };
     document.head.append(script);
   }
 
@@ -87,12 +100,20 @@ export function installMeasurement(config, options = {}) {
     const channel = target.protocol === 'tel:' ? 'phone' : target.protocol === 'mailto:' ? 'email' : ['wa.me', 'api.whatsapp.com', 'web.whatsapp.com'].includes(target.hostname) ? 'whatsapp' : null;
     if (channel) track('contact_click', { contact_channel: channel });
   });
-  window.addEventListener('loja:consentimento', event => setConsent(permitsMeasurement(event.detail)));
-  window.addEventListener('avila:consentimento', event => setConsent(permitsMeasurement(event.detail)));
+  if (adapter === 'loja') window.addEventListener('loja:consentimento', event => setConsent(permitsMeasurement(event.detail)));
+  if (adapter === 'avila') window.addEventListener('avila:consentimento', event => setConsent(permitsMeasurement(event.detail)));
+  const syncZaraz = () => {
+    const api = window.zaraz?.consent;
+    if (api?.APIReady) setConsent(api.getAll().analytics === true);
+  };
+  if (adapter === 'zaraz') {
+    document.addEventListener('zarazConsentAPIReady', syncZaraz);
+    document.addEventListener('zarazConsentChoicesUpdated', syncZaraz);
+  }
   let stored;
-  try { stored = JSON.parse(localStorage.getItem('loja_consentimento')); } catch { /* no usable decision */ }
-  if (stored?.versao === 1) setConsent(permitsMeasurement(stored.escolha));
-  else if (initial.operation !== 'ecommerce' && options.banner === true) {
+  try { stored = JSON.parse(localStorage.getItem(adapter === 'loja' ? 'loja_consentimento' : 'avila_consentimento')); } catch { /* no usable decision */ }
+  if (adapter !== 'zaraz' && stored?.versao === 1) setConsent(permitsMeasurement(stored.escolha));
+  else if (adapter === 'avila' && options.banner === true) {
     try { stored = JSON.parse(localStorage.getItem('avila_consentimento')); } catch { /* no usable decision */ }
     if (stored?.versao === 1) setConsent(stored.escolha === 'aceito');
     else {
@@ -118,6 +139,7 @@ export function installMeasurement(config, options = {}) {
       document.body.append(banner);
     }
   }
+  if (adapter === 'zaraz') syncZaraz();
   const pending = window.__avilaMeasurementQueue || [];
   window.__avilaMeasurementQueue = [];
   for (const item of pending) if (item.path === location.pathname) track(item.name, item.parameters);
