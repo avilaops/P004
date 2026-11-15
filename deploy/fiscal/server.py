@@ -82,7 +82,7 @@ def build_server(address: tuple[str, int], secret: str) -> ThreadingHTTPServer:
         def do_GET(self):
             if self.path != "/healthz":
                 return self.error(404, "Rota não encontrada.")
-            source = os.environ.get("RENDER_GIT_COMMIT", "")
+            source = os.environ.get("GIT_COMMIT", "")
             self.send_bytes(200, json.dumps({"ok": True, "service": "lojas-fiscal-danfe", "source": source if re.fullmatch(r"[a-f0-9]{40}", source) else None}).encode())
 
         def do_POST(self):

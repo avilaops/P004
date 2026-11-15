@@ -117,7 +117,7 @@ try {
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
   assert.ok(pronto, "Build iniciou no loopback");
-  const respostaHtml = await fetch(`http://127.0.0.1:${porta}/`, { headers: { host: "backend-render.example", "x-forwarded-host": `${slug}.localhost` } });
+  const respostaHtml = await fetch(`http://127.0.0.1:${porta}/`, { headers: { host: "backend.example", "x-forwarded-host": `${slug}.localhost` } });
   assert.equal(respostaHtml.status, 200, "SSR resolve o host lógico da fixture no mesmo socket local");
   const html = await respostaHtml.text();
   assert.match(html, /Cookies QA/, "SSR contém o nome do tenant esperado");
