@@ -161,6 +161,8 @@ export const ProdutoEntradaSchema = z.object({
   marca: z.string().max(80).optional(),
   sku: z.string().max(60).optional(),
   gtin: z.string().max(20).optional(),
+  ncm: z.string().trim().regex(/^(?:\d{8})?$/, "NCM exige 8 dígitos, sem pontuação.").transform(v => v || null).nullable().optional(),
+  cest: z.string().trim().regex(/^(?:\d{7})?$/, "CEST exige 7 dígitos, sem pontuação.").transform(v => v || null).nullable().optional(),
   googleProductCategory: z.string().trim().max(300).nullable().optional().refine(
     categoriaGoogleValida,
     "Use um ID ou caminho existente na taxonomia oficial do Google em português.",
