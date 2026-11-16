@@ -88,7 +88,7 @@ test("rejeição só permite nova versão após revisão explícita, sem apagar 
   const rejeitada = await cancelarNfe(dados, async () => { envios++; return respostaEvento(documento.chave, "501"); });
   assert.equal(rejeitada.cancelamento!.status, "REJEITADA"); assert.equal(rejeitada.emissao.status, "AUTORIZADA");
   const revisada = { ...dados, justificativa: "Justificativa revisada para documento exclusivamente sintético." };
-  await assert.rejects(cancelarNfe(revisada), { status: 409 });
+  await assert.rejects(cancelarNfe(revisada, async () => { assert.fail("Revisão implícita não pode transmitir"); }), { status: 409 });
   const aceita = await cancelarNfe({ ...revisada, anterior: { id: rejeitada.cancelamento!.id, resumoHash: rejeitada.cancelamento!.resumoHash } }, async () => { envios++; return respostaEvento(documento.chave, "155"); });
   assert.equal(aceita.cancelamento!.status, "ACEITA"); assert.equal(aceita.historico.length, 2); assert.equal(envios, 2);
   assert.equal(aceita.historico.find(item => item.id === rejeitada.cancelamento!.id)!.status, "SUBSTITUIDA");
@@ -96,6 +96,6 @@ test("rejeição só permite nova versão após revisão explícita, sem apagar 
 
 test("confirmação, justificativa, tenant, ambiente e hash inválidos não reservam cancelamento", async () => {
   const { dados } = await autorizada();
-  for (const alteracao of [{ confirmacao: false }, { justificativa: "curta" }, { tenantId: "outra-loja" }, { ambiente: "1" }, { resumoHash: "0".repeat(64) }]) await assert.rejects(cancelarNfe({ ...dados, ...alteracao }));
+  for (const alteracao of [{ confirmacao: false }, { justificativa: "curta" }, { tenantId: "outra-loja" }, { ambiente: "1" }, { resumoHash: "0".repeat(64) }]) await assert.rejects(cancelarNfe({ ...dados, ...alteracao }, async () => { assert.fail("Entrada inválida não pode transmitir"); }));
   assert.equal(await prisma.cancelamentoEmissaoFiscalLoja.count({ where: { tenantId: dados.tenantId } }), 0);
 });

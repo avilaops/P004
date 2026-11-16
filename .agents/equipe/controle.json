@@ -13,6 +13,17 @@
   ],
   "tasks": [
     {
+      "id": "FISCAL-CANCELAMENTO-20261116",
+      "title": "Cancelar NF-e diretamente pelo Lojas",
+      "objective": "Assinar e transmitir evento110111 na SEFAZ com confirmação explícita, intenção imutável e consulta após resultado incerto.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": ["Somente dono da loja e NF-e autorizada com protocolo original.", "Concorrência transmite uma vez; incerteza impede reenvio automático.", "Consulta prioriza situação cancelada sobre protocolo original autorizado.", "Recibo exige protocolo de evento válido; XML autorizado, estoque e pagamento preservados.", "CI, navegador e publicação comprovados sem evento fiscal real."],
+      "environment": "GitHub CI isolado e servidor SSH",
+      "evidence": "PR272. RED43885632612 reproduziu consulta incorretamente AUTORIZADA quando situação atual é CANCELADA. Implementação e verificação sintética em andamento; publicação ainda não comprovada."
+    },
+    {
       "id": "FISCAL-EMISSAO-DIRETA-20261116",
       "title": "Emitir NF-e diretamente pelo Lojas",
       "objective": "Gerar documento de venda revisado ou importar rascunho, assinar com A1 e transmitir/consultar diretamente na SEFAZ, sem dependência de escrita ERP.",
@@ -63,7 +74,7 @@
       "assignee": "codex",
       "priority": "alta",
       "status": "em-andamento",
-      "blocker": "Premissa anterior de emissão via ERP revogada pelo proprietário em16/11/2026. Implementação de emissão direta em andamento na tarefa FISCAL-EMISSAO-DIRETA-20261116; homologação real ainda não comprovada.",
+      "blocker": "Emissão direta publicada no PR271, sem dependência de escrita ERP. Cancelamento nativo em andamento na tarefa FISCAL-CANCELAMENTO-20261116; homologação real ainda não comprovada.",
       "acceptanceCriteria": [
         "Destinatário, itens, CEST, descontos, despesas e tributos declarados visíveis.",
         "Fornecedor por documento exato e custos preservados no recibo imutável da entrada.",

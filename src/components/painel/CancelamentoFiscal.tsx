@@ -7,7 +7,7 @@ type Emissao = Omit<ResumoEmissao, "criadoEm" | "atualizadoEm"> & { criadoEm: st
 type Situacao = Awaited<ReturnType<typeof obterCancelamentoNfe>>;
 const ESTADOS: Record<string, string> = { PREPARADA: "Intenção registrada", ENVIANDO: "Enviando • consulte antes de repetir", ACEITA: "Cancelamento aceito pela SEFAZ", REJEITADA: "Cancelamento rejeitado", PENDENTE_CONFERENCIA: "Cancelamento ainda não confirmado", CONFIRMADA_CONSULTA: "NF-e cancelada • situação confirmada por consulta", SUBSTITUIDA: "Tentativa anterior preservada" };
 
-export default function CancelamentoFiscal({ emissao, ocupado, atualizar }: { emissao: Emissao; ocupado: boolean; atualizar: (doc: Emissao) => void }) {
+export default function CancelamentoFiscal({ emissao, ocupado, ocupar, atualizar }: { emissao: Emissao; ocupado: boolean; ocupar: (valor: boolean) => void; atualizar: (doc: Emissao) => void }) {
   const [situacao, setSituacao] = useState<Situacao | null>(null), [erro, setErro] = useState("");
   const [justificativa, setJustificativa] = useState(""), [confirmacao, setConfirmacao] = useState(false), [enviando, setEnviando] = useState(false);
   const [revisar, setRevisar] = useState(false);
@@ -24,13 +24,13 @@ export default function CancelamentoFiscal({ emissao, ocupado, atualizar }: { em
   const podeSolicitar = emissao.status === "AUTORIZADA" && situacao && (!cancelamento || revisar && cancelamento.status === "REJEITADA");
   async function solicitar() {
     if (ocupado || enviando || !podeSolicitar || !confirmacao) return;
-    setEnviando(true); setErro(""); setConfirmacao(false);
+    setEnviando(true); ocupar(true); setErro(""); setConfirmacao(false);
     try {
       const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ confirmacao: true, ambiente: emissao.ambiente, resumoHash: emissao.resumoHash, justificativa, ...(revisar && cancelamento ? { anterior: { id: cancelamento.id, resumoHash: cancelamento.resumoHash } } : {}) }) });
       const dados = await r.json(); if (!r.ok) throw new Error(dados.erro ?? "Não foi possível confirmar o cancelamento.");
       setSituacao(dados); setRevisar(false); atualizar(dados.emissao);
     } catch (e) { setErro(e instanceof Error ? e.message : "Falha no cancelamento. Consulte antes de repetir."); }
-    finally { setEnviando(false); }
+    finally { setEnviando(false); ocupar(false); }
   }
   return <div className="grid min-w-0 gap-3 rounded-lg border border-border p-3" role="region" aria-label="Cancelamento fiscal da NF-e">
     <h3 className="text-sm font-medium">Cancelamento na SEFAZ</h3>

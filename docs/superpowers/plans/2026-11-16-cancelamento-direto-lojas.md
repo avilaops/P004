@@ -18,7 +18,7 @@ desfaz cancelamento confirmado.
 
 ## Execução
 
-- [ ] Reproduzir regressão de consulta e contrato do evento no GitHub CI.
+- [x] Reproduzir regressão de consulta e contrato do evento no GitHub CI • RED43885632612.
 - [ ] Persistência imutável e envio idempotente com transporte sintético.
 - [ ] API privada, confirmação e comprovante no painel.
 - [ ] Consulta reconcilia resultado incerto sem inventar protocolo de evento.
@@ -26,5 +26,5 @@ desfaz cancelamento confirmado.
 
 ## Fontes
 
-- [MOC • recepção de eventos](https://moc.sped.fazenda.pr.gov.br/NFe_NFCe/NFe_NFCe/RecepcaoEventoGeral.html).
+- [MOC • recepção de eventos](https://moc.sped.fazenda.pr.gov.br/NFe_NFCe/RecepcaoEventoGeral.html).
 - [Serviços oficiais por UF](https://dfe-portal.svrs.rs.gov.br/Nfe/Servicos).
