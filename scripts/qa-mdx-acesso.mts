@@ -71,12 +71,14 @@ try {
     // Fixture de apresentação: renderiza o componente real sem conta ou SSO.
     // Não representa uma sessão autenticada nem verifica hidratação da busca.
     const htmlSeletor = renderToStaticMarkup(createElement(Seletor, { base: "localhost", lojas: [
-      { slug: "qa-vedacoes", nome: "Vedações QA", dominioPrincipal: "vedacoes-qa.example", status: "ATIVA" },
-      { slug: "qa-nome-longo", nome: "Distribuidora de peças e acessórios com nome extenso QA", dominioPrincipal: null, status: "PROVISIONANDO" },
+      { slug: "qa-vedacoes", nome: "Vedações QA", dominioPrincipal: "vedacoes-qa.example", status: "ATIVA", faviconUrl: "/uploads/qa-vedacoes" },
+      { slug: "qa-nome-longo", nome: "Distribuidora de peças e acessórios com nome extenso QA", dominioPrincipal: null, status: "PROVISIONANDO", faviconUrl: null },
     ] }));
     await page.setContent(`<html lang="pt-BR"><head><style>body{margin:0}${cssEquipe}</style></head><body><div class="eq-shell"><main><div class="eq-conteudo"><h1>Escolha a loja para continuar.</h1>${htmlSeletor}</div></main></div></body></html>`);
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Seletor sem overflow a ${largura}px`);
     assert.equal(await page.locator('form[method="post"][action="/api/painel/entrar/equipe"]').count(), 2);
+    assert.equal(await page.locator('.eq-loja-icone img[src="/uploads/qa-vedacoes/apple-touch-icon.png"]').count(), 1);
+    assert.equal(await page.locator(".eq-loja-inicial").count(), 2, "Toda loja conserva uma inicial como fallback");
     for (const botao of await page.locator("button[type=submit]").all()) {
       assert.ok((await botao.boundingBox())!.height >= 44, "Alvo de toque de pelo menos 44px");
     }
