@@ -6,7 +6,7 @@ import { inputClasse } from "./campos";
 
 export default function FormularioNfeVenda({ conferencia, ocupado, preparar }: { conferencia: ConferenciaFiscalPedido; ocupado: boolean; preparar: (corpo: unknown) => void }) {
   const prefixo = useId();
-  const seletor = (nome: string, rotulo: string, opcoes: Array<[string, string]>, inicial = "") => <label className="grid min-w-0 gap-1 text-sm" htmlFor={`${prefixo}-${nome}`}>{rotulo}<select id={`${prefixo}-${nome}`} name={nome} className={inputClasse} required defaultValue={inicial}><option value="" disabled>Selecione após conferir</option>{opcoes.map(([v, texto]) => <option key={v} value={v}>{texto}</option>)}</select></label>;
+  const seletor = (nome: string, rotulo: string, opcoes: Array<[string, string]>, inicial = "") => <div className="grid min-w-0 gap-1 text-sm"><label htmlFor={`${prefixo}-${nome}`}>{rotulo}</label><select id={`${prefixo}-${nome}`} name={nome} className={inputClasse} required defaultValue={inicial}><option value="" disabled>Selecione após conferir</option>{opcoes.map(([v, texto]) => <option key={v} value={v}>{texto}</option>)}</select></div>;
   function enviar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
