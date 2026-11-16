@@ -58,6 +58,12 @@ test("emissão direta: preparação privada, concorrência, incerteza e consulta
   verificacao.loadSignature(/<Signature\b[\s\S]*?<\/Signature>/.exec(salvo.xmlAssinado)![0]);
   assert.equal(verificacao.checkSignature(salvo.xmlAssinado), true);
   assert.equal(verificacao.getSignedReferences().length, 1);
+  assert.equal(verificacao.checkSignature(salvo.xmlAssinado.replace("Venda revisada", "Venda adulterada")), false);
+  const outra = await prisma.tenant.create({ data: { slug: `emissao-outra-${randomUUID()}`, nome: "Outra loja QA", plano: "LOJA_PRO", status: "ATIVA" } });
+  lojas.push(outra.id);
+  const { id: _id, ...duplicado } = salvo;
+  void _id;
+  await assert.rejects(prisma.emissaoFiscalLoja.create({ data: { ...duplicado, tenantId: outra.id } }), { code: "P2002" });
   const autorizado = await consultarNfe(loja.id, preparada.id, async (dados) => {
     assert.equal(dados.operacao, "consultar"); assert.equal(dados.ambiente, "2");
     return `<retConsSitNFe><tpAmb>2</tpAmb><chNFe>${chave}</chNFe><cStat>100</cStat><protNFe versao="4.00"><infProt><tpAmb>2</tpAmb><chNFe>${chave}</chNFe><digVal>${salvo.digest}</digVal><nProt>135260000099999</nProt><cStat>100</cStat><xMotivo>QA sintético</xMotivo></infProt></protNFe></retConsSitNFe>`;

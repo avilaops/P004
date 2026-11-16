@@ -49,7 +49,7 @@ export async function prepararEmissao(dados: { tenantId: string; pedidoId?: stri
     const chave = credencialAssinatura(fiscal.pfx, fiscal.senha);
     const assinado = assinarNfe(dados.xml, chave.key, chave.cert);
     const intencaoHash = dados.intencaoHash ?? createHash("sha256").update(dados.xml).digest("hex");
-    const identidade = { tenantId: dados.tenantId, ambiente: nota.ambiente, serie: nota.serie, numero: nota.numero };
+    const identidade = { tenantId: dados.tenantId, cnpj: fiscal.cnpj, ambiente: nota.ambiente, serie: nota.serie, numero: nota.numero };
     const data = { ...identidade, pedidoId: pedido?.id, pedidoAtualizadoEm: pedido?.atualizadoEm, cnpj: fiscal.cnpj, uf: nota.uf, chave: nota.chave, autor: dados.autor, total: nota.total, destinatarioDocumento: nota.destinatario, destinatarioNome: nota.nomeDestinatario, intencaoHash, ...assinado };
     try {
       return await prisma.$transaction(async tx => {

@@ -31,7 +31,7 @@ CREATE TABLE "EmissaoFiscalLoja" (
   CONSTRAINT "EmissaoFiscalLoja_tenantId_pedidoId_fkey" FOREIGN KEY ("tenantId", "pedidoId") REFERENCES "Pedido"("tenantId", "id") ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT "EmissaoFiscalLoja_identidade_check" CHECK ("ambiente" IN ('1','2') AND "serie" BETWEEN 0 AND 999 AND "numero" BETWEEN 1 AND 999999999 AND "chave" ~ '^[0-9]{44}$')
 );
-CREATE UNIQUE INDEX "EmissaoFiscalLoja_numero_ativo_key" ON "EmissaoFiscalLoja"("tenantId", "ambiente", "serie", "numero") WHERE "status" <> 'SUBSTITUIDA';
+CREATE UNIQUE INDEX "EmissaoFiscalLoja_numero_ativo_key" ON "EmissaoFiscalLoja"("cnpj", "ambiente", "serie", "numero") WHERE "status" <> 'SUBSTITUIDA';
 CREATE INDEX "EmissaoFiscalLoja_tenantId_ambiente_serie_numero_idx" ON "EmissaoFiscalLoja"("tenantId", "ambiente", "serie", "numero");
 CREATE INDEX "EmissaoFiscalLoja_tenantId_ambiente_chave_idx" ON "EmissaoFiscalLoja"("tenantId", "ambiente", "chave");
 CREATE INDEX "EmissaoFiscalLoja_tenantId_pedidoId_criadoEm_idx" ON "EmissaoFiscalLoja"("tenantId", "pedidoId", "criadoEm");

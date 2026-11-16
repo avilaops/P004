@@ -241,7 +241,7 @@ try {
   await page.getByRole("button", { name: "Preparar e assinar NF-e do pedido", exact: true }).click();
   const respostaNfe = await preparacaoNfe;
   assert.equal(respostaNfe.status(), 201, await respostaNfe.text());
-  const preparadaNfe = await respostaNfe.json();
+  let preparadaNfe = await respostaNfe.json();
   const revisaoNfe = page.getByRole("region", { name: "Revisão da NF-e preparada" });
   await revisaoNfe.waitFor();
   assert.equal(await revisaoNfe.getByRole("button", { name: "Emitir NF-e em homologação", exact: true }).isDisabled(), true);
@@ -257,6 +257,18 @@ try {
   const rascunhoNfe = await fetch(base + `/api/painel/fiscal/emissoes/${preparadaNfe.id}?formato=rascunho`, { headers: { cookie } });
   assert.equal(rascunhoNfe.status, 200); assert.match(await rascunhoNfe.text(), /<Signature/);
   assert.equal((await fetch(base + `/api/painel/fiscal/emissoes/${preparadaNfe.id}?formato=xml`, { headers: { cookie } })).status, 409);
+  const anteriorNfeId = preparadaNfe.id;
+  await revisaoNfe.getByRole("button", { name: "Corrigir preparação desta NF-e", exact: true }).click();
+  await page.getByText("Preparar NF-e de venda deste pedido", { exact: true }).click();
+  await page.getByLabel("Natureza da operação", { exact: true }).fill("Venda revisada de mercadoria");
+  const correcaoNfe = page.waitForResponse(r => new URL(r.url()).pathname === "/api/painel/fiscal/emissoes" && r.request().method() === "POST");
+  await page.getByRole("button", { name: "Preparar e assinar NF-e do pedido", exact: true }).click();
+  const corrigidaNfe = await correcaoNfe;
+  assert.equal(corrigidaNfe.status(), 201, await corrigidaNfe.text());
+  preparadaNfe = await corrigidaNfe.json();
+  assert.notEqual(preparadaNfe.id, anteriorNfeId);
+  assert.equal((await prisma.emissaoFiscalLoja.findUniqueOrThrow({ where: { id: anteriorNfeId } })).status, "SUBSTITUIDA");
+  assert.equal(await revisaoNfe.getByRole("button", { name: "Emitir NF-e em homologação", exact: true }).isDisabled(), true);
   const cookieOutra = `lojas_sessao=${emitirToken(outra.slug)}`;
   assert.equal((await fetch(base + `/api/painel/fiscal/emissoes/${preparadaNfe.id}?formato=rascunho`, { headers: { cookie: cookieOutra } })).status, 404);
   for (const [credencial, status] of [[undefined, 401], [cookieGerente, 403]] as const) {

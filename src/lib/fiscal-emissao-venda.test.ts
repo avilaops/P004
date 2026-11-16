@@ -13,6 +13,8 @@ test("venda revisada gera NF-e com rateio exato e tributação explicitamente es
   assert.equal(nota.total, "30.00"); assert.equal(nota.itens, 3);
   assert.match(xml, /<CSOSN>102<\/CSOSN>/); assert.match(xml, /<vDesc>1.01<\/vDesc>/); assert.match(xml, /<vFrete>1.01<\/vFrete>/);
   assert.match(xml, /SEM VALOR FISCAL/);
+  assert.deepEqual([...xml.matchAll(/<vFrete>(.*?)<\/vFrete>/g)].map(m => m[1]), ["0.34", "0.34", "0.33", "1.01"]);
+  assert.deepEqual([...xml.matchAll(/<vDesc>(.*?)<\/vDesc>/g)].map(m => m[1]), ["0.34", "0.34", "0.33", "1.01"]);
   assert.throws(() => montarNfeVenda(conferencia, endereco, { ...opcoes, modalidadeFrete: "9" }), /frete/);
   assert.equal(OpcoesVendaSchema.safeParse({ ...opcoes, tributacao: undefined }).success, false);
 });
