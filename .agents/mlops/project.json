@@ -212,6 +212,9 @@
         "fundacao"
       ],
       "sources": [
+        { "kind": "code", "path": "src/lib/fiscal-manifestacao.ts" },
+        { "kind": "test", "path": "tests/integration/fiscal-manifestacao.test.ts" },
+        { "kind": "contract", "path": "docs/superpowers/plans/2026-11-16-fiscal-manifestacao.md" },
         { "kind": "code", "path": "src/lib/fiscal-pedido.ts" },
         { "kind": "code", "path": "src/lib/fiscal-pedido-contrato.ts" },
         { "kind": "code", "path": "src/components/painel/ConferenciaFiscalPedido.tsx" },
