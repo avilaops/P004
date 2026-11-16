@@ -18,10 +18,10 @@
       "objective": "Gerar documento de venda revisado ou importar rascunho, assinar com A1 e transmitir/consultar diretamente na SEFAZ, sem dependência de escrita ERP.",
       "assignee": "codex",
       "priority": "alta",
-      "status": "em-andamento",
+      "status": "concluida",
       "acceptanceCriteria": ["Pedido usa fluxo direto do Lojas.", "Ambiente, tributação e numeração revisados explicitamente.", "Preparação não transmite; envio único e consulta após resultado incerto.", "XML autorizado e DANFE exigem protocolo da mesma chave, ambiente e digest.", "Isolamento, CI e publicação comprovados sem emissão real de teste."],
       "environment": "GitHub CI isolado e servidor SSH",
-      "evidence": "Direção corrigida explicitamente pelo proprietário em16/11/2026. PR271 e plano docs/superpowers/plans/2026-11-16-emissao-direta-lojas.md. CI em andamento."
+      "evidence": "PR271 integrado e publicado emcf8970bee5eb52148ebdb1894109805b889cfe2d. CI final43877304871 e produção43880331296 aprovados, produção na tentativa2 após timeout de finalização. Migração20261116123000_emissao_direta_lojas aplicada com backup prévio32.705.884bytes. Home200com versão exata, API emissões401JSON privado/no-store e health200/banco saudável às14:19UTC. Unitários, assinatura verificada, PostgreSQL, tipos, lint, contratos, build e navegador aprovados; prints393/1440px inspecionados. Emissão e consulta nativas A1/SEFAZ, faturamento a prazo, versões imutáveis, correção de rascunho e prevenção de envio duplicado. Evidência: evidencias/emissao-direta-lojas-2026-11-16.md. Nenhuma NF-e real transmitida, alteração no ERP, estoque ou pagamento; homologação real e operações complementares permanecem separadas."
     },
     {
       "id": "FISCAL-MANIFESTACAO-20261116",
