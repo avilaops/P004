@@ -212,6 +212,19 @@
         "fundacao"
       ],
       "sources": [
+        { "kind": "code", "path": "src/lib/fiscal-pedido.ts" },
+        { "kind": "code", "path": "src/lib/fiscal-pedido-contrato.ts" },
+        { "kind": "code", "path": "src/components/painel/ConferenciaFiscalPedido.tsx" },
+        { "kind": "test", "path": "src/lib/fiscal-pedido-contrato.test.ts" },
+        { "kind": "test", "path": "tests/integration/fiscal-pedido.test.ts" },
+        { "kind": "contract", "path": "docs/superpowers/specs/2026-11-15-fiscal-pedido-design.md" },
+        { "kind": "code", "path": "src/lib/fiscal-entrada.ts" },
+        { "kind": "code", "path": "src/lib/fiscal-entrada-xml.ts" },
+        { "kind": "code", "path": "src/components/painel/ConferenciaEntradaFiscal.tsx" },
+        { "kind": "test", "path": "src/lib/fiscal-entrada-xml.test.ts" },
+        { "kind": "test", "path": "tests/integration/fiscal-entrada.test.ts" },
+        { "kind": "test", "path": "scripts/qa-fiscal-entry.mts" },
+        { "kind": "contract", "path": "docs/superpowers/specs/2026-11-15-fiscal-lojas-design.md" },
         {
           "kind": "contract",
           "path": "docs/FLUXOS-FISCAIS.md"

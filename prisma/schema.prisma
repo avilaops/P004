@@ -388,6 +388,8 @@ model Tenant {
   transportesFiscais     TransporteFiscalLoja[]
   anexosFiscais          AnexoFiscalLoja[]
   auditoriasFiscais      AuditoriaFiscalLoja[]
+  fornecedoresFiscais   FornecedorLoja[]
+  cadastrosProdutosFiscais CadastroProdutoFiscal[]
 
   apiKeyEnc            String?
   apiKeyCriadaEm       DateTime?
@@ -589,6 +591,33 @@ model ManifestacaoFiscalLoja {
   @@unique([tenantId, idempotencia])
   @@index([tenantId, status, proximaTentativaEm])
   @@index([documentoId, intencaoEm])
+}
+
+/// Cadastro confirmado, identificado pelo documento exato dentro da loja.
+model FornecedorLoja {
+  id        String @id @default(cuid())
+  tenantId  String
+  documento String
+  nome      String
+  criadoEm  DateTime @default(now())
+  tenant    Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, documento])
+}
+
+/// Idempotência do cadastro explícito; não representa entrada de estoque.
+model CadastroProdutoFiscal {
+  id         String @id @default(cuid())
+  tenantId   String
+  chave      String
+  numero     Int
+  resumoHash String
+  varianteId String
+  criadoEm   DateTime @default(now())
+  tenant     Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  variante   Variante @relation(fields: [tenantId, varianteId], references: [tenantId, id], onDelete: Restrict)
+
+  @@unique([tenantId, chave, numero])
 }
 
 model ParticipanteFiscalLoja {
@@ -1123,6 +1152,7 @@ model Variante {
   movimentos             MovimentoEstoque[]
   itensCatalogoB2B       ItemCatalogoB2B[]
   componentesCatalogoB2B ComponenteKitCatalogoB2B[]
+  cadastrosFiscais       CadastroProdutoFiscal[]
 
   @@unique([tenantId, id])
   @@unique([tenantId, produtoId, id])

@@ -26,7 +26,7 @@ const servidor = spawn(process.execPath, [".next/standalone/server.js"], {
 const navegador = await chromium.launch({ headless: true });
 
 function pedir(host: string, caminho: string) {
-  return fetch(origem + caminho, { redirect: "manual", headers: { host: "backend-render.example", "x-forwarded-host": host } });
+  return fetch(origem + caminho, { redirect: "manual", headers: { host: "backend.example", "x-forwarded-host": host } });
 }
 
 try {

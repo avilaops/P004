@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { TenantAtualizacaoSchema, TenantEntradaSchema } from "./admin-schemas";
+import { TenantAtualizacaoSchema, TenantEntradaSchema, ProdutoEntradaSchema } from "./admin-schemas";
 
 // Os ids de pixel são interpolados em script em linha (`src/components/Pixels.tsx`).
 // O que impede um id de fechar a string ou a tag é o formato exigido na entrada:
@@ -17,6 +17,14 @@ const VALIDOS: Record<(typeof CAMPOS)[number], string[]> = {
 };
 
 const aceita = (campo: string, valor: unknown) => TenantAtualizacaoSchema.safeParse({ [campo]: valor }).success;
+
+test("classificação fiscal do catálogo preserva zeros, admite limpeza e recusa formato ambíguo", () => {
+  const parcial = ProdutoEntradaSchema.partial();
+  assert.deepEqual(parcial.parse({ ncm: "04011010", cest: "0100100" }), { ncm: "04011010", cest: "0100100" });
+  assert.deepEqual(parcial.parse({ ncm: null, cest: null }), { ncm: null, cest: null });
+  assert.deepEqual(parcial.parse({ ncm: "", cest: "" }), { ncm: null, cest: null });
+  for (const entrada of [{ ncm: "4011.10.00" }, { ncm: "4011100" }, { cest: "01.001.00" }, { cest: "100100" }]) assert.equal(parcial.safeParse(entrada).success, false);
+});
 
 test("o contrato compartilhado com o painel e a criação não concedem recursos", () => {
   const recursos = ["frete_melhor_envio_sandbox"];

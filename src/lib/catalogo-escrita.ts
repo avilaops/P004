@@ -76,7 +76,11 @@ async function gravarMidiasLegadas(tx: Tx, p: Awaited<ReturnType<typeof travarPr
 
 /** Única escrita comercial de painel, importação e MCP. Legado é só projeção. */
 export async function salvarProdutoNoCatalogo(tenantId: string, id: string | null, campos: CamposProduto, contexto: { origem?: string; versao?: number; metadadosMidia?: MetadadosMidia; exigirSemImagem?: boolean } = {}) {
-  return prisma.$transaction(async tx => {
+  return prisma.$transaction(tx => salvarProdutoNoCatalogoNaTransacao(tx, tenantId, id, campos, contexto), { timeout: 20000 });
+}
+
+/** Permite compor o cadastro canônico e seu vínculo fiscal atomicamente. */
+export async function salvarProdutoNoCatalogoNaTransacao(tx: Tx, tenantId: string, id: string | null, campos: CamposProduto, contexto: { origem?: string; versao?: number; metadadosMidia?: MetadadosMidia; exigirSemImagem?: boolean } = {}) {
     await permitirProjecao(tx);
     if (campos.categoriaId && !await tx.categoria.findFirst({ where: { id: campos.categoriaId, tenantId } })) throw new ErroCatalogo("Categoria não pertence à loja.");
     if (campos.opcoes && (campos.opcoes as string[]).length) throw new ErroCatalogo("Cadastre as opções e as variações juntas pela grade.");
@@ -120,7 +124,6 @@ export async function salvarProdutoNoCatalogo(tenantId: string, id: string | nul
     await gravarMidiasLegadas(tx, p, campos, contexto.metadadosMidia);
     await atualizarProjecao(tx, tenantId, id);
     return registrar(tx, tenantId, id, p, Object.keys(campos), contexto.origem ?? "api");
-  }, { timeout: 20000 });
 }
 
 /**

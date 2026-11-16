@@ -1,0 +1,47 @@
+{
+  "data": "2026-11-15",
+  "responsavel": "codex",
+  "ambiente": "producao",
+  "workspace": "C:/Users/nicol/source/lojas.avilaops.com",
+  "lojas": {
+    "pullRequest": 264,
+    "commit": "79176aacd0f97e94f0caa47ef0b08ac4f28ca643",
+    "ciPullRequest": { "run": 43688745797, "conclusion": "success" },
+    "ciProducao": { "run": 43689330624, "attempt": 2, "conclusion": "success", "deploy": "success", "smoke": "success" },
+    "observacaoDeploy": "Primeira tentativa atingiu timeout de um minuto depois da ativacao do container. Servico e banco saudaveis confirmados; reexecucao somente do deploy e dependentes concluiu com sucesso.",
+    "robots": {
+      "url": "https://beretarodas.com/robots.txt",
+      "status": 200,
+      "contentSignal": false,
+      "sitemaps": ["https://beretarodas.com/sitemap.xml", "https://beretarodas.com/sitemap-imagens.xml"],
+      "bloqueiosPrivadosPreservados": true
+    }
+  },
+  "avilaops": {
+    "repository": "avilaops/avilaops.com",
+    "commit": "9255dfa5eb88d3592f028783c64d5fedec8c437d",
+    "ciPages": { "run": 43688756688, "conclusion": "success" },
+    "ciVerificacao": { "run": 43688756693, "conclusion": "success" },
+    "robots": {
+      "url": "https://avilaops.com/robots.txt",
+      "status": 200,
+      "contentSignal": false,
+      "sitemaps": ["https://avilaops.com/sitemap.xml", "https://avilaops.com/sitemap-imagens.xml"],
+      "bloqueiosPrivadosPreservados": true
+    }
+  },
+  "indexnow": {
+    "keyLocation": "https://beretarodas.com/f2672b76db164df4ad2e87559d04d7ee.txt",
+    "keyFileStatus": 200,
+    "keyFileBingbotStatus": 200,
+    "keyFileConteudoConferido": true,
+    "urls": 6483,
+    "origemUrls": "https://beretarodas.com/sitemap.xml",
+    "tentativas": [
+      { "endpoint": "https://api.indexnow.org/indexnow", "status": 403, "errorCode": "SiteVerificationNotCompleted" },
+      { "endpoint": "https://www.bing.com/indexnow", "status": 200, "body": "" }
+    ],
+    "resultado": "Lote recebido pelo Bing; nao comprova indexacao das paginas.",
+    "referencia": "https://www.indexnow.org/documentation"
+  }
+}
