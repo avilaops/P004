@@ -236,7 +236,7 @@ try {
   await page.getByLabel("Origem do item 1", { exact: true }).selectOption("0");
   await page.getByLabel("Unidade fiscal do item 1", { exact: true }).fill("UN");
   await page.getByLabel("GTIN do item 1", { exact: true }).fill("SEM GTIN");
-  await page.getByLabel("Confirmei que o destinatário é consumidor final não contribuinte de ICMS e que a venda se enquadra na tributação selecionada.").check();
+  await page.getByLabel("Confirmei que a venda é direta, sem intermediador, o destinatário é consumidor final não contribuinte de ICMS e a tributação selecionada se aplica.").check();
   const preparacaoNfe = page.waitForResponse(r => new URL(r.url()).pathname === "/api/painel/fiscal/emissoes" && r.request().method() === "POST");
   await page.getByRole("button", { name: "Preparar e assinar NF-e do pedido", exact: true }).click();
   const respostaNfe = await preparacaoNfe;
