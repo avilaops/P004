@@ -34,7 +34,12 @@ export function installMeasurement(config, options = {}) {
 
   function loadContainer(id) {
     if (loaded.has(id)) return;
-    if (window.google_tag_manager?.[id]) { loaded.add(id); return; }
+    if (window.google_tag_manager?.[id]) {
+      loaded.add(id);
+      // A gateway may preload the SDK without dispatching its initialization event.
+      if (!window.dataLayer.some(entry => entry?.event === 'gtm.js')) window.dataLayer.push({ 'gtm.start': Date.now(), event: 'gtm.js' });
+      return;
+    }
     loaded.add(id);
     window.dataLayer.push({ 'gtm.start': Date.now(), event: 'gtm.js' });
     const script = document.createElement('script');
