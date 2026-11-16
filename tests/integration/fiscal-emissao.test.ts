@@ -33,6 +33,8 @@ test("emissão direta: preparação privada, concorrência, incerteza e consulta
   const chave = chaveNfe("35", "2611", cnpj, 1, 123, "00000001");
   const xml = /<NFe>[\s\S]*?<\/NFe>/.exec(fixture)![0].replace("<NFe>", '<NFe xmlns="http://www.portalfiscal.inf.br/nfe">').replace(/Id="NFe\d{44}"/, `Id="NFe${chave}"`).replace(/<cDV>\d<\/cDV>/, `<cDV>${chave.at(-1)}</cDV>`);
   const entrada = { tenantId: loja.id, xml, autor: "qa@example.test" };
+  await assert.rejects(prepararEmissao({ ...entrada, xml: xml.replace('<prod>', `<prod Id="NFe${chave}">`) }));
+  assert.equal(await prisma.emissaoFiscalLoja.count({ where: { tenantId: loja.id } }), 0);
   let preparada = await prepararEmissao(entrada);
   assert.equal(preparada.status, "PREPARADA");
   await assert.rejects(prisma.emissaoFiscalLoja.update({ where: { id: preparada.id }, data: { xmlAssinado: "<adulterado/>" } }), /imutável/);

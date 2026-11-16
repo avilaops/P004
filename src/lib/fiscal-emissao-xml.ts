@@ -54,6 +54,9 @@ export function assinarNfe(xml: string, key: string, cert: string) {
   assinatura.addReference({ xpath: `/*[local-name()='NFe' and namespace-uri()='${NFE_NS}']/*[local-name()='infNFe' and namespace-uri()='${NFE_NS}']`, digestAlgorithm: "http://www.w3.org/2000/09/xmldsig#sha1", transforms: ["http://www.w3.org/2000/09/xmldsig#enveloped-signature", "http://www.w3.org/TR/2001/REC-xml-c14n-20010315"] });
   assinatura.computeSignature(xml, { location: { reference: "/*", action: "append" } });
   const xmlAssinado = assinatura.getSignedXml().replace(/^<\?xml[^?]*\?>\s*/, "");
+  const verificacao = new SignedXml({ publicCert: cert });
+  verificacao.loadSignature(assinatura.getSignatureXml());
+  if (!verificacao.checkSignature(xmlAssinado) || verificacao.getSignedReferences().length !== 1) throw new ErroFiscal("Não foi possível conferir a assinatura da NF-e preparada.");
   const digest = texto(bloco(bloco(bloco(bloco(lerXmlNfe(xmlAssinado).NFe).Signature).SignedInfo).Reference).DigestValue);
   if (!digest) throw new ErroFiscal("Assinatura fiscal sem digest.");
   return { xmlAssinado, digest, resumoHash: createHash("sha256").update(xmlAssinado).digest("hex") };
