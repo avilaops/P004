@@ -14,15 +14,14 @@ const dados = () => ({
 
 test("conferência mantém centavos e identifica snapshot comercial sem prometer emissão", () => {
   const r = conferirPedidoFiscal(dados());
-  assert.equal(r.versao, "avila.lojas.fiscal.pedido.v1");
-  assert.equal(r.emissaoDisponivel, false);
+  assert.equal(r.versao, "avila.lojas.fiscal.pedido.v2");
+  assert.equal(r.emissaoDisponivel, true);
+  assert.equal(r.modoEmissao, "DIRETA");
   assert.equal(r.dados.itens[0].totalCentavos, 20000);
   assert.equal(r.dados.totais.totalCentavos, 19500);
   assert.match(r.resumoHash, /^[a-f0-9]{64}$/);
   assert.equal(r.resumoHash, conferirPedidoFiscal(dados()).resumoHash);
-  assert.ok(r.pendencias.some(p => p.codigo === "EMISSAO_INDISPONIVEL"));
-  assert.ok(r.pendencias.some(p => p.codigo === "ERP_NAO_CONFIGURADO"));
-  assert.equal(conferirPedidoFiscal(dados(), { consultaErpConfigurada: true }).pendencias.some(p => p.codigo === "ERP_NAO_CONFIGURADO"), false);
+  assert.ok(!r.pendencias.some(p => p.codigo.includes("ERP") || p.codigo === "EMISSAO_INDISPONIVEL"));
   assert.ok(!r.pendencias.some(p => p.codigo === "TOTAIS_DIVERGENTES"));
   const outro = dados(); outro.itens[0].classificacaoAtual.ncm = "40112000";
   assert.notEqual(r.resumoHash, conferirPedidoFiscal(outro).resumoHash);
