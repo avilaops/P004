@@ -5,7 +5,8 @@ import { validarRascunhoNfe, chaveNfe, lerRespostaNfe, destinoNfe } from "./fisc
 
 const rascunho = () => {
   const fixture = readFileSync("tests/fixtures/nfe-entrada-qa.xml", "utf8");
-  return /<NFe>[\s\S]*?<\/NFe>/.exec(fixture)![0].replace("<NFe>", '<NFe xmlns="http://www.portalfiscal.inf.br/nfe">');
+  const chave = chaveNfe("35", "2611", "12345678000195", 1, 123, "00000001");
+  return /<NFe>[\s\S]*?<\/NFe>/.exec(fixture)![0].replace("<NFe>", '<NFe xmlns="http://www.portalfiscal.inf.br/nfe">').replace(/Id="NFe\d{44}"/, `Id="NFe${chave}"`).replace(/<cDV>\d<\/cDV>/, `<cDV>${chave.at(-1)}</cDV>`);
 };
 
 test("emissão direta valida emitente, ambiente, modelo e numeração sem ERP", () => {

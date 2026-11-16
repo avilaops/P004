@@ -1,0 +1,32 @@
+CREATE TABLE "EmissaoFiscalLoja" (
+  "id" TEXT NOT NULL,
+  "tenantId" TEXT NOT NULL,
+  "pedidoId" TEXT,
+  "pedidoAtualizadoEm" TIMESTAMP(3),
+  "cnpj" TEXT NOT NULL,
+  "uf" TEXT NOT NULL,
+  "ambiente" TEXT NOT NULL,
+  "serie" INTEGER NOT NULL,
+  "numero" INTEGER NOT NULL,
+  "chave" TEXT NOT NULL,
+  "resumoHash" TEXT NOT NULL,
+  "xmlAssinado" TEXT NOT NULL,
+  "xmlResposta" TEXT,
+  "xmlAutorizado" TEXT,
+  "digest" TEXT NOT NULL,
+  "autor" TEXT NOT NULL,
+  "status" TEXT NOT NULL DEFAULT 'PREPARADA',
+  "codigo" TEXT,
+  "motivo" TEXT,
+  "protocolo" TEXT,
+  "enviadoEm" TIMESTAMP(3),
+  "criadoEm" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "atualizadoEm" TIMESTAMP(3) NOT NULL,
+  CONSTRAINT "EmissaoFiscalLoja_pkey" PRIMARY KEY ("id"),
+  CONSTRAINT "EmissaoFiscalLoja_tenantId_fkey" FOREIGN KEY ("tenantId") REFERENCES "Tenant"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT "EmissaoFiscalLoja_tenantId_pedidoId_fkey" FOREIGN KEY ("tenantId", "pedidoId") REFERENCES "Pedido"("tenantId", "id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT "EmissaoFiscalLoja_identidade_check" CHECK ("ambiente" IN ('1','2') AND "serie" BETWEEN 0 AND 999 AND "numero" BETWEEN 1 AND 999999999 AND "chave" ~ '^[0-9]{44}$')
+);
+CREATE UNIQUE INDEX "EmissaoFiscalLoja_tenantId_ambiente_serie_numero_key" ON "EmissaoFiscalLoja"("tenantId", "ambiente", "serie", "numero");
+CREATE UNIQUE INDEX "EmissaoFiscalLoja_tenantId_ambiente_chave_key" ON "EmissaoFiscalLoja"("tenantId", "ambiente", "chave");
+CREATE INDEX "EmissaoFiscalLoja_tenantId_pedidoId_criadoEm_idx" ON "EmissaoFiscalLoja"("tenantId", "pedidoId", "criadoEm");

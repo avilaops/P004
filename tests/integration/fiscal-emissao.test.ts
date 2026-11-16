@@ -1,0 +1,60 @@
+import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { after, test } from "node:test";
+import forge from "node-forge";
+import { prisma } from "../../src/lib/db";
+import { selarCertificado } from "../../src/lib/fiscal-certificado";
+import { chaveNfe, lerXmlNfe } from "../../src/lib/fiscal-emissao-xml";
+import { prepararEmissao, emitirNfe, consultarNfe, type enviarNfe } from "../../src/lib/fiscal-emissao";
+
+const url = new URL(process.env.DATABASE_URL ?? "http://invalid");
+if (!["127.0.0.1", "localhost"].includes(url.hostname) || !["5548", "5588"].includes(url.port) || !url.pathname.endsWith("_test")) throw new Error("Teste exige Postgres local isolado e base *_test.");
+process.env.LOJAS_CERT_SECRET = "ef".repeat(32);
+const lojas: string[] = [];
+after(async () => {
+  await prisma.emissaoFiscalLoja.deleteMany({ where: { tenantId: { in: lojas } } });
+  await prisma.tenant.deleteMany({ where: { id: { in: lojas } } });
+  await prisma.$disconnect();
+});
+
+test("emissão direta: preparação privada, concorrência, incerteza e consulta recuperam protocolo sem ERP", async () => {
+  const cnpj = "12345678000195";
+  const loja = await prisma.tenant.create({ data: { slug: `emissao-${randomUUID()}`, nome: "QA emissão", plano: "LOJA_PRO", status: "ATIVA", cnpj } });
+  lojas.push(loja.id);
+  const chaves = forge.pki.rsa.generateKeyPair(2048), cert = forge.pki.createCertificate();
+  cert.publicKey = chaves.publicKey; cert.serialNumber = "01";
+  cert.validity.notBefore = new Date(Date.now() - 86400000); cert.validity.notAfter = new Date(Date.now() + 86400000);
+  cert.setSubject([{ name: "commonName", value: `QA:${cnpj}` }]); cert.setIssuer(cert.subject.attributes); cert.sign(chaves.privateKey, forge.md.sha256.create());
+  const pfx = Buffer.from(forge.asn1.toDer(forge.pkcs12.toPkcs12Asn1(chaves.privateKey, cert, "senha", { algorithm: "3des" })).getBytes(), "binary");
+  await prisma.fiscalLoja.create({ data: { tenantId: loja.id, cnpj, uf: "SP", titular: "QA", validoAte: cert.validity.notAfter, certificadoEnc: selarCertificado(pfx, "senha") } });
+  const fixture = readFileSync("tests/fixtures/nfe-entrada-qa.xml", "utf8");
+  const chave = chaveNfe("35", "2611", cnpj, 1, 123, "00000001");
+  const xml = /<NFe>[\s\S]*?<\/NFe>/.exec(fixture)![0].replace("<NFe>", '<NFe xmlns="http://www.portalfiscal.inf.br/nfe">').replace(/Id="NFe\d{44}"/, `Id="NFe${chave}"`).replace(/<cDV>\d<\/cDV>/, `<cDV>${chave.at(-1)}</cDV>`);
+  const entrada = { tenantId: loja.id, xml, autor: "qa@example.test" };
+  const preparada = await prepararEmissao(entrada);
+  assert.equal(preparada.status, "PREPARADA");
+  assert.equal((await prepararEmissao(entrada)).id, preparada.id);
+  await assert.rejects(prepararEmissao({ ...entrada, xml: xml.replace("Venda de mercadoria", "Outro conteúdo") }), { status: 409 });
+  const comando = { tenantId: loja.id, id: preparada.id, ambiente: preparada.ambiente, resumoHash: preparada.resumoHash };
+  let envios = 0;
+  const falhar: typeof enviarNfe = async () => { envios++; throw new Error("Transporte sintético incerto"); };
+  const resultados = await Promise.all(Array.from({ length: 5 }, () => emitirNfe(comando, falhar)));
+  assert.equal(envios, 1);
+  assert.equal(new Set(resultados.map(r => r.id)).size, 1);
+  assert.equal((await emitirNfe(comando, falhar)).status, "PENDENTE_CONFERENCIA");
+  assert.equal(envios, 1);
+  await assert.rejects(emitirNfe({ ...comando, tenantId: "outro-tenant" }, falhar), { status: 404 });
+  await assert.rejects(emitirNfe({ ...comando, ambiente: "1" }, falhar), { status: 409 });
+  const salvo = await prisma.emissaoFiscalLoja.findUniqueOrThrow({ where: { id: preparada.id } });
+  const autorizado = await consultarNfe(loja.id, preparada.id, async (dados) => {
+    assert.equal(dados.operacao, "consultar"); assert.equal(dados.ambiente, "2");
+    return `<retConsSitNFe><tpAmb>2</tpAmb><chNFe>${chave}</chNFe><cStat>100</cStat><protNFe versao="4.00"><infProt><tpAmb>2</tpAmb><chNFe>${chave}</chNFe><digVal>${salvo.digest}</digVal><nProt>135260000099999</nProt><cStat>100</cStat><xMotivo>QA sintético</xMotivo></infProt></protNFe></retConsSitNFe>`;
+  });
+  assert.equal(autorizado.status, "AUTORIZADA"); assert.equal(autorizado.protocolo, "135260000099999");
+  const final = await prisma.emissaoFiscalLoja.findUniqueOrThrow({ where: { id: preparada.id } });
+  assert.ok(lerXmlNfe(final.xmlAutorizado!).nfeProc);
+  await consultarNfe(loja.id, preparada.id, async () => '<retConsSitNFe><tpAmb>2</tpAmb><cStat>217</cStat></retConsSitNFe>');
+  assert.equal((await prisma.emissaoFiscalLoja.findUniqueOrThrow({ where: { id: preparada.id } })).status, "AUTORIZADA");
+  assert.equal(await prisma.comandoEstoque.count({ where: { tenantId: loja.id } }), 0);
+});

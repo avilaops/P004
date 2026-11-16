@@ -377,6 +377,7 @@ model Tenant {
   operadores             OperadorLoja[]
   fiscal                 FiscalLoja?
   documentosFiscais      DocumentoFiscalLoja[]
+  emissoesFiscais        EmissaoFiscalLoja[]
   fluxosFiscais          FluxoFiscalLoja[]
   eventosFiscais         EventoFiscalLoja[]
   manifestacoesFiscais   ManifestacaoFiscalLoja[]
@@ -456,6 +457,38 @@ model SolicitacaoSobMedida {
   @@unique([tenantId, referencia])
   @@index([tenantId, estado, criadoEm])
   @@index([tenantId, referenciaOrigem])
+}
+
+model EmissaoFiscalLoja {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  pedidoId            String?
+  pedidoAtualizadoEm  DateTime?
+  cnpj                String
+  uf                  String
+  ambiente            String
+  serie               Int
+  numero              Int
+  chave               String
+  resumoHash          String
+  xmlAssinado         String   @db.Text
+  xmlResposta         String?  @db.Text
+  xmlAutorizado       String?  @db.Text
+  digest              String
+  autor               String
+  status              String   @default("PREPARADA")
+  codigo              String?
+  motivo              String?
+  protocolo           String?
+  enviadoEm           DateTime?
+  criadoEm            DateTime @default(now())
+  atualizadoEm        DateTime @updatedAt
+  tenant              Tenant   @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  pedido              Pedido?  @relation(fields: [tenantId, pedidoId], references: [tenantId, id], onDelete: Restrict)
+
+  @@unique([tenantId, ambiente, serie, numero])
+  @@unique([tenantId, ambiente, chave])
+  @@index([tenantId, pedidoId, criadoEm])
 }
 
 model FiscalLoja {
@@ -1053,6 +1086,7 @@ model Pedido {
   postagem          Postagem?
   cobrancaPix       CobrancaPixManual?
   cotacaoOrigem     CotacaoB2B?
+  emissoesFiscais   EmissaoFiscalLoja[]
   empresaB2B        EmpresaB2B?        @relation(fields: [tenantId, empresaB2BId], references: [tenantId, id], onDelete: Restrict)
   unidadeB2B        UnidadeEmpresaB2B? @relation(fields: [tenantId, empresaB2BId, unidadeB2BId], references: [tenantId, empresaId, id], onDelete: Restrict)
   centroCustoB2B    CentroCustoB2B?    @relation(fields: [tenantId, empresaB2BId, centroCustoB2BId], references: [tenantId, empresaId, id], onDelete: Restrict)
