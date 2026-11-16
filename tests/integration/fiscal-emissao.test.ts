@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { after, test } from "node:test";
 import forge from "node-forge";
+import { SignedXml } from "xml-crypto";
 import { prisma } from "../../src/lib/db";
 import { selarCertificado } from "../../src/lib/fiscal-certificado";
 import { chaveNfe, lerXmlNfe } from "../../src/lib/fiscal-emissao-xml";
@@ -47,6 +48,10 @@ test("emissão direta: preparação privada, concorrência, incerteza e consulta
   await assert.rejects(emitirNfe({ ...comando, tenantId: "outro-tenant" }, falhar), { status: 404 });
   await assert.rejects(emitirNfe({ ...comando, ambiente: "1" }, falhar), { status: 409 });
   const salvo = await prisma.emissaoFiscalLoja.findUniqueOrThrow({ where: { id: preparada.id } });
+  const verificacao = new SignedXml({ publicCert: forge.pki.certificateToPem(cert) });
+  verificacao.loadSignature(/<Signature\b[\s\S]*?<\/Signature>/.exec(salvo.xmlAssinado)![0]);
+  assert.equal(verificacao.checkSignature(salvo.xmlAssinado), true);
+  assert.equal(verificacao.getSignedReferences().length, 1);
   const autorizado = await consultarNfe(loja.id, preparada.id, async (dados) => {
     assert.equal(dados.operacao, "consultar"); assert.equal(dados.ambiente, "2");
     return `<retConsSitNFe><tpAmb>2</tpAmb><chNFe>${chave}</chNFe><cStat>100</cStat><protNFe versao="4.00"><infProt><tpAmb>2</tpAmb><chNFe>${chave}</chNFe><digVal>${salvo.digest}</digVal><nProt>135260000099999</nProt><cStat>100</cStat><xMotivo>QA sintético</xMotivo></infProt></protNFe></retConsSitNFe>`;

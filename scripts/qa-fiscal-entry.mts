@@ -6,8 +6,11 @@ import { chromium } from "playwright";
 import { prisma } from "../src/lib/db";
 import { salvarProdutoNoCatalogo } from "../src/lib/catalogo-escrita";
 import { emitirToken } from "../src/lib/sessao";
+import forge from "node-forge";
+import { selarCertificado } from "../src/lib/fiscal-certificado";
 
 assert.equal(process.env.CI, "true");
+process.env.LOJAS_CERT_SECRET ??= "ab".repeat(32);
 const db = new URL(process.env.DATABASE_URL ?? "http://invalid");
 assert.ok(["localhost", "127.0.0.1"].includes(db.hostname) && db.port === "5548" && db.pathname.endsWith("_test"));
 const base = "http://localhost:3108", output = "artifacts/fiscal-entry-browser";
@@ -204,6 +207,65 @@ try {
   await paginaGerente.goto(base + `/painel/pedidos/${pedido.id}`);
   assert.equal(await paginaGerente.getByRole("button", { name: "Conferir dados fiscais", exact: true }).count(), 0);
   await contextoGerente.close();
+  // Certificado e dados sintéticos. Esta jornada prepara, mas não transmite.
+  const chavesNfe = forge.pki.rsa.generateKeyPair(2048), certificadoNfe = forge.pki.createCertificate();
+  certificadoNfe.publicKey = chavesNfe.publicKey; certificadoNfe.serialNumber = "01";
+  certificadoNfe.validity.notBefore = new Date(Date.now() - 86400000); certificadoNfe.validity.notAfter = new Date(Date.now() + 86400000);
+  certificadoNfe.setSubject([{ name: "commonName", value: `QA:${loja.cnpj}` }]); certificadoNfe.setIssuer(certificadoNfe.subject.attributes); certificadoNfe.sign(chavesNfe.privateKey, forge.md.sha256.create());
+  const pfxNfe = Buffer.from(forge.asn1.toDer(forge.pkcs12.toPkcs12Asn1(chavesNfe.privateKey, certificadoNfe, "qa", { algorithm: "3des" })).getBytes(), "binary");
+  await prisma.fiscalLoja.create({ data: { tenantId: loja.id, cnpj: loja.cnpj!, uf: "SP", titular: "QA sintético", validoAte: certificadoNfe.validity.notAfter, certificadoEnc: selarCertificado(pfxNfe, "qa") } });
+  const enderecoNfe = { logradouro: "Rua QA", numero: "1", bairro: "Centro", cidade: "São Paulo", uf: "SP", cep: "01001000" };
+  await prisma.tenant.update({ where: { id: loja.id }, data: { endereco: enderecoNfe } });
+  await prisma.pedido.update({ where: { id: pedido.id }, data: { entrega: enderecoNfe } });
+  await page.route("**/api/painel/fiscal/emissoes", async route => {
+    if (route.request().method() === "POST") await route.continue({ headers: { ...route.request().headers(), origin: "https://localhost" } });
+    else await route.continue();
+  });
+  await page.getByRole("button", { name: "Atualizar conferência fiscal", exact: true }).click();
+  await page.getByRole("status").filter({ hasText: "Conferência disponível" }).waitFor();
+  await page.getByText("Preparar NF-e de venda deste pedido", { exact: true }).click();
+  await page.getByLabel("Série da NF-e", { exact: true }).fill("1");
+  await page.getByLabel("Número da NF-e", { exact: true }).fill("123");
+  await page.getByLabel("Inscrição estadual do emitente", { exact: true }).fill("111111111111");
+  await page.getByLabel("Município IBGE do emitente", { exact: true }).fill("3550308");
+  await page.getByLabel("Município IBGE do destinatário", { exact: true }).fill("3550308");
+  await page.getByLabel("Tributação revisada", { exact: true }).selectOption("SIMPLES_102_PIS07_COFINS07");
+  await page.getByLabel("Pagamento da NF-e", { exact: true }).selectOption("17");
+  await page.getByLabel("Responsável pelo frete", { exact: true }).selectOption("9");
+  await page.getByLabel("CFOP do item 1", { exact: true }).selectOption("5102");
+  await page.getByLabel("Origem do item 1", { exact: true }).selectOption("0");
+  await page.getByLabel("Unidade fiscal do item 1", { exact: true }).fill("UN");
+  await page.getByLabel("GTIN do item 1", { exact: true }).fill("SEM GTIN");
+  await page.getByLabel("Confirmei que o destinatário é consumidor final não contribuinte de ICMS e que a venda se enquadra na tributação selecionada.").check();
+  const preparacaoNfe = page.waitForResponse(r => new URL(r.url()).pathname === "/api/painel/fiscal/emissoes" && r.request().method() === "POST");
+  await page.getByRole("button", { name: "Preparar e assinar NF-e do pedido", exact: true }).click();
+  const respostaNfe = await preparacaoNfe;
+  assert.equal(respostaNfe.status(), 201, await respostaNfe.text());
+  const preparadaNfe = await respostaNfe.json();
+  const revisaoNfe = page.getByRole("region", { name: "Revisão da NF-e preparada" });
+  await revisaoNfe.waitFor();
+  assert.equal(await revisaoNfe.getByRole("button", { name: "Emitir NF-e em homologação", exact: true }).isDisabled(), true);
+  await revisaoNfe.getByRole("checkbox").check();
+  assert.equal(await revisaoNfe.getByRole("button", { name: "Emitir NF-e em homologação", exact: true }).isEnabled(), true);
+  // Não clicar em emitir: envio é coberto no teste de integração com transporte sintético.
+  await page.getByText("Preparar NF-e de venda deste pedido", { exact: true }).click();
+  for (const width of [393, 1440]) {
+    await page.setViewportSize({ width, height: 1100 });
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), `Emissão sem overflow em ${width}px`);
+    await page.screenshot({ path: `${output}/emissao-direta-${width}.png`, fullPage: true });
+  }
+  const rascunhoNfe = await fetch(base + `/api/painel/fiscal/emissoes/${preparadaNfe.id}?formato=rascunho`, { headers: { cookie } });
+  assert.equal(rascunhoNfe.status, 200); assert.match(await rascunhoNfe.text(), /<Signature/);
+  assert.equal((await fetch(base + `/api/painel/fiscal/emissoes/${preparadaNfe.id}?formato=xml`, { headers: { cookie } })).status, 409);
+  const cookieOutra = `lojas_sessao=${emitirToken(outra.slug)}`;
+  assert.equal((await fetch(base + `/api/painel/fiscal/emissoes/${preparadaNfe.id}?formato=rascunho`, { headers: { cookie: cookieOutra } })).status, 404);
+  for (const [credencial, status] of [[undefined, 401], [cookieGerente, 403]] as const) {
+    const resposta = await fetch(base + "/api/painel/fiscal/emissoes", { headers: credencial ? { cookie: credencial } : {} });
+    assert.equal(resposta.status, status); assert.match(resposta.headers.get("cache-control") ?? "", /no-store/);
+  }
+  const protegidaNfe = await prisma.emissaoFiscalLoja.findUniqueOrThrow({ where: { id: preparadaNfe.id } });
+  assert.equal(protegidaNfe.status, "PREPARADA"); assert.equal(protegidaNfe.enviadoEm, null);
+  assert.equal(await prisma.comandoEstoque.count({ where: { tenantId: loja.id } }), comandosAntes);
   assert.equal(erros.length, 0, erros.join("; "));
   console.log(JSON.stringify({ fiscalEntryBrowser: "pass", duplicateEntry: "prevented", tenantIsolation: "pass" }));
 } finally {

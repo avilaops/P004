@@ -8,10 +8,12 @@ import { origemFiscalPermitida } from "@/lib/fiscal-origem";
 import { exigir } from "@/lib/operadores";
 import { prepararFiscalDoPedido } from "@/lib/fiscal-pedido";
 import { montarNfeVenda, OpcoesVendaSchema } from "@/lib/fiscal-emissao-venda";
+import { LimitadorPorJanela } from "@/lib/api-limite";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 const headers = { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" };
+const limitador = new LimitadorPorJanela();
 const entrada = z.union([
   z.object({ xml: z.string().min(1).max(1024 * 1024), pedidoId: z.string().min(1).max(100).optional() }),
   z.object({ pedidoId: z.string().min(1).max(100), venda: OpcoesVendaSchema }),
@@ -29,6 +31,7 @@ export async function POST(request: Request) {
   const { s, erro } = await exigir("fiscal");
   if (erro) { Object.entries(headers).forEach(([k, v]) => erro.headers.set(k, v)); return erro; }
   if (!origemFiscalPermitida(request)) return Response.json({ erro: "Origem da ação fiscal recusada." }, { status: 403, headers });
+  if (!limitador.consumir(`${s.tenant.id}:preparacao-nfe`, 10).permitido) return Response.json({ erro: "Aguarde antes de preparar outra NF-e." }, { status: 429, headers });
   try {
     const reader = request.body?.getReader();
     if (!reader) throw new ErroFiscal("Envie o rascunho da NF-e.");
