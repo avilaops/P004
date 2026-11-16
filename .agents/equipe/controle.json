@@ -18,10 +18,10 @@
       "objective": "Validar e assinar antes da intenção, impedir envio duplicado e preservar resultado final persistido.",
       "assignee": "codex",
       "priority": "alta",
-      "status": "em-andamento",
+      "status": "concluida",
       "acceptanceCriteria": ["Entrada inválida e certificado indisponível não reservam intenção.", "Concorrência transmite uma vez e preserva comando original.", "Falha posterior não desfaz aceite e protocolo.", "CNPJ integrado não transmite pelo coletor local.", "CI e publicação verificados, sem emissão real ou alterações no ERP."],
       "environment": "GitHub CI isolado e servidor SSH",
-      "evidence": "PR269 • regressões reproduzidas em43857990688 nos testes unitários e PostgreSQL. Verificação final pendente."
+      "evidence": "PR269 integrado em96f3d85757f3dad11d87a8a492755ae79f08347d. RED43857990688 e GREEN final43859738403. Pipeline43860889804 aprovado; entrega dispensada por main mais nova. Publicado em267b565663dc22c5e6b2c146f39d461b6c82720d, que preserva a correção fiscal; produção43861260846 e fumaça aprovadas na tentativa2 após timeout de finalização. Home200com versão exata, health200/banco saudável, manifestação sem sessão401JSON/privado/no-store. Concorrência, transporte incerto, falha posterior de auditoria, isolamento e autoridade ERP comprovados com dados/transporte sintéticos. Evidência: evidencias/fiscal-manifestacao-2026-11-16.md. Nenhum evento SEFAZ real ou alteração no ERP."
     },
     {
       "id": "FISCAL-PEDIDO-20261115",
