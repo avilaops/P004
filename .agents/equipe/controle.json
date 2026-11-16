@@ -18,10 +18,10 @@
       "objective": "Assinar e transmitir evento110111 na SEFAZ com confirmação explícita, intenção imutável e consulta após resultado incerto.",
       "assignee": "codex",
       "priority": "alta",
-      "status": "em-andamento",
+      "status": "concluida",
       "acceptanceCriteria": ["Somente dono da loja e NF-e autorizada com protocolo original.", "Concorrência transmite uma vez; incerteza impede reenvio automático.", "Consulta prioriza situação cancelada sobre protocolo original autorizado.", "Recibo exige protocolo de evento válido; XML autorizado, estoque e pagamento preservados.", "CI, navegador e publicação comprovados sem evento fiscal real."],
       "environment": "GitHub CI isolado e servidor SSH",
-      "evidence": "PR272. RED43885632612 reproduziu consulta incorretamente AUTORIZADA quando situação atual é CANCELADA. Implementação e verificação sintética em andamento; publicação ainda não comprovada."
+      "evidence": "PR272 integrado e publicado em463380525c1f5ea81cca183fb2e26f6fd318cc6e. RED43885632612 reproduziu consulta incorretamente AUTORIZADA quando situação atual é CANCELADA; CI final43889647698 e produção43891181312 aprovados. Produção na tentativa2 após timeout de1min; backup32.708.239bytes conferido e migração20261116142000_cancelamento_nfe_lojas aplicada. Fumaça oficial aprovada, home200/versão exata, API cancelamento401JSON privado/no-store e health200/banco ok às15:10UTC. Assinatura, concorrência, imutabilidade, revisão de rejeição, incerteza e reconciliação comprovadas com transporte sintético. Navegador393/1440px inspecionado; pedido, pagamento e estoque preservados. Evidência: evidencias/cancelamento-direto-lojas-2026-11-16.md. Nenhum evento fiscal real enviado, alteração no ERP ou homologação real alegada."
     },
     {
       "id": "FISCAL-EMISSAO-DIRETA-20261116",
@@ -74,7 +74,7 @@
       "assignee": "codex",
       "priority": "alta",
       "status": "em-andamento",
-      "blocker": "Emissão direta publicada no PR271, sem dependência de escrita ERP. Cancelamento nativo em andamento na tarefa FISCAL-CANCELAMENTO-20261116; homologação real ainda não comprovada.",
+      "blocker": "Emissão direta publicada no PR271 e cancelamento nativo no PR272, sem dependência de escrita ERP. Homologação fiscal real ainda não comprovada; inutilização e carta de correção fora destas entregas.",
       "acceptanceCriteria": [
         "Destinatário, itens, CEST, descontos, despesas e tributos declarados visíveis.",
         "Fornecedor por documento exato e custos preservados no recibo imutável da entrada.",
@@ -83,7 +83,7 @@
         "Emissão direta do Lojas com A1 e SEFAZ, sem dependência de escrita ERP; aceite fiscal real separado das evidências sintéticas."
       ],
       "environment": "GitHub CI isolado e produção SSH; nenhuma operação fiscal ou entrada real de teste",
-      "evidence": "Recebimento entregue no PR265, versão20ddb6603d57da7a7baf62183714835bfc30d971. CI PR43692768983 e produção43693482933 aprovados, produção na tentativa3. Backup pré-migração32.686.040bytes conferido; migração20261115080000_fiscal_fornecedor_cadastro aplicada. Home pública200com versão exata; API nova de custos401JSONsem sessão. Navegador: cadastro sem entrada automática, recebimento idempotente, fornecedor/custos e360/393/768/1280/1440px. Evidências em evidencias/fiscal-e-remocao-render-2026-11-15.md. Emissão continua bloqueada pelo ERP; nenhuma emissão ou manifestação real realizada."
+      "evidence": "Recebimento entregue no PR265, versão20ddb6603d57da7a7baf62183714835bfc30d971. CI43692768983 e produção43693482933 aprovados, backup32.686.040bytes e migração20261115080000_fiscal_fornecedor_cadastro conferidos. Cadastro sem entrada automática, recebimento idempotente, fornecedor/custos e navegador360/393/768/1280/1440px comprovados em evidencias/fiscal-e-remocao-render-2026-11-15.md. Emissão direta publicada no PR271 e cancelamento nativo no PR272, versão463380525c1f5ea81cca183fb2e26f6fd318cc6e; CI43889647698 e produção43891181312 aprovados. Sem dependência de escrita ERP. Evidências adicionais: evidencias/emissao-direta-lojas-2026-11-16.md e evidencias/cancelamento-direto-lojas-2026-11-16.md. Nenhum evento fiscal real realizado no QA; homologação real permanece pendente."
     },
     {
       "id": "ROBOTS-SEM-CONTENT-SIGNAL-20261115",

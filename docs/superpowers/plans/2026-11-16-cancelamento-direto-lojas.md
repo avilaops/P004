@@ -19,10 +19,13 @@ desfaz cancelamento confirmado.
 ## Execução
 
 - [x] Reproduzir regressão de consulta e contrato do evento no GitHub CI • RED43885632612.
-- [ ] Persistência imutável e envio idempotente com transporte sintético.
-- [ ] API privada, confirmação e comprovante no painel.
-- [ ] Consulta reconcilia resultado incerto sem inventar protocolo de evento.
-- [ ] CI, navegador, publicação e evidências.
+- [x] Persistência imutável e envio idempotente com transporte sintético.
+- [x] API privada, confirmação e comprovante no painel.
+- [x] Consulta reconcilia resultado incerto sem inventar protocolo de evento.
+- [x] CI43889647698, navegador393/1440px, publicação43891181312 e evidências.
+
+Publicação463380525c1f5ea81cca183fb2e26f6fd318cc6e verificada em16/11/2026.
+Registro: `evidencias/cancelamento-direto-lojas-2026-11-16.md`.
 
 ## Fontes
 
