@@ -13,6 +13,17 @@
   ],
   "tasks": [
     {
+      "id": "FISCAL-MANIFESTACAO-20261116",
+      "title": "Corrigir preparação e reserva da manifestação local",
+      "objective": "Validar e assinar antes da intenção, impedir envio duplicado e preservar resultado final persistido.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-andamento",
+      "acceptanceCriteria": ["Entrada inválida e certificado indisponível não reservam intenção.", "Concorrência transmite uma vez e preserva comando original.", "Falha posterior não desfaz aceite e protocolo.", "CNPJ integrado não transmite pelo coletor local.", "CI e publicação verificados, sem emissão real ou alterações no ERP."],
+      "environment": "GitHub CI isolado e servidor SSH",
+      "evidence": "PR269 • regressões reproduzidas em43857990688 nos testes unitários e PostgreSQL. Verificação final pendente."
+    },
+    {
       "id": "FISCAL-PEDIDO-20261115",
       "title": "Conferir dados e pendências fiscais do pedido no Lojas",
       "objective": "Permitir revisão do snapshot comercial, totais e classificação atual, sem alterar ERP ou fingir emissão disponível.",

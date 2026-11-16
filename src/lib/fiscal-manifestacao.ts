@@ -1,9 +1,11 @@
 import { createHash, createSign } from "node:crypto";
 import { request } from "node:https";
+import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { abrirCertificado, credencialAssinatura, credencialTls, ErroFiscal, lerCertificado } from "./fiscal-certificado";
 import { consultarSefazPorChave } from "./fiscal-distribuicao";
 import { cabecalhoDocumentoFiscal } from "./fiscal-documento";
+import { fiscalErpConfigurado } from "./erp-fiscal";
 
 const NFE_NS = "http://www.portalfiscal.inf.br/nfe";
 const DSIG_NS = "http://www.w3.org/2000/09/xmldsig#";
@@ -20,6 +22,10 @@ export const TIPOS_MANIFESTACAO = {
 } as const;
 export type TipoManifestacao = keyof typeof TIPOS_MANIFESTACAO;
 
+export function tipoManifestacaoValido(tipo: unknown): tipo is TipoManifestacao {
+  return typeof tipo === "string" && Object.hasOwn(TIPOS_MANIFESTACAO, tipo);
+}
+
 const escape = (texto: string) => texto.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const pick = (xml: string, nome: string) => new RegExp(`<(?:\\w+:)?${nome}>([^<]*)</(?:\\w+:)?${nome}>`).exec(xml)?.[1] ?? null;
 
@@ -29,6 +35,7 @@ function instanteFiscal(data: Date): string {
 }
 
 export function montarManifestacao(dados: { tipo: TipoManifestacao; chave: string; cnpj: string; sequencia: number; data: Date; justificativa?: string | null }) {
+  if (!tipoManifestacaoValido(dados.tipo)) throw new ErroFiscal("Tipo de manifestação inválido.");
   if (!/^\d{44}$/.test(dados.chave) || !/^[0-9A-Z]{12}\d{2}$/.test(dados.cnpj)) throw new ErroFiscal("Chave ou CNPJ inválido para manifestação.");
   if (!Number.isInteger(dados.sequencia) || dados.sequencia < 1 || dados.sequencia > 20) throw new ErroFiscal("Sequência de manifestação inválida.");
   const tipo = TIPOS_MANIFESTACAO[dados.tipo];
@@ -83,43 +90,61 @@ async function enviar(pfx: Buffer, senha: string, corpo: string): Promise<string
   }).catch(() => { throw new ErroFiscal("Não foi possível confirmar a manifestação na SEFAZ. A intenção foi preservada para conferência."); });
 }
 
-export async function manifestarDocumento(dados: { tenantId: string; documentoId: string; tipo: TipoManifestacao; justificativa?: string | null; autor: string; agora?: Date }) {
+export async function manifestarDocumento(
+  dados: { tenantId: string; documentoId: string; tipo: TipoManifestacao; justificativa?: string | null; autor: string; agora?: Date },
+  transporte: { enviar: typeof enviar; consultar: typeof consultarSefazPorChave } = { enviar, consultar: consultarSefazPorChave },
+) {
+  if (!tipoManifestacaoValido(dados.tipo)) throw new ErroFiscal("Tipo de manifestação inválido.");
   const documento = await prisma.documentoFiscalLoja.findFirst({ where: { id: dados.documentoId, tenantId: dados.tenantId }, select: { id: true, chave: true, schema: true, destinatarioDocumento: true } });
   const fiscal = await prisma.fiscalLoja.findUnique({ where: { tenantId: dados.tenantId }, include: { tenant: { select: { cnpj: true, status: true } } } });
   if (!documento || !documento.chave || !/^resNFe/i.test(documento.schema)) throw new ErroFiscal("A manifestação exige um resumo de NF-e recebido por esta loja.");
   if (!fiscal || fiscal.tenant.status !== "ATIVA") throw new ErroFiscal("Configure o certificado A1 da loja antes de manifestar.");
   const cnpj = fiscal.tenant.cnpj?.replace(/[^0-9A-Z]/gi, "").toUpperCase() ?? "";
+  if (fiscalErpConfigurado(cnpj)) throw new ErroFiscal("A manifestação deste CNPJ é feita pelo ERP. Use o painel fiscal do ERP.");
   if (fiscal.cnpj !== cnpj || (documento.destinatarioDocumento && documento.destinatarioDocumento !== cnpj)) throw new ErroFiscal("O destinatário da NF-e não corresponde ao certificado desta loja.");
   const sequencia = 1;
+  const preparado = montarManifestacao({ tipo: dados.tipo, chave: documento.chave, cnpj, sequencia, data: dados.agora ?? new Date(), justificativa: dados.justificativa });
   const idempotencia = `NFE:${documento.chave}:${TIPOS_MANIFESTACAO[dados.tipo].codigo}:${sequencia}:PRODUCAO`;
   const existente = await prisma.manifestacaoFiscalLoja.findUnique({ where: { tenantId_idempotencia: { tenantId: dados.tenantId, idempotencia } } });
   if (existente) return existente;
-  const registro = await prisma.manifestacaoFiscalLoja.create({ data: { tenantId: dados.tenantId, documentoId: documento.id, idempotencia, tipo: dados.tipo, justificativa: dados.justificativa, autor: dados.autor, ambiente: "PRODUCAO", sequencia } });
   let pfx: Buffer | undefined;
   try {
     const aberto = abrirCertificado(fiscal.certificadoEnc); pfx = aberto.pfx;
     lerCertificado(pfx, aberto.senha, cnpj);
-    const preparado = montarManifestacao({ tipo: dados.tipo, chave: documento.chave, cnpj, sequencia, data: dados.agora ?? new Date(), justificativa: dados.justificativa });
     const chave = credencialAssinatura(pfx, aberto.senha);
     const assinado = assinarManifestacao(preparado.xml, preparado.id, chave.key, chave.cert);
     const lote = String(Date.now()).slice(-15);
     const requisicao = envelopeManifestacao(assinado, lote);
-    await prisma.manifestacaoFiscalLoja.update({ where: { id: registro.id }, data: { lote, enviadoEm: new Date(), status: "ENVIANDO", tentativas: { increment: 1 }, xmlEnviado: assinado } });
-    const resposta = await enviar(pfx, aberto.senha, requisicao);
-    const retorno = lerRetornoManifestacao(resposta, documento.chave);
-    const final = await prisma.manifestacaoFiscalLoja.update({ where: { id: registro.id }, data: { concluidoEm: new Date(), protocolo: retorno.protocolo, status: retorno.aceita ? "ACEITA" : "REJEITADA", codigoRetorno: retorno.codigo, motivoRetorno: retorno.motivo.slice(0, 400), xmlResposta: resposta, resultadoFinal: true } });
-    await prisma.auditoriaFiscalLoja.create({ data: { tenantId: dados.tenantId, documentoId: documento.id, manifestacaoId: registro.id, acao: retorno.aceita ? "MANIFESTACAO_ACEITA" : "MANIFESTACAO_REJEITADA", ator: dados.autor, dados: { tipo: dados.tipo, codigo: retorno.codigo, protocolo: retorno.protocolo } } });
-    if (retorno.aceita) {
-      try {
-        const distribuicao = await consultarSefazPorChave(pfx, aberto.senha, cnpj, fiscal.uf, documento.chave);
-        if (distribuicao.documentos.length) await prisma.documentoFiscalLoja.createMany({ data: distribuicao.documentos.map((item) => ({ ...item, ...cabecalhoDocumentoFiscal(item.xml, item.schema, item.chave), tenantId: dados.tenantId, cnpj, hashXml: createHash("sha256").update(item.xml, "utf8").digest("hex"), identificadorExterno: `SEFAZ_NFE:${cnpj}:${item.nsu}` })), skipDuplicates: true });
-      } catch (erroDistribuicao) {
-        await prisma.auditoriaFiscalLoja.create({ data: { tenantId: dados.tenantId, documentoId: documento.id, manifestacaoId: registro.id, acao: "XML_COMPLETO_AGUARDANDO", ator: dados.autor, dados: { motivo: erroDistribuicao instanceof ErroFiscal ? erroDistribuicao.message : "Consulta por chave pendente." } } });
-      }
+    let registro;
+    try {
+      registro = await prisma.manifestacaoFiscalLoja.create({ data: { tenantId: dados.tenantId, documentoId: documento.id, idempotencia, tipo: dados.tipo, justificativa: dados.justificativa?.replace(/\s+/g, " ").trim(), autor: dados.autor, ambiente: "PRODUCAO", sequencia } });
+    } catch (erro) {
+      if (!(erro instanceof Prisma.PrismaClientKnownRequestError) || erro.code !== "P2002") throw erro;
+      return await prisma.manifestacaoFiscalLoja.findUniqueOrThrow({ where: { tenantId_idempotencia: { tenantId: dados.tenantId, idempotencia } } });
     }
-    return final;
-  } catch (erro) {
-    await prisma.manifestacaoFiscalLoja.update({ where: { id: registro.id }, data: { status: "PENDENTE_CONFERENCIA", proximaTentativaEm: new Date(Date.now() + 60 * 60_000), motivoRetorno: erro instanceof ErroFiscal ? erro.message : "Falha protegida no envio fiscal." } });
-    throw erro;
+    try {
+      await prisma.manifestacaoFiscalLoja.update({ where: { id: registro.id }, data: { lote, enviadoEm: new Date(), status: "ENVIANDO", tentativas: { increment: 1 }, xmlEnviado: assinado } });
+      const resposta = await transporte.enviar(pfx, aberto.senha, requisicao);
+      const retorno = lerRetornoManifestacao(resposta, documento.chave);
+      const final = await prisma.manifestacaoFiscalLoja.update({ where: { id: registro.id }, data: { concluidoEm: new Date(), protocolo: retorno.protocolo, status: retorno.aceita ? "ACEITA" : "REJEITADA", codigoRetorno: retorno.codigo, motivoRetorno: retorno.motivo.slice(0, 400), xmlResposta: resposta, resultadoFinal: true } });
+      await prisma.auditoriaFiscalLoja.create({ data: { tenantId: dados.tenantId, documentoId: documento.id, manifestacaoId: registro.id, acao: retorno.aceita ? "MANIFESTACAO_ACEITA" : "MANIFESTACAO_REJEITADA", ator: dados.autor, dados: { tipo: dados.tipo, codigo: retorno.codigo, protocolo: retorno.protocolo } } });
+      if (retorno.aceita) {
+        try {
+          const distribuicao = await transporte.consultar(pfx, aberto.senha, cnpj, fiscal.uf, documento.chave);
+          if (distribuicao.documentos.length) await prisma.documentoFiscalLoja.createMany({ data: distribuicao.documentos.map((item) => ({ ...item, ...cabecalhoDocumentoFiscal(item.xml, item.schema, item.chave), tenantId: dados.tenantId, cnpj, hashXml: createHash("sha256").update(item.xml, "utf8").digest("hex"), identificadorExterno: `SEFAZ_NFE:${cnpj}:${item.nsu}` })), skipDuplicates: true });
+        } catch (erroDistribuicao) {
+          await prisma.auditoriaFiscalLoja.create({ data: { tenantId: dados.tenantId, documentoId: documento.id, manifestacaoId: registro.id, acao: "XML_COMPLETO_AGUARDANDO", ator: dados.autor, dados: { motivo: erroDistribuicao instanceof ErroFiscal ? erroDistribuicao.message : "Consulta por chave pendente." } } });
+        }
+      }
+      return final;
+    } catch (erro) {
+      const persistido = await prisma.manifestacaoFiscalLoja.findUniqueOrThrow({ where: { id: registro.id } });
+      if (persistido.resultadoFinal) {
+        console.error("Falha posterior ao resultado da manifestação fiscal", { manifestacaoId: registro.id });
+        return persistido;
+      }
+      await prisma.manifestacaoFiscalLoja.updateMany({ where: { id: registro.id, resultadoFinal: false }, data: { status: "PENDENTE_CONFERENCIA", proximaTentativaEm: new Date(Date.now() + 60 * 60_000), motivoRetorno: erro instanceof ErroFiscal ? erro.message : "Falha protegida no envio fiscal." } });
+      throw erro;
+    }
   } finally { pfx?.fill(0); }
 }
