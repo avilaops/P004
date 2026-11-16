@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { after, mock, test } from "node:test";
+import { after, test } from "node:test";
 import forge from "node-forge";
 import { prisma } from "../../src/lib/db";
 import { manifestarDocumento } from "../../src/lib/fiscal-manifestacao";
@@ -78,7 +78,9 @@ test("falha de transporte preserva intenção incerta sem retransmitir", async (
 
 test("falha posterior de auditoria não desfaz aceite ou protocolo persistidos", async () => {
   const { dados, chave } = await prepararCertificado();
-  const auditoria = mock.method(prisma.auditoriaFiscalLoja, "create", async () => { throw new Error("Auditoria indisponível no teste"); });
+  const criarAuditoria = prisma.auditoriaFiscalLoja.create;
+  // O delegate do Prisma é um Proxy sem descriptor de método para mock.method.
+  prisma.auditoriaFiscalLoja.create = async () => { throw new Error("Auditoria indisponível no teste"); };
   try {
     const resultado = await manifestarDocumento(dados, {
       enviar: async () => `<retEnvEvento><cStat>128</cStat><retEvento><infEvento><cStat>135</cStat><chNFe>${chave}</chNFe><nProt>135260000099999</nProt></infEvento></retEvento></retEnvEvento>`,
@@ -90,7 +92,7 @@ test("falha posterior de auditoria não desfaz aceite ou protocolo persistidos",
     const persistido = await prisma.manifestacaoFiscalLoja.findUniqueOrThrow({ where: { id: resultado.id } });
     assert.equal(persistido.status, "ACEITA");
     assert.equal(persistido.proximaTentativaEm, null);
-  } finally { auditoria.mock.restore(); }
+  } finally { prisma.auditoriaFiscalLoja.create = criarAuditoria; }
 });
 
 test("CNPJ integrado não transmite pelo coletor local", async () => {
