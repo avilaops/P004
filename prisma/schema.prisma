@@ -471,7 +471,11 @@ model EmissaoFiscalLoja {
   numero              Int
   chave               String
   resumoHash          String
+  intencaoHash        String
   xmlAssinado         String   @db.Text
+  total               String
+  destinatarioDocumento String
+  destinatarioNome    String
   xmlResposta         String?  @db.Text
   xmlAutorizado       String?  @db.Text
   digest              String

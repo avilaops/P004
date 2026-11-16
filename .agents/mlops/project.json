@@ -212,6 +212,14 @@
         "fundacao"
       ],
       "sources": [
+        { "kind": "code", "path": "src/lib/fiscal-emissao.ts" },
+        { "kind": "code", "path": "src/lib/fiscal-emissao-xml.ts" },
+        { "kind": "code", "path": "src/lib/fiscal-emissao-venda.ts" },
+        { "kind": "code", "path": "src/components/painel/EmissaoFiscal.tsx" },
+        { "kind": "test", "path": "src/lib/fiscal-emissao-xml.test.ts" },
+        { "kind": "test", "path": "src/lib/fiscal-emissao-venda.test.ts" },
+        { "kind": "test", "path": "tests/integration/fiscal-emissao.test.ts" },
+        { "kind": "contract", "path": "docs/superpowers/plans/2026-11-16-emissao-direta-lojas.md" },
         { "kind": "code", "path": "src/lib/fiscal-manifestacao.ts" },
         { "kind": "test", "path": "tests/integration/fiscal-manifestacao.test.ts" },
         { "kind": "contract", "path": "docs/superpowers/plans/2026-11-16-fiscal-manifestacao.md" },

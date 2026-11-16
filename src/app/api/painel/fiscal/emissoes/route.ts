@@ -1,15 +1,21 @@
 import { z } from "zod";
+import { createHash } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { ErroApi } from "@/lib/api-resposta";
 import { ErroFiscal } from "@/lib/fiscal-certificado";
 import { prepararEmissao, RESUMO_EMISSAO } from "@/lib/fiscal-emissao";
 import { origemFiscalPermitida } from "@/lib/fiscal-origem";
 import { exigir } from "@/lib/operadores";
+import { prepararFiscalDoPedido } from "@/lib/fiscal-pedido";
+import { montarNfeVenda, OpcoesVendaSchema } from "@/lib/fiscal-emissao-venda";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 const headers = { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" };
-const entrada = z.object({ xml: z.string().min(1).max(1024 * 1024), pedidoId: z.string().min(1).max(100).optional() });
+const entrada = z.union([
+  z.object({ xml: z.string().min(1).max(1024 * 1024), pedidoId: z.string().min(1).max(100).optional() }),
+  z.object({ pedidoId: z.string().min(1).max(100), venda: OpcoesVendaSchema }),
+]);
 
 export async function GET(request: Request) {
   const { s, erro } = await exigir("fiscal");
@@ -37,7 +43,16 @@ export async function POST(request: Request) {
     } finally { reader.releaseLock(); }
     const validado = entrada.safeParse(JSON.parse(Buffer.concat(partes).toString("utf8")));
     if (!validado.success) throw new ErroFiscal("Confira o rascunho e o pedido informado.");
-    const resultado = await prepararEmissao({ ...validado.data, tenantId: s.tenant.id, autor: s.operador?.email ?? s.tenant.loginEmail ?? "dono-da-loja" });
+    let preparacao: { xml: string; pedidoId?: string; intencaoHash?: string };
+    if ("venda" in validado.data) {
+      const { venda, pedidoId } = validado.data;
+      const conferencia = await prepararFiscalDoPedido(s.tenant.id, pedidoId);
+      const emitente = await prisma.tenant.findUniqueOrThrow({ where: { id: s.tenant.id }, select: { endereco: true } });
+      const xml = montarNfeVenda(conferencia, emitente.endereco, venda);
+      const intencaoHash = createHash("sha256").update(JSON.stringify({ dados: conferencia.resumoHash, endereco: emitente.endereco, venda })).digest("hex");
+      preparacao = { xml, pedidoId, intencaoHash };
+    } else { preparacao = validado.data; }
+    const resultado = await prepararEmissao({ ...preparacao, tenantId: s.tenant.id, autor: s.operador?.email ?? s.tenant.loginEmail ?? "dono-da-loja" });
     return Response.json(resultado, { status: 201, headers });
   } catch (falha) {
     return Response.json({ erro: falha instanceof ErroApi || falha instanceof ErroFiscal ? falha.message : "Não foi possível preparar a NF-e." }, { status: falha instanceof ErroApi ? falha.status : 422, headers });

@@ -8,6 +8,7 @@ import { Secao, inputClasse } from "./campos";
 import DownloadFiscal from "./DownloadFiscal";
 import FluxosFiscais from "./FluxosFiscais";
 import ConferenciaEntradaFiscal from "./ConferenciaEntradaFiscal";
+import EmissaoFiscal from "./EmissaoFiscal";
 
 type Estado = {
   configuracao: { cnpj: string; uf: string; titular: string; validoAte: string; proximaConsultaEm: string; ultimaMensagem: string | null } | null;
@@ -234,6 +235,7 @@ export default function Fiscal() {
 
   return (
     <div className="grid min-w-0 gap-5">
+      <EmissaoFiscal />
       {erro && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900">{erro}</p>}
       {mensagem && <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">{mensagem}</p>}
       <Secao titulo="Certificado digital A1" descricao={configuracao ? "Identificação da empresa e validade do certificado." : "Conecte o certificado da empresa para começar a receber NF-e."}>

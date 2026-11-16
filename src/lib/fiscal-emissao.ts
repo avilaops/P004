@@ -1,11 +1,12 @@
 import { request } from "node:https";
+import { createHash } from "node:crypto";
 import { Prisma, type EmissaoFiscalLoja } from "@prisma/client";
 import { prisma } from "./db";
 import { ErroApi } from "./api-resposta";
 import { abrirCertificado, credencialAssinatura, credencialTls, ErroFiscal, lerCertificado } from "./fiscal-certificado";
 import { assinarNfe, destinoNfe, envelopeConsulta, envelopeEmissao, lerRespostaNfe, NFE_NS, validarRascunhoNfe } from "./fiscal-emissao-xml";
 
-export const RESUMO_EMISSAO = { id: true, pedidoId: true, ambiente: true, chave: true, serie: true, numero: true, resumoHash: true, status: true, codigo: true, motivo: true, protocolo: true, criadoEm: true, atualizadoEm: true } as const;
+export const RESUMO_EMISSAO = { id: true, pedidoId: true, ambiente: true, chave: true, serie: true, numero: true, total: true, destinatarioDocumento: true, destinatarioNome: true, resumoHash: true, status: true, codigo: true, motivo: true, protocolo: true, criadoEm: true, atualizadoEm: true } as const;
 export type ResumoEmissao = Pick<EmissaoFiscalLoja, keyof typeof RESUMO_EMISSAO>;
 
 export async function enviarNfe(dados: { uf: string; ambiente: string; operacao: "autorizar" | "consultar"; corpo: string; pfx: Buffer; senha: string }): Promise<string> {
@@ -37,7 +38,7 @@ async function certificado(tenantId: string, cnpjEsperado?: string) {
 }
 
 /** Preparação apenas assina e persiste. Não faz requisição externa. */
-export async function prepararEmissao(dados: { tenantId: string; pedidoId?: string; xml: string; autor: string }) {
+export async function prepararEmissao(dados: { tenantId: string; pedidoId?: string; xml: string; autor: string; intencaoHash?: string }) {
   const fiscal = await certificado(dados.tenantId);
   try {
     const nota = validarRascunhoNfe(dados.xml, fiscal.cnpj);
@@ -47,14 +48,17 @@ export async function prepararEmissao(dados: { tenantId: string; pedidoId?: stri
     if (pedido && (pedido.status !== "PAGO" || pedido.clienteDocumento.replace(/\D/g, "") !== nota.destinatario || BigInt(nota.total.replace(".", "")) !== BigInt(pedido.totalCentavos))) throw new ErroFiscal("Confira situação, destinatário e total: a NF-e diverge do pedido pago.");
     const chave = credencialAssinatura(fiscal.pfx, fiscal.senha);
     const assinado = assinarNfe(dados.xml, chave.key, chave.cert);
+    const intencaoHash = dados.intencaoHash ?? createHash("sha256").update(dados.xml).digest("hex");
     const identidade = { tenantId: dados.tenantId, ambiente: nota.ambiente, serie: nota.serie, numero: nota.numero };
     try {
-      return await prisma.emissaoFiscalLoja.create({ data: { ...identidade, pedidoId: pedido?.id, pedidoAtualizadoEm: pedido?.atualizadoEm, cnpj: fiscal.cnpj, uf: nota.uf, chave: nota.chave, autor: dados.autor, ...assinado }, select: RESUMO_EMISSAO });
+      return await prisma.emissaoFiscalLoja.create({ data: { ...identidade, pedidoId: pedido?.id, pedidoAtualizadoEm: pedido?.atualizadoEm, cnpj: fiscal.cnpj, uf: nota.uf, chave: nota.chave, autor: dados.autor, total: nota.total, destinatarioDocumento: nota.destinatario, destinatarioNome: nota.nomeDestinatario, intencaoHash, ...assinado }, select: RESUMO_EMISSAO });
     } catch (erro) {
       if (!(erro instanceof Prisma.PrismaClientKnownRequestError) || erro.code !== "P2002") throw erro;
-      const existente = await prisma.emissaoFiscalLoja.findUnique({ where: { tenantId_ambiente_serie_numero: identidade }, select: RESUMO_EMISSAO });
-      if (!existente || existente.resumoHash !== assinado.resumoHash || existente.pedidoId !== (dados.pedidoId ?? null)) throw new ErroApi("conflito", "Série e número já reservados para outro documento. Consulte a emissão existente.");
-      return existente;
+      const existente = await prisma.emissaoFiscalLoja.findUnique({ where: { tenantId_ambiente_serie_numero: identidade }, select: { ...RESUMO_EMISSAO, intencaoHash: true } });
+      if (!existente || existente.intencaoHash !== intencaoHash || existente.pedidoId !== (dados.pedidoId ?? null)) throw new ErroApi("conflito", "Série e número já reservados para outro documento. Consulte a emissão existente.");
+      const { intencaoHash: _intencao, ...resumo } = existente;
+      void _intencao;
+      return resumo;
     }
   } finally { fiscal.pfx.fill(0); }
 }
@@ -69,7 +73,7 @@ async function registrarResposta(doc: EmissaoFiscalLoja, resposta: string) {
   const retorno = lerRespostaNfe(resposta, doc);
   const xmlAutorizado = retorno.protocoloXml ? `<nfeProc xmlns="${NFE_NS}" versao="4.00">${doc.xmlAssinado}${retorno.protocoloXml}</nfeProc>` : undefined;
   // Uma consulta sem resultado não desfaz protocolo já confirmado.
-  const estados = retorno.status === "CANCELADA" ? ["ENVIANDO", "PENDENTE_CONFERENCIA", "AUTORIZADA"] : ["ENVIANDO", "PENDENTE_CONFERENCIA"];
+  const estados = retorno.status === "CANCELADA" ? ["ENVIANDO", "PENDENTE_CONFERENCIA", "AUTORIZADA", "REJEITADA"] : retorno.status === "AUTORIZADA" ? ["ENVIANDO", "PENDENTE_CONFERENCIA", "REJEITADA"] : ["ENVIANDO", "PENDENTE_CONFERENCIA"];
   await prisma.emissaoFiscalLoja.updateMany({ where: { id: doc.id, tenantId: doc.tenantId, status: { in: estados } }, data: { status: retorno.status, codigo: retorno.codigo, motivo: retorno.motivo, xmlResposta: resposta, ...(retorno.protocolo ? { protocolo: retorno.protocolo } : {}), ...(xmlAutorizado ? { xmlAutorizado } : {}) } });
   return prisma.emissaoFiscalLoja.findFirstOrThrow({ where: { id: doc.id, tenantId: doc.tenantId }, select: RESUMO_EMISSAO });
 }

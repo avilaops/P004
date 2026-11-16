@@ -1,7 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { ErroApi } from "./api-resposta";
-import { fiscalErpConfigurado } from "./erp-fiscal";
 import { conferirPedidoFiscal, type EnderecoConferenciaFiscal } from "./fiscal-pedido-contrato";
 
 function enderecoComercial(valor: Prisma.JsonValue | null): EnderecoConferenciaFiscal | null {
@@ -37,6 +36,6 @@ export async function prepararFiscalDoPedido(tenantId: string, pedidoId: string)
         const variante = item.varianteId ? porVariante.get(item.varianteId) : null;
         return { id: item.id, produtoId: produto?.id ?? null, varianteId: variante?.produtoId === produto?.id ? variante?.id ?? null : null, nome: item.nome, sku: item.sku, quantidade: item.quantidade, precoUnitarioCentavos: item.precoUnitarioCentavos, quantidadeCancelada: item.quantidadeCancelada, quantidadeDevolvida: item.quantidadeDevolvida, classificacaoAtual: produto ? { ncm: produto.ncm, cest: produto.cest } : null };
       }),
-    }, { consultaErpConfigurada: fiscalErpConfigurado(loja.cnpj ?? "") });
+    });
   }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead, timeout: 10_000 });
 }

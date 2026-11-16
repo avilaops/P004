@@ -16,7 +16,7 @@ const LIMITE = 2_147_483_647;
 const inteiro = (n: number) => Number.isSafeInteger(n) && n >= 0 && n <= LIMITE;
 
 /** Conferência comercial local. Não é payload de emissão nem cálculo tributário. */
-export function conferirPedidoFiscal(entrada: DadosPedidoFiscal, opcoes: { consultaErpConfigurada: boolean } = { consultaErpConfigurada: false }) {
+export function conferirPedidoFiscal(entrada: DadosPedidoFiscal) {
   const pendencias: PendenciaPedidoFiscal[] = [];
   const apontar = (codigo: string, campo: string, mensagem: string, href?: string) => pendencias.push({ codigo, campo, mensagem, ...(href ? { href } : {}) });
   if (!/^[\d./\s-]+$/.test(entrada.emitente.documento) || entrada.emitente.documento.replace(/\D/g, "").length !== 14 || !validarDocumento(entrada.emitente.documento)) apontar("EMITENTE_DOCUMENTO", "emitente.documento", "Confira o CNPJ da empresa nos dados da loja.");
@@ -47,11 +47,9 @@ export function conferirPedidoFiscal(entrada: DadosPedidoFiscal, opcoes: { consu
   const { subtotalCentavos, descontoCentavos, totalCentavos } = entrada.totais;
   const valoresValidos = [subtotalCentavos, descontoCentavos, totalCentavos, entrada.frete.valorCentavos].every(inteiro);
   if (!linhasValidas || !valoresValidos || soma !== BigInt(subtotalCentavos) || BigInt(subtotalCentavos) + BigInt(entrada.frete.valorCentavos) - BigInt(descontoCentavos) !== BigInt(totalCentavos)) apontar("TOTAIS_DIVERGENTES", "totais", "Os totais preservados divergem das linhas, frete ou desconto, ou excedem o limite do pedido. Revise a origem comercial; nenhum valor foi corrigido automaticamente.");
-  if (!opcoes.consultaErpConfigurada) apontar("ERP_NAO_CONFIGURADO", "integracao", "A consulta fiscal do ERP não está configurada para esta empresa. Solicite a configuração ao suporte.");
-  apontar("EMISSAO_INDISPONIVEL", "integracao", "A emissão de pedidos pelo ERP ainda precisa ser liberada pelo suporte. Operação, município e tributação devem ser conferidos no ERP.");
   const dados = { ...entrada, itens };
   const resumoHash = createHash("sha256").update(JSON.stringify(dados)).digest("hex");
-  return { versao: "avila.lojas.fiscal.pedido.v1" as const, emissaoDisponivel: false as const, consultaErpConfigurada: opcoes.consultaErpConfigurada, resumoHash, dados, pendencias };
+  return { versao: "avila.lojas.fiscal.pedido.v2" as const, emissaoDisponivel: true as const, modoEmissao: "DIRETA" as const, resumoHash, dados, pendencias };
 }
 
 export type ConferenciaFiscalPedido = ReturnType<typeof conferirPedidoFiscal>;

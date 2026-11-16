@@ -169,7 +169,8 @@ try {
   assert.equal(consultaFiscal.status, 200);
   assert.match(consultaFiscal.headers.get("cache-control") ?? "", /no-store/);
   const snapshot = await consultaFiscal.json();
-  assert.equal(snapshot.emissaoDisponivel, false);
+  assert.equal(snapshot.emissaoDisponivel, true);
+  assert.equal(snapshot.modoEmissao, "DIRETA");
   assert.equal(snapshot.dados.itens[0].nome, "Peça comprada QA");
   assert.equal(JSON.stringify(snapshot).includes("senhaHash"), false);
   await page.getByRole("button", { name: "Atualizar conferência fiscal", exact: true }).click();

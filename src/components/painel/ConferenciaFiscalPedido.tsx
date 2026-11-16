@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { ConferenciaFiscalPedido as Conferencia } from "@/lib/fiscal-pedido-contrato";
 import { brl, Secao } from "./campos";
+import EmissaoFiscal from "./EmissaoFiscal";
 
 const MEIOS: Record<string, string> = { pix: "Pix", cartao: "Cartão", boleto: "Boleto" };
 const PAGAMENTOS: Record<string, string> = { approved: "Aprovado", pending: "Aguardando pagamento", in_process: "Em análise", authorized: "Autorizado pelo meio de pagamento", rejected: "Recusado", cancelled: "Cancelado", refunded: "Reembolsado", charged_back: "Contestado" };
@@ -27,7 +28,7 @@ export default function ConferenciaFiscalPedido({ pedidoId }: { pedidoId: string
     {ocupado && <p role="status" className="text-sm">Consultando os dados atuais do pedido…</p>}
     {erro && <p role="alert" className="break-words rounded-lg bg-red-50 p-3 text-sm text-red-900">{erro}</p>}
     {dados && base && <div className="grid min-w-0 gap-4">
-      <p role="status" className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">Conferência disponível • emissão de NF-e ainda indisponível nesta integração.</p>
+      <p role="status" className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">Conferência disponível • emissão direta pelo Lojas com A1 e SEFAZ.</p>
       <dl className="grid min-w-0 gap-3 text-sm sm:grid-cols-2">
         <div><dt className="text-muted-foreground">Emitente</dt><dd className="break-words">{base.emitente.nome} • {base.emitente.documento || "Documento não informado"}</dd></div>
         <div><dt className="text-muted-foreground">Destinatário</dt><dd className="break-words">{base.destinatario.nome} • {base.destinatario.documento || "Documento não informado"}</dd></div>
@@ -39,6 +40,7 @@ export default function ConferenciaFiscalPedido({ pedidoId }: { pedidoId: string
       <p className="text-sm">Subtotal {brl(base.totais.subtotalCentavos)} • frete {brl(base.frete.valorCentavos)} • desconto {brl(base.totais.descontoCentavos)} • total preservado {brl(base.totais.totalCentavos)}</p>
       <p className="text-xs text-muted-foreground">Preços e descrições são os registrados na compra. NCM/CEST são os atuais do catálogo e precisam de revisão para a operação fiscal.</p>
       <div className="grid gap-2"><h3 className="font-medium">Pendências para revisão</h3><ul className="grid gap-2">{dados.pendencias.map((p, indice) => <li key={`${p.codigo}:${p.campo}:${indice}`} className="break-words rounded-lg bg-amber-50 p-3 text-sm text-amber-950">{p.mensagem}{p.href && <> <a href={p.href} className="underline">Abrir cadastro</a></>}</li>)}</ul></div>
+      <EmissaoFiscal pedidoId={pedidoId} conferencia={dados} />
       <details className="text-xs text-muted-foreground"><summary className="cursor-pointer">Identificação desta conferência</summary><p className="mt-2 break-all">Pedido {base.pedido.referencia} • dados de {new Date(base.pedido.atualizadoEm).toLocaleString("pt-BR")} • {dados.versao}</p><p className="mt-1 break-all">Resumo SHA-256: {dados.resumoHash}</p><p className="mt-1">Identifica os dados consultados; não representa assinatura ou autorização fiscal.</p></details>
     </div>}
   </Secao>;

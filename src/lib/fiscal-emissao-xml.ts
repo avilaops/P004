@@ -30,7 +30,7 @@ export function chaveNfe(uf: string, anoMes: string, cnpj: string, serie: number
 export function validarRascunhoNfe(xml: string, cnpj: string) {
   const raiz = lerXmlNfe(xml);
   if (Object.keys(raiz).filter(k => !k.startsWith("?")).join() !== "NFe") throw new ErroFiscal("Envie somente o rascunho XML NFe, sem protocolo anterior.");
-  const nfe = bloco(raiz.NFe), inf = bloco(nfe.infNFe), ide = bloco(inf.ide), emit = bloco(inf.emit);
+  const nfe = bloco(new XMLParser({ ignoreAttributes: false, parseTagValue: false }).parse(xml).NFe), inf = bloco(nfe.infNFe), ide = bloco(inf.ide), emit = bloco(inf.emit);
   if (nfe["@_xmlns"] !== NFE_NS || nfe.Signature || inf["@_versao"] !== "4.00") throw new ErroFiscal("XML deve ser NF-e 4.00 ainda sem assinatura.");
   if (ide.mod !== "55") throw new ErroFiscal("Emissão disponível para modelo 55.");
   if (ide.tpAmb !== "1" && ide.tpAmb !== "2") throw new ErroFiscal("Informe ambiente de homologação ou produção.");
@@ -110,6 +110,7 @@ export function lerRespostaNfe(xml: string, esperado: { chave: string; ambiente:
   const codigo = texto(inf.cStat), motivo = texto(inf.xMotivo).slice(0, 400);
   if (!/^\d{3}$/.test(codigo)) throw new ErroFiscal("Resposta fiscal sem código válido.");
   const autorizada = prot && ["100", "150"].includes(codigo);
+  if (["101", "151"].includes(codigo) && retorno.chNFe !== esperado.chave) throw new ErroFiscal("Cancelamento sem confirmação da mesma chave fiscal.");
   if (autorizada && (inf.digVal !== esperado.digest || !/^\d{15}$/.test(texto(inf.nProt)))) throw new ErroFiscal("Protocolo sem digest ou identificação correspondente.");
   const status = autorizada ? "AUTORIZADA" : ["101", "151"].includes(codigo) ? "CANCELADA" : ["103", "104", "105", "106", "108", "109", "110", "204", "217", "539", "656", "999"].includes(codigo) ? "PENDENTE_CONFERENCIA" : "REJEITADA";
   return { status, codigo, motivo, protocolo: autorizada ? texto(inf.nProt) : null, protocoloXml: autorizada ? builder.build({ protNFe: { ...prot, "@_xmlns": NFE_NS, "@_versao": "4.00" } }) as string : null };

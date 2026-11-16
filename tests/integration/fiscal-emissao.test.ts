@@ -19,7 +19,7 @@ after(async () => {
 });
 
 test("emissão direta: preparação privada, concorrência, incerteza e consulta recuperam protocolo sem ERP", async () => {
-  const cnpj = "12345678000195";
+  const cnpj = String(BigInt(`0x${randomUUID().replaceAll("-", "")}`) % 100000000000000n).padStart(14, "0");
   const loja = await prisma.tenant.create({ data: { slug: `emissao-${randomUUID()}`, nome: "QA emissão", plano: "LOJA_PRO", status: "ATIVA", cnpj } });
   lojas.push(loja.id);
   const chaves = forge.pki.rsa.generateKeyPair(2048), cert = forge.pki.createCertificate();
@@ -28,7 +28,7 @@ test("emissão direta: preparação privada, concorrência, incerteza e consulta
   cert.setSubject([{ name: "commonName", value: `QA:${cnpj}` }]); cert.setIssuer(cert.subject.attributes); cert.sign(chaves.privateKey, forge.md.sha256.create());
   const pfx = Buffer.from(forge.asn1.toDer(forge.pkcs12.toPkcs12Asn1(chaves.privateKey, cert, "senha", { algorithm: "3des" })).getBytes(), "binary");
   await prisma.fiscalLoja.create({ data: { tenantId: loja.id, cnpj, uf: "SP", titular: "QA", validoAte: cert.validity.notAfter, certificadoEnc: selarCertificado(pfx, "senha") } });
-  const fixture = readFileSync("tests/fixtures/nfe-entrada-qa.xml", "utf8");
+  const fixture = readFileSync("tests/fixtures/nfe-entrada-qa.xml", "utf8").replaceAll("<CNPJ>12345678000195</CNPJ>", `<CNPJ>${cnpj}</CNPJ>`);
   const chave = chaveNfe("35", "2611", cnpj, 1, 123, "00000001");
   const xml = /<NFe>[\s\S]*?<\/NFe>/.exec(fixture)![0].replace("<NFe>", '<NFe xmlns="http://www.portalfiscal.inf.br/nfe">').replace(/Id="NFe\d{44}"/, `Id="NFe${chave}"`).replace(/<cDV>\d<\/cDV>/, `<cDV>${chave.at(-1)}</cDV>`);
   const entrada = { tenantId: loja.id, xml, autor: "qa@example.test" };
