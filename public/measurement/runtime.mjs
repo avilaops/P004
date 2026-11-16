@@ -1,11 +1,11 @@
-import { resolveRoute, sanitizeUrl, sanitizeEvent } from './core.mjs';
+import { resolveRoute, sanitizeUrl, sanitizeEvent, sanitizeReferrer } from './core.mjs';
 
 export function installMeasurement(config, options = {}) {
   if (window.__avilaMeasurement) return window.__avilaMeasurement;
-  const initial = resolveRoute(config, location.href);
-  if (!initial) return { setConsent() {}, track() {} };
-  const site = config.sites.find(site => site.domain === initial.domain);
-  const adapter = options.consentAdapter || initial.consentAdapter || site.consentAdapter || (initial.operation === 'ecommerce' || initial.domain === 'lojas.avilaops.com' ? 'loja' : 'avila');
+  const url = new URL(location.href);
+  const site = config.sites.find(site => site.domain === url.hostname || site.aliases?.includes(url.hostname));
+  if (url.protocol !== 'https:' || url.username || url.password || !site || ['sso', 'redirect'].includes(site.operation)) return { setConsent() {}, track() {} };
+  const adapter = options.consentAdapter || site.consentAdapter || (site.operation === 'ecommerce' || site.domain === 'lojas.avilaops.com' ? 'loja' : 'avila');
   const loaded = new Set();
   const ids = new Set(config.sites.map(s => s.measurementId).filter(Boolean));
   let consent = false;
@@ -26,8 +26,8 @@ export function installMeasurement(config, options = {}) {
       operation: route.operation,
       site_area: route.area,
       page_location: sanitizeUrl(location.href, route.area),
-      // Referrers may contain customer identifiers even when the current page is public.
-      page_referrer: '',
+      // Preserve acquisition origins without referring paths, queries or credentials.
+      page_referrer: sanitizeReferrer(document.referrer, config, location.href),
       page_title: route.domain + ' • ' + route.area,
     };
   }
@@ -57,7 +57,7 @@ export function installMeasurement(config, options = {}) {
   function view() {
     if (!consent) return;
     const ctx = context();
-    if (!ctx) return;
+    if (!ctx) { lastView = null; return; }
     const key = ctx.container_id + ':' + location.origin + location.pathname;
     if (key === lastView) return;
     lastView = key;

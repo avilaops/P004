@@ -258,7 +258,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </p>
           )}
           <main id="conteudo-loja" className="flex-1">{children}</main>
-          <Footer tenant={t} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} temBlog={publicacoes > 0 || artigosDomiRio(t.slug).length > 0} />
+          <Footer tenant={t} rastreioAtivo={temRastreio(pixels)} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} temBlog={publicacoes > 0 || artigosDomiRio(t.slug).length > 0} />
           {carrinhoProprio && <CarrinhoLateral pedidoMinimoCentavos={publico.pedidoMinimoCentavos}/>}
           {identidadeComercial.whatsapp && <WhatsAppFlutuante numero={identidadeComercial.whatsapp.numero} nome={t.nome} />}
           {/* Navegação do celular. Vale para todos os layouts: é da loja, não

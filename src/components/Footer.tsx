@@ -16,7 +16,7 @@ import { meiosAceitos } from "@/lib/recursos";
  * (a C2TI dá R$ 20 de desconto para manter o logo; aqui é parte do produto):
  * cada loja no ar é um anúncio da plataforma.
  */
-export default function Footer({ tenant, categorias, temBlog = false }: { tenant: Tenant; categorias: Array<{ slug: string; nome: string }>; temBlog?: boolean }) {
+export default function Footer({ tenant, categorias, temBlog = false, rastreioAtivo }: { tenant: Tenant; categorias: Array<{ slug: string; nome: string }>; temBlog?: boolean; rastreioAtivo?: boolean }) {
   const avila = new URL("/lojas/", process.env.AVILAOPS_URL ?? "https://avilaops.com").href;
   // Loja só online não expõe onde fica o estoque no bloco de visita: endereço
   // é opt-in ali. Na linha de identificação abaixo ele aparece sempre, porque
@@ -119,7 +119,7 @@ export default function Footer({ tenant, categorias, temBlog = false }: { tenant
         <div className="container-loja flex flex-col items-center justify-between gap-2 py-4 text-xs text-muted-foreground sm:flex-row">
           <span>
             © {new Date().getFullYear()} {identificacao.join(" · ")}
-            {temRastreio(pixelsDo(tenant)) && (
+            {(rastreioAtivo ?? temRastreio(pixelsDo(tenant))) && (
               <>
                 {" · "}
                 <PreferenciasCookies />

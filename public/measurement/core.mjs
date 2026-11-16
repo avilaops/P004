@@ -85,3 +85,16 @@ export function sanitizeEvent(name, input = {}) {
   }).filter(item => item.item_id || item.item_name);
   return { name, parameters };
 }
+
+
+/** Keep public acquisition origins without transmitting referring paths or credentials. */
+export function sanitizeReferrer(rawUrl, config, currentUrl) {
+  let url, current;
+  try { url = new URL(rawUrl); current = new URL(currentUrl); } catch { return ''; }
+  if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.port) return '';
+  const host = url.hostname;
+  if (host === current.hostname || !host.includes('.') || /^[0-9.]+$/.test(host) || host.includes(':') || /\.(local|internal|lan|localhost)$/.test(host)) return '';
+  if (host === 'avilaops.com' || host.endsWith('.avilaops.com') || ['accounts.google.com', 'login.microsoftonline.com', 'login.live.com'].includes(host)) return '';
+  if (config.sites.some(site => site.domain === host || site.aliases?.includes(host))) return '';
+  return url.origin + '/';
+}
