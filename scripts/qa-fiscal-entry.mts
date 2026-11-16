@@ -218,9 +218,13 @@ try {
   await prisma.tenant.update({ where: { id: loja.id }, data: { endereco: enderecoNfe } });
   await prisma.pedido.update({ where: { id: pedido.id }, data: { entrega: enderecoNfe } });
   await page.route("**/api/painel/fiscal/emissoes", async route => {
-    if (route.request().method() === "POST") await route.continue({ headers: { ...route.request().headers(), origin: "https://localhost" } });
-    else await route.continue();
+    if (route.request().method() !== "POST") return route.continue();
+    const requestHeaders = await route.request().allHeaders();
+    assert.ok(requestHeaders.cookie?.includes("lojas_sessao="));
+    const response = await route.fetch({ headers: { ...requestHeaders, origin: "https://localhost" } });
+    await route.fulfill({ response });
   });
+  assert.equal((await fetch(base + "/api/painel/fiscal/emissoes", { method: "POST", headers: { cookie, origin: "https://other.example", "content-type": "application/json" }, body: "{}" })).status, 403);
   await page.getByRole("button", { name: "Atualizar conferência fiscal", exact: true }).click();
   await page.getByRole("status").filter({ hasText: "Conferência disponível" }).waitFor();
   await page.getByText("Preparar NF-e de venda deste pedido", { exact: true }).click();
@@ -271,6 +275,9 @@ try {
   assert.equal(await revisaoNfe.getByRole("button", { name: "Emitir NF-e em homologação", exact: true }).isDisabled(), true);
   const cookieOutra = `lojas_sessao=${emitirToken(outra.slug)}`;
   assert.equal((await fetch(base + `/api/painel/fiscal/emissoes/${preparadaNfe.id}?formato=rascunho`, { headers: { cookie: cookieOutra } })).status, 404);
+  const corpoEmissao = { acao: "emitir", ambiente: preparadaNfe.ambiente, resumoHash: preparadaNfe.resumoHash, confirmacao: true };
+  assert.equal((await fetch(base + `/api/painel/fiscal/emissoes/${preparadaNfe.id}`, { method: "POST", headers: { cookie: cookieOutra, origin: "https://localhost", "content-type": "application/json" }, body: JSON.stringify(corpoEmissao) })).status, 404);
+  assert.equal((await fetch(base + `/api/painel/fiscal/emissoes/${preparadaNfe.id}`, { method: "POST", headers: { cookie, origin: "https://localhost", "content-type": "application/json" }, body: JSON.stringify({ ...corpoEmissao, confirmacao: false }) })).status, 422);
   for (const [credencial, status] of [[undefined, 401], [cookieGerente, 403]] as const) {
     const resposta = await fetch(base + "/api/painel/fiscal/emissoes", { headers: credencial ? { cookie: credencial } : {} });
     assert.equal(resposta.status, status); assert.match(resposta.headers.get("cache-control") ?? "", /no-store/);
