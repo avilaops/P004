@@ -1,5 +1,6 @@
 import type { Tenant } from "@prisma/client";
 import { CHAVE, VERSAO, consentimentoGoogle } from "./consentimento-config";
+import { medicaoGerenciadaPara } from "./medicao-gerenciada";
 
 /**
  * Os pixels que a loja carrega. Fica fora do componente porque o layout (que é
@@ -7,6 +8,7 @@ import { CHAVE, VERSAO, consentimentoGoogle } from "./consentimento-config";
  * cookies — e função exportada de módulo "use client" não roda no servidor.
  */
 export interface PixelsDaLoja {
+  medicaoGerenciada?: boolean;
   /** Caminho reservado no próprio domínio, somente após configurar o Gateway. */
   googleTagGatewayPath?: string;
   gtmId: string | null;
@@ -20,7 +22,8 @@ export interface PixelsDaLoja {
 
 export function pixelsDo(t: Tenant, hostname?: string): PixelsDaLoja {
   const gateway = caminhoDoGatewayGoogle(hostname ?? "");
-  return { gtmId: t.gtmId, metaPixelId: t.metaPixelId, ga4Id: t.ga4Id, googleAdsId: t.googleAdsId, tiktokPixelId: t.tiktokPixelId, googleMerchantId: t.googleMerchantId, ...(gateway ? { googleTagGatewayPath: gateway } : {}) };
+  const gerenciada = process.env.MEDICAO_33_ATIVA === '1' ? medicaoGerenciadaPara(hostname ?? '') : null;
+  return { gtmId: gerenciada?.gtmId ?? t.gtmId, metaPixelId: t.metaPixelId, ga4Id: gerenciada ? null : t.ga4Id, googleAdsId: t.googleAdsId, tiktokPixelId: t.tiktokPixelId, googleMerchantId: t.googleMerchantId, ...(gateway ? { googleTagGatewayPath: gateway } : {}), ...(gerenciada ? { medicaoGerenciada: true } : {}) };
 }
 
 /** Configuração operacional da zona da plataforma; domínios de clientes são independentes. */
@@ -42,6 +45,7 @@ export function caminhoDoGatewayGoogle(hostname: string, env: Record<string, str
  * mais for preciso medir se configura dentro do container, não aqui.
  */
 export function pixelsDaPlataforma(env: Record<string, string | undefined> = process.env): PixelsDaLoja {
+  if (env.MEDICAO_33_ATIVA === '1') return { gtmId: 'GTM-MMTBHNRN', ga4Id: null, metaPixelId: null, googleAdsId: null, tiktokPixelId: null, googleMerchantId: null, medicaoGerenciada: true };
   const gtm = (env.PLATAFORMA_GTM_ID ?? "").trim();
   const gateway = caminhoDoGatewayGoogle("lojas.avilaops.com", env);
   return {

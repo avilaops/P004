@@ -13,8 +13,8 @@ import "../plataforma.css";
 export default async function PlataformaLayout({ children }: { children: React.ReactNode }) {
   const sessao = await sessaoDoPainel();
   const lojista = sessao?.tenant ?? null;
-  // Só no site público. O painel do lojista tem layout próprio e fica sem tag:
-  // ali circulam pedido, cliente e faturamento da loja de outra pessoa.
+  // O institucional usa seu contêiner; o painel tem integração separada, com
+  // rotas privadas mascaradas e sem conteúdo de pedidos ou clientes nos eventos.
   const pixels = pixelsDaPlataforma();
   return (
     <div className="plataforma-shell">

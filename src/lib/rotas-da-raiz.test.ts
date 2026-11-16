@@ -15,6 +15,12 @@ test("retorno de autorização e contratos de API ficam na raiz", () => {
   }
 });
 
+test('os módulos de medição da plataforma não são reescritos para uma página', () => {
+  assert.equal(ficaNaRaiz('/measurement/entry.mjs'), true);
+  assert.equal(ficaNaRaiz('/measurement/sites.json'), true);
+  assert.equal(ficaNaRaiz('/measurement-falso'), false);
+});
+
 test("painel e página de venda continuam indo para a plataforma", () => {
   for (const caminho of ["/", "/painel", "/painel/configuracoes/entrega", "/entrar", "/criar", "/melhor-envio", "/mercado-pago", "/mlx/callback", "/canais", "/autorizar", "/oauth"]) {
     assert.equal(ficaNaRaiz(caminho), false, caminho);

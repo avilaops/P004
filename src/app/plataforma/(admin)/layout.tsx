@@ -9,6 +9,9 @@ import "../marca-lojas.css";
 import "../plataforma.css";
 import "./painel.css";
 import type { Viewport } from "next";
+import Pixels from "@/components/Pixels";
+import Consentimento, { PreferenciasCookies } from "@/components/Consentimento";
+import { pixelsDaPlataforma } from "@/lib/pixels";
 
 /**
  * `viewport-fit=cover` é o que faz `env(safe-area-inset-*)` valer algo no
@@ -31,6 +34,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const sessao = await sessaoDoPainel();
   if (!sessao) redirect("/entrar");
   const loja = sessao.tenant;
+  const pixels = pixelsDaPlataforma();
 
   // O pedido pago é o único que cobra ação agora: o dinheiro entrou e o
   // produto ainda não saiu. Uma contagem por navegação é barata e evita que a
@@ -43,10 +47,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="padm">
+      {pixels.medicaoGerenciada && <Pixels p={pixels} />}
       <a href="#conteudo-painel" className="padm-pular">Pular para o conteúdo</a>
       <NavPainel nome={loja.nome} urlLoja={urlDaLoja(loja)} aSeparar={aSeparar} pixManual={pixLigado} pixAConferir={pixAConferir} configuradorSobMedida={recursoAtivo(loja, "configurador_sob_medida")} podeTrocarLoja={!sessao.equipe && sessao.papel === "DONO" && Boolean(loja.loginEmail)} trocarLojaHref={sessao.equipe ? "/entrar/equipe" : undefined} />
       <BuscaPainel pixManual={pixLigado} configuradorSobMedida={recursoAtivo(loja, "configurador_sob_medida")} />
       <main id="conteudo-painel" tabIndex={-1} className="padm-conteudo pl-workspace">{children}</main>
+      {pixels.medicaoGerenciada && <><Consentimento ativo plataforma /><div className="px-4 py-2 text-sm"><PreferenciasCookies /></div></>}
     </div>
   );
 }

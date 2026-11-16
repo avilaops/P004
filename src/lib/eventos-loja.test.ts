@@ -61,6 +61,37 @@ function paginaRecemAberta(gtmId: string | null) {
   return janela as { dataLayer: unknown[] };
 }
 
+test('medição gerenciada usa somente o runtime e confirma a compra já paga', (t) => {
+  t.after(() => void delete (globalThis as { window?: unknown }).window);
+  const w = paginaRecemAberta('GTM-M6JQNNMS');
+  const recebidos: Array<{ name: string; parameters: Record<string, unknown> }> = [];
+  Object.assign(w, {
+    __avilaManaged: true,
+    localStorage: { getItem: () => JSON.stringify({ versao: 1, escolha: 'medicao' }) },
+    __avilaMeasurement: { track(name: string, parameters: Record<string, unknown>) { recebidos.push({ name, parameters }); return true; } },
+  });
+  verProduto(itens[0]);
+  comprar(itens, { totalCentavos: 12480, freteCentavos: 2500, referencia: 'PED-GERENCIADA' });
+  assert.deepEqual(recebidos.map(e => e.name), ['view_item', 'purchase']);
+  assert.equal(recebidos[1].parameters.confirmed, true);
+  assert.equal(recebidos[1].parameters.transaction_id, 'PED-GERENCIADA');
+  assert.deepEqual(lidoDoDataLayer(w.dataLayer).eventos, [], 'não duplica no caminho GTM legado');
+});
+
+test('publicidade sem medição não enfileira eventos para o GA4 gerenciado', (t) => {
+  t.after(() => void delete (globalThis as { window?: unknown }).window);
+  const w = paginaRecemAberta('GTM-M6JQNNMS');
+  let chamadas = 0;
+  Object.assign(w, {
+    __avilaManaged: true,
+    localStorage: { getItem: () => JSON.stringify({ versao: 1, escolha: 'publicidade' }) },
+    __avilaMeasurement: { track() { chamadas++; return true; } },
+  });
+  verProduto(itens[0]);
+  assert.equal(chamadas, 0);
+  assert.deepEqual(lidoDoDataLayer(w.dataLayer).eventos, []);
+});
+
 /** Separa o que o GTM lê (objeto com `event`) do que o gtag empurra (`arguments`). */
 function lidoDoDataLayer(dataLayer: unknown[]) {
   const objetos: Record<string, unknown>[] = [];
