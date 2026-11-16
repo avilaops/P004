@@ -34,3 +34,25 @@ sempre respeitam tenant e permissão fiscal. Nenhum efeito automático em estoqu
 - [Serviços oficiais](https://dfe-portal.svrs.rs.gov.br/Nfe/Servicos).
 - [MOC](https://www.nfe.fazenda.gov.br/portal/exibirArquivo.aspx?AspxAutoDetectCookieSupport=1&conteudo=LrBx7WT9PuA%3D).
 - [Assinatura XML](https://github.com/node-saml/xml-crypto).
+
+## Recorte implementado
+
+Emissão NF-e modelo 55, modalidade normal, com destinos oficiais por UF.
+O formulário de pedidos atende venda online a consumidor final não contribuinte
+no Simples Nacional, CSOSN 102, PIS/COFINS 07, sem ST, mediante escolha explícita.
+CFOP, origem, unidade e GTIN exigem revisão por item. Outros enquadramentos
+entram como XML fiscal revisado, que o Lojas valida quanto à identidade, assina
+e transmite diretamente • não há geração automática de tributação não suportada.
+
+Numeração é informada pelo emitente; não é inferida de notas recebidas. O
+documento assinado é imutável. Correção explícita de preparação ou rejeição
+confirmada cria outra versão na mesma numeração e preserva a anterior. Troca
+concorrente com envio é impedida no banco; resultado incerto, autorizado ou
+denegado não pode ser substituído por este caminho. Inutilização, carta de correção, cancelamento
+ativo e cálculo tributário geral não fazem parte desta entrega de autorização.
+Consulta reconhece cancelamento já registrado na SEFAZ e preserva o XML original.
+
+A preparação vinculada a pedido exige pedido pago, destinatário e total iguais.
+Mudança no pedido após preparação bloqueia o envio. O XML assinado e o XML
+autorizado têm proteção de imutabilidade no PostgreSQL. A integração não modifica
+preço, pagamento, estoque ou situação comercial.

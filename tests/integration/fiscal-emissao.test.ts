@@ -33,10 +33,15 @@ test("emissão direta: preparação privada, concorrência, incerteza e consulta
   const chave = chaveNfe("35", "2611", cnpj, 1, 123, "00000001");
   const xml = /<NFe>[\s\S]*?<\/NFe>/.exec(fixture)![0].replace("<NFe>", '<NFe xmlns="http://www.portalfiscal.inf.br/nfe">').replace(/Id="NFe\d{44}"/, `Id="NFe${chave}"`).replace(/<cDV>\d<\/cDV>/, `<cDV>${chave.at(-1)}</cDV>`);
   const entrada = { tenantId: loja.id, xml, autor: "qa@example.test" };
-  const preparada = await prepararEmissao(entrada);
+  let preparada = await prepararEmissao(entrada);
   assert.equal(preparada.status, "PREPARADA");
+  await assert.rejects(prisma.emissaoFiscalLoja.update({ where: { id: preparada.id }, data: { xmlAssinado: "<adulterado/>" } }), /imutável/);
   assert.equal((await prepararEmissao(entrada)).id, preparada.id);
   await assert.rejects(prepararEmissao({ ...entrada, xml: xml.replace("Venda de mercadoria", "Outro conteúdo") }), { status: 409 });
+  const anteriorId = preparada.id;
+  preparada = await prepararEmissao({ ...entrada, xml: xml.replace("Venda de mercadoria", "Venda revisada"), substituir: { id: preparada.id, resumoHash: preparada.resumoHash } });
+  assert.notEqual(preparada.id, anteriorId);
+  assert.equal((await prisma.emissaoFiscalLoja.findUniqueOrThrow({ where: { id: anteriorId } })).status, "SUBSTITUIDA");
   const comando = { tenantId: loja.id, id: preparada.id, ambiente: preparada.ambiente, resumoHash: preparada.resumoHash };
   let envios = 0;
   const falhar: typeof enviarNfe = async () => { envios++; throw new Error("Transporte sintético incerto"); };
@@ -44,6 +49,7 @@ test("emissão direta: preparação privada, concorrência, incerteza e consulta
   assert.equal(envios, 1);
   assert.equal(new Set(resultados.map(r => r.id)).size, 1);
   assert.equal((await emitirNfe(comando, falhar)).status, "PENDENTE_CONFERENCIA");
+  await assert.rejects(prepararEmissao({ ...entrada, substituir: { id: preparada.id, resumoHash: preparada.resumoHash } }), { status: 409 });
   assert.equal(envios, 1);
   await assert.rejects(emitirNfe({ ...comando, tenantId: "outro-tenant" }, falhar), { status: 404 });
   await assert.rejects(emitirNfe({ ...comando, ambiente: "1" }, falhar), { status: 409 });
@@ -57,8 +63,10 @@ test("emissão direta: preparação privada, concorrência, incerteza e consulta
     return `<retConsSitNFe><tpAmb>2</tpAmb><chNFe>${chave}</chNFe><cStat>100</cStat><protNFe versao="4.00"><infProt><tpAmb>2</tpAmb><chNFe>${chave}</chNFe><digVal>${salvo.digest}</digVal><nProt>135260000099999</nProt><cStat>100</cStat><xMotivo>QA sintético</xMotivo></infProt></protNFe></retConsSitNFe>`;
   });
   assert.equal(autorizado.status, "AUTORIZADA"); assert.equal(autorizado.protocolo, "135260000099999");
+  await assert.rejects(prepararEmissao({ ...entrada, substituir: { id: preparada.id, resumoHash: preparada.resumoHash } }), { status: 409 });
   const final = await prisma.emissaoFiscalLoja.findUniqueOrThrow({ where: { id: preparada.id } });
   assert.ok(lerXmlNfe(final.xmlAutorizado!).nfeProc);
+  await assert.rejects(prisma.emissaoFiscalLoja.update({ where: { id: preparada.id }, data: { xmlAutorizado: "<adulterado/>" } }), /imutável/);
   await consultarNfe(loja.id, preparada.id, async () => '<retConsSitNFe><tpAmb>2</tpAmb><cStat>217</cStat></retConsSitNFe>');
   assert.equal((await prisma.emissaoFiscalLoja.findUniqueOrThrow({ where: { id: preparada.id } })).status, "AUTORIZADA");
   assert.equal(await prisma.comandoEstoque.count({ where: { tenantId: loja.id } }), 0);

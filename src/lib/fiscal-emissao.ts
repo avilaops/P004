@@ -38,7 +38,7 @@ async function certificado(tenantId: string, cnpjEsperado?: string) {
 }
 
 /** Preparação apenas assina e persiste. Não faz requisição externa. */
-export async function prepararEmissao(dados: { tenantId: string; pedidoId?: string; xml: string; autor: string; intencaoHash?: string }) {
+export async function prepararEmissao(dados: { tenantId: string; pedidoId?: string; xml: string; autor: string; intencaoHash?: string; substituir?: { id: string; resumoHash: string } }) {
   const fiscal = await certificado(dados.tenantId);
   try {
     const nota = validarRascunhoNfe(dados.xml, fiscal.cnpj);
@@ -50,11 +50,22 @@ export async function prepararEmissao(dados: { tenantId: string; pedidoId?: stri
     const assinado = assinarNfe(dados.xml, chave.key, chave.cert);
     const intencaoHash = dados.intencaoHash ?? createHash("sha256").update(dados.xml).digest("hex");
     const identidade = { tenantId: dados.tenantId, ambiente: nota.ambiente, serie: nota.serie, numero: nota.numero };
+    const data = { ...identidade, pedidoId: pedido?.id, pedidoAtualizadoEm: pedido?.atualizadoEm, cnpj: fiscal.cnpj, uf: nota.uf, chave: nota.chave, autor: dados.autor, total: nota.total, destinatarioDocumento: nota.destinatario, destinatarioNome: nota.nomeDestinatario, intencaoHash, ...assinado };
     try {
-      return await prisma.emissaoFiscalLoja.create({ data: { ...identidade, pedidoId: pedido?.id, pedidoAtualizadoEm: pedido?.atualizadoEm, cnpj: fiscal.cnpj, uf: nota.uf, chave: nota.chave, autor: dados.autor, total: nota.total, destinatarioDocumento: nota.destinatario, destinatarioNome: nota.nomeDestinatario, intencaoHash, ...assinado }, select: RESUMO_EMISSAO });
+      return await prisma.$transaction(async tx => {
+        if (dados.substituir) {
+          const anterior = await tx.emissaoFiscalLoja.updateMany({ where: { ...identidade, id: dados.substituir.id, resumoHash: dados.substituir.resumoHash, pedidoId: dados.pedidoId ?? null, status: { in: ["PREPARADA", "REJEITADA"] } }, data: { status: "SUBSTITUIDA" } });
+          if (!anterior.count) {
+            const existente = await tx.emissaoFiscalLoja.findFirst({ where: { ...identidade, status: { not: "SUBSTITUIDA" } }, select: { ...RESUMO_EMISSAO, intencaoHash: true } });
+            if (existente?.intencaoHash === intencaoHash && existente.pedidoId === (dados.pedidoId ?? null)) return tx.emissaoFiscalLoja.findUniqueOrThrow({ where: { id: existente.id }, select: RESUMO_EMISSAO });
+            throw new ErroApi("conflito", "A preparação anterior mudou ou já foi enviada. Consulte antes de corrigir.");
+          }
+        }
+        return tx.emissaoFiscalLoja.create({ data, select: RESUMO_EMISSAO });
+      });
     } catch (erro) {
       if (!(erro instanceof Prisma.PrismaClientKnownRequestError) || erro.code !== "P2002") throw erro;
-      const existente = await prisma.emissaoFiscalLoja.findUnique({ where: { tenantId_ambiente_serie_numero: identidade }, select: { ...RESUMO_EMISSAO, intencaoHash: true } });
+      const existente = await prisma.emissaoFiscalLoja.findFirst({ where: { ...identidade, status: { not: "SUBSTITUIDA" } }, select: { ...RESUMO_EMISSAO, intencaoHash: true } });
       if (!existente || existente.intencaoHash !== intencaoHash || existente.pedidoId !== (dados.pedidoId ?? null)) throw new ErroApi("conflito", "Série e número já reservados para outro documento. Consulte a emissão existente.");
       const { intencaoHash: _intencao, ...resumo } = existente;
       void _intencao;
@@ -102,6 +113,7 @@ export async function emitirNfe(dados: { tenantId: string; id: string; resumoHas
 
 export async function consultarNfe(tenantId: string, id: string, enviar: typeof enviarNfe = enviarNfe) {
   const doc = await documento(tenantId, id);
+  if (doc.status === "SUBSTITUIDA") throw new ErroApi("conflito", "Este rascunho foi substituído. Consulte a versão atual da emissão.");
   if (doc.status === "PREPARADA") throw new ErroApi("conflito", "Este documento ainda não foi enviado.");
   const fiscal = await certificado(tenantId, doc.cnpj);
   try {

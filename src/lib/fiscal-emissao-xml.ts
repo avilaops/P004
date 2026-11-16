@@ -112,6 +112,6 @@ export function lerRespostaNfe(xml: string, esperado: { chave: string; ambiente:
   const autorizada = prot && ["100", "150"].includes(codigo);
   if (["101", "151"].includes(codigo) && retorno.chNFe !== esperado.chave) throw new ErroFiscal("Cancelamento sem confirmação da mesma chave fiscal.");
   if (autorizada && (inf.digVal !== esperado.digest || !/^\d{15}$/.test(texto(inf.nProt)))) throw new ErroFiscal("Protocolo sem digest ou identificação correspondente.");
-  const status = autorizada ? "AUTORIZADA" : ["101", "151"].includes(codigo) ? "CANCELADA" : ["103", "104", "105", "106", "108", "109", "110", "204", "217", "539", "656", "999"].includes(codigo) ? "PENDENTE_CONFERENCIA" : "REJEITADA";
+  const status = autorizada ? "AUTORIZADA" : ["101", "151"].includes(codigo) ? "CANCELADA" : ["110", "205", "301", "302", "303"].includes(codigo) ? "DENEGADA" : ["103", "104", "105", "106", "108", "109", "204", "217", "539", "656", "999"].includes(codigo) ? "PENDENTE_CONFERENCIA" : "REJEITADA";
   return { status, codigo, motivo, protocolo: autorizada ? texto(inf.nProt) : null, protocoloXml: autorizada ? builder.build({ protNFe: { ...prot, "@_xmlns": NFE_NS, "@_versao": "4.00" } }) as string : null };
 }

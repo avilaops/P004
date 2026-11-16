@@ -14,9 +14,10 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 const headers = { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" };
 const limitador = new LimitadorPorJanela();
+const substituir = z.object({ id: z.string().min(1).max(100), resumoHash: z.string().regex(/^[a-f0-9]{64}$/) }).optional();
 const entrada = z.union([
-  z.object({ xml: z.string().min(1).max(1024 * 1024), pedidoId: z.string().min(1).max(100).optional() }),
-  z.object({ pedidoId: z.string().min(1).max(100), venda: OpcoesVendaSchema }),
+  z.object({ xml: z.string().min(1).max(1024 * 1024), pedidoId: z.string().min(1).max(100).optional(), substituir }),
+  z.object({ pedidoId: z.string().min(1).max(100), venda: OpcoesVendaSchema, substituir }),
 ]);
 
 export async function GET(request: Request) {
@@ -46,14 +47,14 @@ export async function POST(request: Request) {
     } finally { reader.releaseLock(); }
     const validado = entrada.safeParse(JSON.parse(Buffer.concat(partes).toString("utf8")));
     if (!validado.success) throw new ErroFiscal("Confira o rascunho e o pedido informado.");
-    let preparacao: { xml: string; pedidoId?: string; intencaoHash?: string };
+    let preparacao: { xml: string; pedidoId?: string; intencaoHash?: string; substituir?: { id: string; resumoHash: string } };
     if ("venda" in validado.data) {
       const { venda, pedidoId } = validado.data;
       const conferencia = await prepararFiscalDoPedido(s.tenant.id, pedidoId);
       const emitente = await prisma.tenant.findUniqueOrThrow({ where: { id: s.tenant.id }, select: { endereco: true } });
       const xml = montarNfeVenda(conferencia, emitente.endereco, venda);
       const intencaoHash = createHash("sha256").update(JSON.stringify({ dados: conferencia.resumoHash, endereco: emitente.endereco, venda })).digest("hex");
-      preparacao = { xml, pedidoId, intencaoHash };
+      preparacao = { xml, pedidoId, intencaoHash, substituir: validado.data.substituir };
     } else { preparacao = validado.data; }
     const resultado = await prepararEmissao({ ...preparacao, tenantId: s.tenant.id, autor: s.operador?.email ?? s.tenant.loginEmail ?? "dono-da-loja" });
     return Response.json(resultado, { status: 201, headers });

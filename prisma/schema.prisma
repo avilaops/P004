@@ -490,8 +490,9 @@ model EmissaoFiscalLoja {
   tenant              Tenant   @relation(fields: [tenantId], references: [id], onDelete: Restrict)
   pedido              Pedido?  @relation(fields: [tenantId, pedidoId], references: [tenantId, id], onDelete: Restrict)
 
-  @@unique([tenantId, ambiente, serie, numero])
-  @@unique([tenantId, ambiente, chave])
+  // A unicidade da tentativa ativa por série/número é um índice parcial na migração.
+  @@index([tenantId, ambiente, serie, numero])
+  @@index([tenantId, ambiente, chave])
   @@index([tenantId, pedidoId, criadoEm])
 }
 
