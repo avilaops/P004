@@ -52,7 +52,9 @@ denegado não pode ser substituído por este caminho. Inutilização, carta de c
 ativo e cálculo tributário geral não fazem parte desta entrega de autorização.
 Consulta reconhece cancelamento já registrado na SEFAZ e preserva o XML original.
 
-A preparação vinculada a pedido exige pedido pago, destinatário e total iguais.
+A preparação vinculada a pedido exige situação comercial válida, destinatário
+e total iguais. Faturamento e pagamento são independentes, inclusive em pedidos
+B2B aprovados a prazo; cotação, cancelamento e estorno bloqueiam a emissão.
 Mudança no pedido após preparação bloqueia o envio. O XML assinado e o XML
 autorizado têm proteção de imutabilidade no PostgreSQL. A integração não modifica
 preço, pagamento, estoque ou situação comercial.

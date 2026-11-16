@@ -78,4 +78,13 @@ test("emissão direta: preparação privada, concorrência, incerteza e consulta
   await consultarNfe(loja.id, preparada.id, async () => '<retConsSitNFe><tpAmb>2</tpAmb><cStat>217</cStat></retConsSitNFe>');
   assert.equal((await prisma.emissaoFiscalLoja.findUniqueOrThrow({ where: { id: preparada.id } })).status, "AUTORIZADA");
   assert.equal(await prisma.comandoEstoque.count({ where: { tenantId: loja.id } }), 0);
+  const pedido = await prisma.pedido.create({ data: { tenantId: loja.id, referencia: `emissao-b2b-${randomUUID()}`, status: "APROVADO", clienteNome: "Comprador a prazo QA", clienteDocumento: "11222333000181", clienteEmail: "qa@example.test", clienteTelefone: "11999999999", freteNome: "Retirada", freteCentavos: 0, subtotalCentavos: 12500, totalCentavos: 12500, meioPagamento: "boleto" } });
+  const chaveB2b = chaveNfe("35", "2611", cnpj, 1, 124, "00000001");
+  const xmlB2b = xml.replace(`Id="NFe${chave}"`, `Id="NFe${chaveB2b}"`).replace("<nNF>123</nNF>", "<nNF>124</nNF>").replace(/<cDV>\d<\/cDV>/, `<cDV>${chaveB2b.at(-1)}</cDV>`);
+  const b2b = await prepararEmissao({ ...entrada, pedidoId: pedido.id, xml: xmlB2b });
+  assert.equal(b2b.status, "PREPARADA");
+  assert.equal((await prisma.pedido.findUniqueOrThrow({ where: { id: pedido.id } })).status, "APROVADO");
+  await prisma.pedido.update({ where: { id: pedido.id }, data: { status: "CANCELADO" } });
+  await assert.rejects(emitirNfe({ tenantId: loja.id, id: b2b.id, ambiente: b2b.ambiente, resumoHash: b2b.resumoHash }, falhar), { status: 409 });
+  assert.equal(envios, 1);
 });

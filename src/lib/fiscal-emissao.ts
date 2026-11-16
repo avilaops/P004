@@ -1,6 +1,6 @@
 import { request } from "node:https";
 import { createHash } from "node:crypto";
-import { Prisma, type EmissaoFiscalLoja } from "@prisma/client";
+import { Prisma, type EmissaoFiscalLoja, type PedidoStatus } from "@prisma/client";
 import { prisma } from "./db";
 import { ErroApi } from "./api-resposta";
 import { abrirCertificado, credencialAssinatura, credencialTls, ErroFiscal, lerCertificado } from "./fiscal-certificado";
@@ -8,6 +8,7 @@ import { assinarNfe, destinoNfe, envelopeConsulta, envelopeEmissao, lerRespostaN
 
 export const RESUMO_EMISSAO = { id: true, pedidoId: true, ambiente: true, chave: true, serie: true, numero: true, total: true, destinatarioDocumento: true, destinatarioNome: true, resumoHash: true, status: true, codigo: true, motivo: true, protocolo: true, criadoEm: true, atualizadoEm: true } as const;
 export type ResumoEmissao = Pick<EmissaoFiscalLoja, keyof typeof RESUMO_EMISSAO>;
+const SITUACOES_EMISSAO: PedidoStatus[] = ["APROVADO", "AGUARDANDO_PAGAMENTO", "PAGO", "EM_SEPARACAO", "ENVIADO", "ENTREGUE"];
 
 export async function enviarNfe(dados: { uf: string; ambiente: string; operacao: "autorizar" | "consultar"; corpo: string; pfx: Buffer; senha: string }): Promise<string> {
   const servico = dados.operacao === "autorizar" ? "NFeAutorizacao4/nfeAutorizacaoLote" : "NFeConsultaProtocolo4/nfeConsultaNF";
@@ -45,7 +46,7 @@ export async function prepararEmissao(dados: { tenantId: string; pedidoId?: stri
     if (nota.uf !== fiscal.uf) throw new ErroFiscal("A UF do emitente diverge do cadastro fiscal.");
     const pedido = dados.pedidoId ? await prisma.pedido.findFirst({ where: { tenantId: dados.tenantId, id: dados.pedidoId }, select: { id: true, totalCentavos: true, clienteDocumento: true, status: true, atualizadoEm: true } }) : null;
     if (dados.pedidoId && !pedido) throw new ErroApi("nao_encontrado", "Pedido não encontrado nesta loja.");
-    if (pedido && (pedido.status !== "PAGO" || pedido.clienteDocumento.replace(/\D/g, "") !== nota.destinatario || BigInt(nota.total.replace(".", "")) !== BigInt(pedido.totalCentavos))) throw new ErroFiscal("Confira situação, destinatário e total: a NF-e diverge do pedido pago.");
+    if (pedido && (!SITUACOES_EMISSAO.includes(pedido.status) || pedido.clienteDocumento.replace(/\D/g, "") !== nota.destinatario || BigInt(nota.total.replace(".", "")) !== BigInt(pedido.totalCentavos))) throw new ErroFiscal("Confira situação, destinatário e total: a NF-e diverge do pedido.");
     const chave = credencialAssinatura(fiscal.pfx, fiscal.senha);
     const assinado = assinarNfe(dados.xml, chave.key, chave.cert);
     const intencaoHash = dados.intencaoHash ?? createHash("sha256").update(dados.xml).digest("hex");
@@ -96,7 +97,7 @@ export async function emitirNfe(dados: { tenantId: string; id: string; resumoHas
   const fiscal = await certificado(dados.tenantId, doc.cnpj);
   try {
     if (doc.pedidoId) {
-      const pedido = await prisma.pedido.findFirst({ where: { tenantId: doc.tenantId, id: doc.pedidoId, status: "PAGO", atualizadoEm: doc.pedidoAtualizadoEm ?? undefined } });
+      const pedido = await prisma.pedido.findFirst({ where: { tenantId: doc.tenantId, id: doc.pedidoId, status: { in: SITUACOES_EMISSAO }, atualizadoEm: doc.pedidoAtualizadoEm ?? undefined } });
       if (!pedido) throw new ErroApi("conflito", "O pedido mudou após a preparação. Revise a NF-e antes de emitir.");
     }
     const reserva = await prisma.emissaoFiscalLoja.updateMany({ where: { id: doc.id, tenantId: doc.tenantId, status: "PREPARADA" }, data: { status: "ENVIANDO", enviadoEm: new Date() } });
