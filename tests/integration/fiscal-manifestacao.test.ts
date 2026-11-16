@@ -81,7 +81,7 @@ test("falha posterior de auditoria não desfaz aceite ou protocolo persistidos",
   const criarAuditoria = prisma.auditoriaFiscalLoja.create;
   let falhasDeAuditoria = 0;
   // O delegate do Prisma é um Proxy sem descriptor de método para mock.method.
-  prisma.auditoriaFiscalLoja.create = async () => { falhasDeAuditoria++; throw new Error("Auditoria indisponível no teste"); };
+  prisma.auditoriaFiscalLoja.create = () => { falhasDeAuditoria++; throw new Error("Auditoria indisponível no teste"); };
   try {
     const resultado = await manifestarDocumento(dados, {
       enviar: async () => `<retEnvEvento><cStat>128</cStat><retEvento><infEvento><cStat>135</cStat><chNFe>${chave}</chNFe><nProt>135260000099999</nProt></infEvento></retEvento></retEnvEvento>`,
