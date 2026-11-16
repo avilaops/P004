@@ -489,11 +489,43 @@ model EmissaoFiscalLoja {
   atualizadoEm        DateTime @updatedAt
   tenant              Tenant   @relation(fields: [tenantId], references: [id], onDelete: Restrict)
   pedido              Pedido?  @relation(fields: [tenantId, pedidoId], references: [tenantId, id], onDelete: Restrict)
+  cancelamentos       CancelamentoEmissaoFiscalLoja[]
 
+  @@unique([tenantId, id])
   // A unicidade da tentativa ativa por série/número é um índice parcial na migração.
   @@index([tenantId, ambiente, serie, numero])
   @@index([tenantId, ambiente, chave])
   @@index([tenantId, pedidoId, criadoEm])
+}
+
+model CancelamentoEmissaoFiscalLoja {
+  id            String   @id @default(cuid())
+  tenantId      String
+  emissaoId     String
+  anteriorId    String?
+  intencaoHash  String
+  resumoHash    String
+  justificativa String
+  autor         String
+  lote          String
+  xmlAssinado   String   @db.Text
+  status        String   @default("PREPARADA")
+  codigo        String?
+  motivo        String?
+  protocolo     String?
+  xmlResposta   String?  @db.Text
+  xmlProcessado String?  @db.Text
+  xmlConsulta   String?  @db.Text
+  criadoEm      DateTime @default(now())
+  atualizadoEm  DateTime @updatedAt
+  enviadoEm     DateTime?
+  concluidoEm   DateTime?
+  emissao       EmissaoFiscalLoja @relation(fields: [tenantId, emissaoId], references: [tenantId, id], onDelete: Restrict, map: "CancelamentoEmissaoFiscalLoja_emissao_fkey")
+  anterior      CancelamentoEmissaoFiscalLoja? @relation("VersoesCancelamento", fields: [tenantId, emissaoId, anteriorId], references: [tenantId, emissaoId, id], onDelete: Restrict, onUpdate: Restrict, map: "CancelamentoEmissaoFiscalLoja_anterior_fkey")
+  revisoes      CancelamentoEmissaoFiscalLoja[] @relation("VersoesCancelamento")
+
+  @@unique([tenantId, emissaoId, id])
+  @@index([tenantId, emissaoId, criadoEm])
 }
 
 model FiscalLoja {
