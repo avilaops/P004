@@ -13,6 +13,17 @@
   ],
   "tasks": [
     {
+      "id": "FAVICONS-SELETOR-LOJAS-20261116",
+      "title": "Exibir a identidade de cada loja no seletor da equipe",
+      "objective": "Usar o pacote de favicon cadastrado por tenant nos cartões da equipe e preservar uma inicial legível quando a loja ainda não tiver pacote próprio.",
+      "assignee": "codex",
+      "priority": "normal",
+      "status": "em-andamento",
+      "acceptanceCriteria": ["A consulta inclui faviconUrl sem misturar dados entre tenants.", "Lojas com pacote exibem apple-touch-icon.png da própria pasta.", "Loja sem pacote ou com arquivo indisponível exibe sua inicial sem imagem quebrada.", "Busca, entrada, responsividade e acessibilidade do seletor permanecem.", "Tipos, lint, testes, build e navegador são verificados exclusivamente no GitHub CI."],
+      "environment": "worktree isolada e GitHub CI; sem testes ou builds locais",
+      "evidence": "Implementação em andamento na branch feat/favicons-seletor-lojas. Estado de produção lido sem mutação: quatro lojas têm pacote próprio e quatro dependem do fallback da plataforma."
+    },
+    {
       "id": "FISCAL-CANCELAMENTO-20261116",
       "title": "Cancelar NF-e diretamente pelo Lojas",
       "objective": "Assinar e transmitir evento110111 na SEFAZ com confirmação explícita, intenção imutável e consulta após resultado incerto.",

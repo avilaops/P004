@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Search, Store, X } from "lucide-react";
-import { filtrarLojas } from "@/lib/busca-lojas";
+import { filtrarLojas, iconeDaLoja, inicialDaLoja } from "@/lib/busca-lojas";
 
-type Loja = { slug: string; nome: string; status: string; dominioPrincipal: string | null };
+type Loja = { slug: string; nome: string; status: string; dominioPrincipal: string | null; faviconUrl: string | null };
 const SITUACAO: Record<string, string> = { ATIVA: "Ativa", SUSPENSA: "Suspensa", PROVISIONANDO: "Em provisionamento" };
 
 export default function SeletorLojasEquipe({ lojas, base }: { lojas: Loja[]; base: string }) {
@@ -48,26 +48,35 @@ export default function SeletorLojasEquipe({ lojas, base }: { lojas: Loja[]; bas
         {busca.trim() && ` para “${busca.trim()}”`}
       </p>
       <ul id="lojas-equipe" className="eq-lojas" aria-busy={entrando !== null}>
-        {filtradas.map((loja) => (
-          <li key={loja.slug}>
-            <form action="/api/painel/entrar/equipe" method="post" onSubmit={(e) => {
-              if (envioIniciado.current) { e.preventDefault(); return; }
-              envioIniciado.current = true;
-              setEntrando(loja.slug);
-            }}>
-              <input type="hidden" name="slug" value={loja.slug} />
-              <button type="submit" className="eq-loja" disabled={entrando !== null}>
-                <span className="eq-loja-icone"><Store size={22} aria-hidden="true" /></span>
-                <span className="eq-loja-info">
-                  <strong>{loja.nome}</strong>
-                  <span>{loja.dominioPrincipal ?? `${loja.slug}.${base}`}</span>
-                  <span className="eq-loja-status" data-status={loja.status}>{SITUACAO[loja.status] ?? loja.status}</span>
-                </span>
-                <span className="eq-loja-acao">{entrando === loja.slug ? "Entrando…" : "Entrar"}<ArrowRight size={18} aria-hidden="true" /></span>
-              </button>
-            </form>
-          </li>
-        ))}
+        {filtradas.map((loja) => {
+          const icone = iconeDaLoja(loja.faviconUrl);
+          return (
+            <li key={loja.slug}>
+              <form action="/api/painel/entrar/equipe" method="post" onSubmit={(e) => {
+                if (envioIniciado.current) { e.preventDefault(); return; }
+                envioIniciado.current = true;
+                setEntrando(loja.slug);
+              }}>
+                <input type="hidden" name="slug" value={loja.slug} />
+                <button type="submit" className="eq-loja" disabled={entrando !== null}>
+                  <span className="eq-loja-icone">
+                    {icone && <>
+                      {/* eslint-disable-next-line @next/next/no-img-element -- arquivo dinâmico do pacote de marca de cada tenant */}
+                      <img src={icone} alt="" width="42" height="42" onError={(evento) => { evento.currentTarget.hidden = true; }} />
+                    </>}
+                    <span className="eq-loja-inicial" aria-hidden="true">{inicialDaLoja(loja.nome)}</span>
+                  </span>
+                  <span className="eq-loja-info">
+                    <strong>{loja.nome}</strong>
+                    <span>{loja.dominioPrincipal ?? `${loja.slug}.${base}`}</span>
+                    <span className="eq-loja-status" data-status={loja.status}>{SITUACAO[loja.status] ?? loja.status}</span>
+                  </span>
+                  <span className="eq-loja-acao">{entrando === loja.slug ? "Entrando…" : "Entrar"}<ArrowRight size={18} aria-hidden="true" /></span>
+                </button>
+              </form>
+            </li>
+          );
+        })}
       </ul>
       {filtradas.length === 0 && <div className="eq-vazio">
         <Store size={28} aria-hidden="true" />
