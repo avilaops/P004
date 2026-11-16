@@ -79,8 +79,9 @@ test("falha de transporte preserva intenção incerta sem retransmitir", async (
 test("falha posterior de auditoria não desfaz aceite ou protocolo persistidos", async () => {
   const { dados, chave } = await prepararCertificado();
   const criarAuditoria = prisma.auditoriaFiscalLoja.create;
+  let falhasDeAuditoria = 0;
   // O delegate do Prisma é um Proxy sem descriptor de método para mock.method.
-  prisma.auditoriaFiscalLoja.create = async () => { throw new Error("Auditoria indisponível no teste"); };
+  prisma.auditoriaFiscalLoja.create = async () => { falhasDeAuditoria++; throw new Error("Auditoria indisponível no teste"); };
   try {
     const resultado = await manifestarDocumento(dados, {
       enviar: async () => `<retEnvEvento><cStat>128</cStat><retEvento><infEvento><cStat>135</cStat><chNFe>${chave}</chNFe><nProt>135260000099999</nProt></infEvento></retEvento></retEnvEvento>`,
@@ -89,6 +90,7 @@ test("falha posterior de auditoria não desfaz aceite ou protocolo persistidos",
     assert.equal(resultado.status, "ACEITA");
     assert.equal(resultado.protocolo, "135260000099999");
     assert.equal(resultado.resultadoFinal, true);
+    assert.equal(falhasDeAuditoria, 1);
     const persistido = await prisma.manifestacaoFiscalLoja.findUniqueOrThrow({ where: { id: resultado.id } });
     assert.equal(persistido.status, "ACEITA");
     assert.equal(persistido.proximaTentativaEm, null);
