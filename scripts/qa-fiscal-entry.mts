@@ -140,6 +140,19 @@ try {
   const operador = await prisma.operadorLoja.create({ data: { tenantId: loja.id, nome: "Gerente QA", email: "gerente@example.test", senhaHash: "hash-sintetico-sem-login", papel: "GERENTE" } });
   const cookieGerente = `lojas_sessao=${emitirToken(loja.slug, operador.id)}`;
   assert.equal((await fetch(base + fiscalPath, { headers: { cookie: cookieGerente } })).status, 403);
+  const manifestacaoPath = `/api/painel/fiscal/documentos/${doc.id}/manifestacao`;
+  for (const [credencial, status] of [[undefined, 401], [cookieGerente, 403]] as const) {
+    const resposta = await fetch(base + manifestacaoPath, { method: "POST", headers: credencial ? { cookie: credencial } : {} });
+    assert.equal(resposta.status, status);
+    assert.match(resposta.headers.get("cache-control") ?? "", /private.*no-store/);
+  }
+  for (const invalido of [null, { tipo: "toString", confirmacao: true }, { tipo: "CIENCIA", confirmacao: true, justificativa: {} }]) {
+    const resposta = await fetch(base + manifestacaoPath, { method: "POST", headers: { cookie, origin: "https://localhost", "content-type": "application/json" }, body: JSON.stringify(invalido) });
+    assert.equal(resposta.status, 422);
+    assert.match(resposta.headers.get("cache-control") ?? "", /private.*no-store/);
+    assert.equal((await resposta.json()).erro, "Confirme explicitamente a manifestação fiscal escolhida.");
+  }
+  assert.equal(await prisma.manifestacaoFiscalLoja.count({ where: { tenantId: loja.id } }), 0);
   const anotherOrder = await prisma.pedido.create({ data: { tenantId: outra.id, referencia: `qa-fiscal-outro-${randomUUID()}`, clienteNome: "Outra empresa QA", clienteDocumento: "52998224725", clienteEmail: "qa@example.test", clienteTelefone: "11999999999", freteNome: "Retirada", freteCentavos: 0, subtotalCentavos: 0, totalCentavos: 0, meioPagamento: "pix" } });
   assert.equal((await fetch(base + `/api/painel/pedidos/${anotherOrder.id}/fiscal`, { headers: { cookie } })).status, 404);
   await page.goto(base + `/painel/pedidos/${pedido.id}`);
