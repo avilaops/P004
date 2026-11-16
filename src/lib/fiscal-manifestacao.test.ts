@@ -25,3 +25,9 @@ test("manifestação: interpreta aceite, rejeição e recusa resposta de outra c
 test("manifestação: envelope só aceita XML assinado", () => {
   assert.throws(() => envelopeManifestacao("<evento/>", "1"), /assinatura/);
 });
+
+test("manifestação: recusa tipos herdados do protótipo antes de preparar XML", () => {
+  for (const tipo of ["toString", "constructor", "__proto__", "INVALIDO"]) {
+    assert.throws(() => montarManifestacao({ tipo: tipo as "CIENCIA", chave: CHAVE, cnpj: "12345678000195", sequencia: 1, data: new Date() }), /Tipo de manifestação inválido/);
+  }
+});
