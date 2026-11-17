@@ -35,6 +35,11 @@ entregue ao proprietário; detalhes em `design-qa.md`.
   aprovada, preservando os contratos de `scripts/ci/artefato.mjs` e a política
   de `docs/CI-ETAPAS-CURTAS.md`. Nenhum gate será considerado aprovado por
   capturas estáticas ou por uma execução de outro commit/tentativa.
+  Diagnóstico: na tentativa2 de44118063520, a preparação do job de tipos levou
+  cerca de19s, seguida de typegen/tsc até atingir o limite. Separar um artefato
+  de qualidade sem os binários ONNX mantém os arquivos de tipos e os comandos
+  originais, reduz a transferência e preserva a proveniência. Build/testes
+  continuam usando o pacote completo, com o mesmo limite nativo por job.
 - [ ] Revisar o delta, integrar a PR274 e publicar pela imagem produzida no
   pipeline aprovado. Conferir revisão implantada, saúde e fumaça oficial.
 - [ ] Preservar o tema anterior e ativar Carbon somente na Bereta por mecanismo

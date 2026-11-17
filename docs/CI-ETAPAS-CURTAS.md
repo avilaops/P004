@@ -22,6 +22,14 @@ esse binário; a sessão CPU continua verificada dentro da imagem final.
 O arquivo Linux x64 não transfere os binários ONNX de Windows, macOS ou ARM.
 O manifesto também exige a mesma plataforma, arquitetura e versão principal
 do Node no consumidor.
+
+Tipos e lint recebem `dependencias-qualidade`, derivado do arquivo completo
+validado da mesma execução/tentativa. Somente `onnxruntime-node/bin` fica fora
+desse pacote: código JavaScript, declarações TypeScript e compilador SWC são
+idênticos. O motor nativo continua no build, testes e imagem. Cada variante
+tem seu próprio tipo, manifesto e SHA-256. Não há nova instalação ou reúso de
+outro run. A divisão evita transferir o motor de inferência para quatro jobs
+que não o executam e conserva o timeout nativo de um minuto.
 O alvo é Linux x64 com glibc (runner Ubuntu e runtime Debian); o SWC de musl
 também fica fora do arquivo. O Node 22 presente em `RUNNER_TOOL_CACHE` é
 validado antes de entrar no PATH. Se não estiver disponível, a action oficial

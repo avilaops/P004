@@ -135,9 +135,38 @@ jobs:
           ids: ${{ needs.dependencias.outputs.artifact_id }}
       - run: npx tsx --test --test-shard=${{ matrix.fatia }} src/lib/*.test.ts packages/checkout/src/core/*.test.ts packages/checkout/src/server/*.test.ts packages/checkout/src/providers/*.test.ts
 
+  dependencias_qualidade:
+    name: preparar dependências de tipos e lint
+    needs: instalacao_dependencias
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    outputs:
+      artifact_id: ${{ steps.arquivo.outputs.ids }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar-artefatos
+        with:
+          ids: ${{ needs.instalacao_dependencias.outputs.artifact_id }}
+          tipos: dependencias
+      - name: Separar ferramentas e declarações sem o motor de inferência
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/dependencias-qualidade"
+          tar -I 'zstd -T0 -1' \
+            --exclude='node_modules/onnxruntime-node/bin' \
+            -cf "$RUNNER_TEMP/dependencias-qualidade/payload.tar.zst" node_modules
+      - uses: ./.github/actions/publicar-artefato
+        id: arquivo
+        with:
+          tipo: dependencias-qualidade
+          partes: '1'
+          pasta: ${{ runner.temp }}/dependencias-qualidade/
+
   qualidade:
     name: qualidade / ${{ matrix.comando }} / ${{ matrix.grupo }}
-    needs: instalacao_dependencias
+    needs: dependencias_qualidade
     runs-on: ubuntu-24.04
     timeout-minutes: 1
     strategy:
@@ -156,9 +185,10 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
-      - uses: ./.github/actions/preparar-node
+      - uses: ./.github/actions/preparar-artefatos
         with:
-          ids: ${{ needs.instalacao_dependencias.outputs.artifact_id }}
+          ids: ${{ needs.dependencias_qualidade.outputs.artifact_id }}
+          tipos: dependencias-qualidade
       - if: matrix.comando == 'typecheck'
         run: npx next typegen
       - if: matrix.comando == 'typecheck'
