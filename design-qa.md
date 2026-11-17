@@ -31,6 +31,17 @@ marcas e mantém os botões Carbon alinhados. O modo claro do Night ganhou
 cores legíveis na navegação e no telefone, conservando a topbar escura.
 O teste visual agora verifica a geometria do preço e as cores desse modo.
 
+## Resultado visual final
+
+**Aprovado para apresentação visual.** A execução
+[44105546998](https://github.com/avilaops/P004/actions/runs/44105546998)
+passou nos quatro templates no commit `2cf29bc27c7c1faba34df21c3f4e27cc21591cee`.
+Inclui Next Link real, preços Racing mobile sem sobreposição e Night claro
+legível. Artefatos `rodas-comparacao-<layout>-2cf29bc…` contêm capturas desktop,
+mobile, comparação com a referência, páginas compiladas e `resultado.json`.
+Não há pendências visuais bloqueadoras identificadas nas quatro referências.
+A publicação continua condicionada ao CI completo.
+
 ## Diferenças intencionais
 
 - Marca Bereta Rodas, português e moeda brasileira substituem os exemplos.
