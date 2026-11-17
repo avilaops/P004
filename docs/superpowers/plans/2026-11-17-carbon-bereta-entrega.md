@@ -19,7 +19,7 @@ entregue ao proprietário; detalhes em `design-qa.md`.
 
 - Build e testes exclusivamente no GitHub CI, sem executá-los nos servidores.
 - Preservar gates, hashes e origem dos artefatos. Timeout nativo de dois minutos
-  somente na instalação, preparação de ferramentas, qualidade e build; demais
+  somente na instalação, preparação de ferramentas, qualidade, unitários e build; demais
   limites existentes preservados. Exceção e diagnóstico em `CI-ETAPAS-CURTAS.md`.
 - Usar preços, imagens, disponibilidade e identidade legal reais da Bereta.
 - Não criar pedidos, pagamentos, mensagens ao cliente ou eventos fiscais reais.
@@ -35,7 +35,7 @@ entregue ao proprietário; detalhes em `design-qa.md`.
   `src/app/layout.tsx`. Verificação: `scripts/qa-templates-rodas.mts` no CI.
 - [ ] Diagnosticar os cancelamentos da CI e concluir uma execução integral
   aprovada, preservando os contratos de `scripts/ci/artefato.mjs` e a política
-  de `docs/CI-ETAPAS-CURTAS.md`, com a folga restrita dos quatro jobs registrados.
+  de `docs/CI-ETAPAS-CURTAS.md`, com a folga restrita dos cinco jobs registrados.
   Nenhum gate será considerado aprovado por
   capturas estáticas ou por uma execução de outro commit/tentativa.
   Diagnóstico: na tentativa2 de44118063520, a preparação do job de tipos levou

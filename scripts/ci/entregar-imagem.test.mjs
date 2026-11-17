@@ -98,6 +98,7 @@ test("política do projeto exige timeout nativo e permite folga nos jobs longos"
     ["instalacao_dependencias", "2"],
     ["dependencias_qualidade", "2"],
     ["qualidade", "2"],
+    ["unitarios", "2"],
     ["build", "2"],
     ["integracao", "10"],
     ["fontes", "10"],

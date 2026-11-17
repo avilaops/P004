@@ -123,10 +123,13 @@ try {
       resultados.push({ layout, width, caso: "catalogo_com_fotos_e_nomes_longos", passou: true });
     }
     // Os links da home publicada levam aos produtos reais deste tenant.
-    const produto = page.locator(`[data-rodas="${layout}"] a[href="/produtos/roda-demonstracao"]`).first();
+    const produto = page.locator(`[data-rodas="${layout}"] a[href^="/produtos/"]`).first();
+    const hrefDoProduto = await produto.getAttribute("href");
+    assert.match(hrefDoProduto ?? "", /^\/produtos\/[a-z0-9-]+$/);
+    const produtoReal = await prisma.produto.findUniqueOrThrow({ where: { tenantId_slug: { tenantId: t.id, slug: hrefDoProduto!.split("/").at(-1)! } } });
     await produto.click();
-    await page.waitForURL(/\/produtos\/roda-demonstracao$/);
-    assert.ok((await page.locator("h1").innerText()).includes("Roda de demonstração"));
+    await page.waitForURL(url => url.pathname === hrefDoProduto);
+    assert.ok((await page.locator("h1").textContent())?.includes(produtoReal.nome));
     await page.goto(lojaUrl);
     await page.locator('.rw-header input[name="q"]').fill("roda & medidas");
     await page.locator('.rw-header button[type="submit"]').click();
