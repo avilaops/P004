@@ -107,14 +107,16 @@
 [data-layout="rodas-racing"] .rw-product-info { padding: 13px; color: #eee; background: #141414; }
 [data-layout="rodas-racing"] .rw-product-name { text-transform: uppercase; font-size: 11px; color: #e4e4e4; }
 [data-layout="rodas-racing"] .rw-product-description { display: none; }
-[data-layout="rodas-racing"] .rw-price { color: #e4e4e4; font-size: 17px; }
+[data-layout="rodas-racing"] .rw-product-bottom { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 8px; }
+[data-layout="rodas-racing"] .rw-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px; color: #e4e4e4; font-size: 17px; margin-bottom: 0; }
+[data-layout="rodas-racing"] .rw-price del { padding-left: 0; }
 [data-layout="rodas-racing"] .rw-view { display: none; }
-[data-layout="rodas-racing"] .rw-product-actions { float: right; margin-top: -30px; }
+[data-layout="rodas-racing"] .rw-product-actions { justify-content: end; }
 [data-layout="rodas-racing"] .rw-add { min-height: 25px; padding: 4px; background: #fff; color: #141414; }
 [data-layout="rodas-racing"] .rw-add span { display: none; }
 [data-layout="rodas-racing"] .rw-brands { min-height: 95px; background: #121212; }
 [data-layout="rodas-racing"] .rw-brands a { color: #919191; }
-[data-layout="rodas-racing"] .rw-brands img { filter: grayscale(1) brightness(0) invert(.45); }
+[data-layout="rodas-racing"] .rw-brands img { filter: grayscale(1); opacity: .65; }
 [data-layout="rodas-racing"] .rw-footer { margin-top: 0; color: #aaa; background: #111; }
 [data-layout="rodas-racing"] .rw-footer h2 { color: #eee; }
 
@@ -239,7 +241,8 @@
   .rw-grid, [data-layout="rodas-racing"] .rw-grid, [data-layout="rodas-night"] .rw-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 14px; }
   .rw-product-name { font-size: 12px; }.rw-product-actions > a, .rw-add { min-height: 44px; }.rw-section > h2 { font-size: 15px; }.rw-brands { gap: 14px; padding: 16px; min-height: 60px; }.rw-brands a { font-size: 14px; }
   [data-layout="rodas-racing"] .rw-section { padding: 18px; }[data-layout="rodas-racing"] .rw-hero-signature { font-size: 16px; }[data-layout="rodas-racing"] .rw-hero h1 { font-size: 18px; }[data-layout="rodas-racing"] .rw-hero h1 strong { font-size: 12px; }
-  [data-layout="rodas-racing"] .rw-product-actions { margin-top: -36px; }[data-layout="rodas-racing"] .rw-add { min-height: 32px; }
+  [data-layout="rodas-racing"] .rw-add { min-height: 44px; min-width: 36px; }
+  [data-layout="rodas-carbon"] .rw-product-actions > * { flex: 1; padding: 5px; }
   [data-layout="rodas-night"] .rw-hero-copy { left: 7%; top: 24%; }[data-layout="rodas-night"] .rw-hero h1 { font-size: 22px; letter-spacing: -1px; }[data-layout="rodas-night"] .rw-hero h1 strong { font-size: 30px; }
   .rw-visual-categories { gap: 8px; }.rw-visual-categories a { min-height: 80px; }.rw-visual-categories span { font-size: 14px; }.rw-visual-categories svg { width: 24px; height: 24px; padding: 5px; }.rw-bottom-banner { min-height: 120px; padding: 15px; }.rw-bottom-banner span { font-size: 20px; }.rw-bottom-banner strong { font-size: 28px; }
   .rw-catalog-layout { display: block; padding: 14px; }.rw-sidebar { display: none; }[data-layout="rodas-carbon"] .rw-hero h1 { font-size: 13px; }.rw-editorial { grid-template-columns: 1fr; }

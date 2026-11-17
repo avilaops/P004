@@ -41,6 +41,24 @@ try {
     await page.setViewportSize({ width: 390, height: 844 });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `${nome}: overflow mobile`);
     await page.screenshot({ path: `${pasta}/capturas/${nome}-mobile.png`, fullPage: true });
+    if (nome === "racing") {
+      const sobreposicao = await page.locator(".rw-product-bottom").evaluateAll(cartoes => cartoes.some(cartao => {
+        const preco = cartao.querySelector(".rw-price")?.getBoundingClientRect();
+        const botao = cartao.querySelector(".rw-add")?.getBoundingClientRect();
+        return preco && botao && preco.right > botao.left;
+      }));
+      assert.equal(sobreposicao, false, "preço não pode ficar sob o botão no celular");
+    }
+    if (nome === "night") {
+      await page.evaluate(() => {
+        document.documentElement.dataset.modo = "claro";
+        document.documentElement.style.setProperty("--background", "#ffffff");
+        document.documentElement.style.setProperty("--foreground", "#18181b");
+      });
+      assert.equal(await page.locator(".rw-nav a").nth(1).evaluate(el => getComputedStyle(el).color), "rgb(24, 24, 27)");
+      assert.equal(await page.locator(".rw-top").evaluate(el => getComputedStyle(el).color), "rgb(184, 184, 184)");
+      await page.screenshot({ path: `${pasta}/capturas/night-claro-mobile.png`, fullPage: true });
+    }
     assert.deepEqual(erros, []);
     await page.setViewportSize({ width: 1280, height: 1000 });
     // Compara a mesma página inteira, normalizada para a mesma largura.
