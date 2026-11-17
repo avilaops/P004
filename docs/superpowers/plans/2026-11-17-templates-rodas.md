@@ -61,3 +61,6 @@ Após cancelamentos nativos do build por tempo em `44087397104`,
 completo do produtor original. O conteúdo e SHA-256 são os mesmos das quatro
 partes; versão, execução, tentativa e hash continuam conferidos pelo protocolo
 existente. O gate de qualidade e o timeout de um minuto são preservados.
+O mesmo arquivo completo é usado pela matriz de qualidade: em `44089948211`
+a restauração de quatro partes consumiu 44 segundos antes do ESLint e o job
+foi cancelado pelo limite nativo. A matriz, os comandos e o limite permanecem.
