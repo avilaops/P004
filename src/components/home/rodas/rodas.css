@@ -2,6 +2,9 @@
    Os componentes comerciais continuam compartilhados; só a apresentação muda. */
 [data-layout^="rodas-"] .container-loja { max-width: 1180px; }
 [data-layout^="rodas-"] .cabecalho-loja { position: relative; backdrop-filter: none; }
+[data-layout^="rodas-"] .cabecalho-loja .bg-card,
+[data-layout^="rodas-"] .cabecalho-loja .busca-sugestoes,
+[data-layout^="rodas-"] .cabecalho-loja .menu-mobile-dialog { color: var(--foreground); }
 [data-layout^="rodas-"] .nav-loja { background: #202124; color: #fff; border: 0; }
 [data-layout^="rodas-"] .nav-loja-item { color: #fff; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
 [data-layout^="rodas-"] .nav-loja-item:hover { color: #fff; text-decoration: underline; }

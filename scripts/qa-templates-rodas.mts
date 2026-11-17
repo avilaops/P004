@@ -8,6 +8,7 @@ import { emitirToken } from "../src/lib/sessao.ts";
 import { salvarProdutoNoCatalogo } from "../src/lib/catalogo-escrita.ts";
 import { codificarRascunho } from "../src/lib/previa-tema.ts";
 import { TemaSchema } from "../src/lib/tema.ts";
+import { ehTemplateRodas, selecionarTemplateRodas } from "../src/lib/templates-rodas.ts";
 
 assert.equal(process.env.CI, "true", "Verificação exclusiva do GitHub CI");
 const banco = new URL(process.env.DATABASE_URL ?? "http://invalid");
@@ -65,7 +66,8 @@ try {
     for (const modo of ["claro", "escuro"] as const) {
       for (const width of [390, 1440]) {
         await page.setViewportSize({ width, height: 900 });
-        const tema = TemaSchema.parse({ ...temaInicial, layout, modo, heroTitulo: "Escolha o próximo visual do seu carro" });
+        assert.ok(ehTemplateRodas(layout));
+        const tema = TemaSchema.parse({ ...selecionarTemplateRodas(temaInicial, layout), modo, heroTitulo: "Escolha o próximo visual do seu carro" });
         const resposta = await page.goto(`${origem}/painel/previa?t=${codificarRascunho(tema)}`);
         assert.equal(resposta?.status(), 200);
         await page.locator(`[data-rodas="${layout}"]`).waitFor();
