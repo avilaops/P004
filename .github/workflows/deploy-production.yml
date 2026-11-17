@@ -256,7 +256,7 @@ jobs:
 
   build:
     name: compilar aplicação
-    needs: [dependencias, qualidade]
+    needs: [instalacao_dependencias, qualidade]
     runs-on: ubuntu-24.04
     timeout-minutes: 1
     outputs:
@@ -267,7 +267,9 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/preparar-artefatos
         with:
-          ids: ${{ needs.dependencias.outputs.artifact_id }}
+          # O produtor já fornece o mesmo arquivo completo e manifesto. Evita
+          # baixar e concatenar quatro partes antes da compilação de um minuto.
+          ids: ${{ needs.instalacao_dependencias.outputs.artifact_id }}
           tipos: dependencias
       - name: Compilar com o cliente Prisma já gerado nas dependências
         run: node node_modules/next/dist/bin/next build

@@ -2,7 +2,7 @@
 
 **Objetivo:** oferecer quatro novas composições para testar na Bereta pelo painel.
 **Responsável:** agente Codex (`codex`).
-**Stack:** TypeScript, Next.js, React e CSS Modules existentes.
+**Stack:** TypeScript, Next.js, React e CSS com escopo `data-layout`.
 
 ## Decisões de implementação
 
@@ -54,3 +54,10 @@ asserção de conteúdo que comparava `innerText` transformado pelo CSS com text
 original. Usar `textContent` conserva a verificação exata do conteúdo salvo.
 Resultado final será vinculado à PR274 e ao artefato versionado
 `lojas-templates-rodas-browser-<sha>` da mesma execução de CI.
+
+Continuação: o proprietário reiterou TypeScript/Next.js e dispensou Rust.
+Após cancelamentos nativos do build por tempo em `44087397104`,
+`44088283133` e `44089060984`, o consumidor de build passa a baixar o arquivo
+completo do produtor original. O conteúdo e SHA-256 são os mesmos das quatro
+partes; versão, execução, tentativa e hash continuam conferidos pelo protocolo
+existente. O gate de qualidade e o timeout de um minuto são preservados.
