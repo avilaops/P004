@@ -308,7 +308,7 @@ export default function Marca({
             <Campo label="Título principal"><input className={inputClasse} maxLength={120} value={tema.heroTitulo ?? ""} onChange={e => setTema({ ...tema, heroTitulo: e.target.value })} /></Campo>
             <Campo label="Texto principal"><textarea className={inputClasse} maxLength={220} value={tema.heroTexto ?? ""} onChange={e => setTema({ ...tema, heroTexto: e.target.value })} /></Campo>
           </fieldset>}
-          {(tema.layout === "distribuidora" || tema.layout === "automotivo" || tema.layout === "atelie") && <fieldset className="mt-6 grid gap-4 rounded-xl border border-border p-4">
+          {(ehTemplateRodas(tema.layout) || tema.layout === "distribuidora" || tema.layout === "automotivo" || tema.layout === "atelie") && <fieldset className="mt-6 grid gap-4 rounded-xl border border-border p-4">
             <legend className="px-2 text-sm font-semibold">Carrossel de campanhas em imagem</legend>
             <p className="text-sm text-muted-foreground">A chamada e qualquer condição comercial devem estar dentro da arte. Use apenas preço e desconto aprovados para a campanha.</p>
             {campanhas.map((campanha, indice) => <div key={indice} className="grid gap-3 rounded-lg border border-border p-3 sm:grid-cols-2">

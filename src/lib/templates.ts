@@ -48,11 +48,16 @@ function soHome(layout: TemaLoja["layout"]): ContratoTemplate {
   };
 }
 
+function homeRodas(layout: TemaLoja["layout"]): ContratoTemplate {
+  const base = soHome(layout);
+  return { ...base, blocos: { ...base.blocos, cabecalho: "proprio", rodape: "proprio" } };
+}
+
 export const CONTRATOS: Record<TemaLoja["layout"], ContratoTemplate> = {
-  "rodas-street": soHome("rodas-street"),
-  "rodas-racing": soHome("rodas-racing"),
-  "rodas-carbon": soHome("rodas-carbon"),
-  "rodas-night": soHome("rodas-night"),
+  "rodas-street": homeRodas("rodas-street"),
+  "rodas-racing": homeRodas("rodas-racing"),
+  "rodas-carbon": homeRodas("rodas-carbon"),
+  "rodas-night": homeRodas("rodas-night"),
   "automotivo-premium": {
     layout: "automotivo-premium",
     versao: VERSAO_CONTRATO,

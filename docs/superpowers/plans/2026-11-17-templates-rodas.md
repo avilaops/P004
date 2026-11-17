@@ -10,19 +10,22 @@ O proprietário enviou quatro imagens durante a implementação. Criar
 `rodas-street` (cabeçalho vermelho e vitrine clara), `rodas-racing`
 (amarelo/preto com painéis claros), `rodas-carbon` (menu lateral e catálogo
 com contorno) e `rodas-night` (escuro/amarelo e categorias fotográficas).
-Preservar a hierarquia das referências, usando fotos, logo e dados reais
-da loja. Paletas iniciais são aplicadas ao selecionar no painel; o lojista
+Reproduzir as referências: Street com cinco colunas e banner claro, Racing
+com quatro colunas e painéis brancos em moldura escura, Night com quatro
+colunas e coleções fotográficas sobre preto, Carbon com três colunas e menu
+lateral. Cada modelo fornece cabeçalho, cartões e rodapé próprios. Paletas
+iniciais são aplicadas ao selecionar no painel; o lojista
 pode personalizá-las antes de salvar. Fonte e conteúdo permanecem os existentes.
-Usar quatro composições de home sobre os dados existentes, em vez de duplicar
-checkout ou criar sites separados. Alterar só cores não oferece comparação
-de hierarquia; reimplementar a loja inteira amplia o escopo sem necessidade.
+Usar composições sobre dados existentes, mantendo o carrinho e o checkout
+compartilhados. A adaptação anterior foi rejeitada por distância visual;
+trocar apenas cores ou aplicar CSS no DOM da loja não satisfaz este contrato.
 
 O tema ativo não muda. As opções aparecem em Marca • Vitrine e na prévia
-existente. Produtos, preços, disponibilidade e atendimento usam os componentes
-compartilhados. Nenhuma foto, avaliação ou condição comercial é inventada.
-Sem imagem, o hero apresenta texto; sem produtos, apresenta estado vazio.
-Categorias sem foto respeitam `categoriaSemImagem`. Cores, fonte e cantos
-continuam configuráveis. O institucional permanece fora desta alteração.
+existente. Preços e disponibilidade usam as regras compartilhadas. O catálogo
+real mantém as próprias fotos, sem substituições ilustrativas. O hero tem arte
+default do template e aceita banners cadastrados. Sem produtos, há estado vazio.
+Fotografias de categoria podem ilustrar navegação, sem representar SKU.
+O institucional permanece fora desta alteração.
 
 ## Tarefas
 
@@ -39,7 +42,12 @@ Testes e build exclusivamente no GitHub CI. Teste de contrato fixa aceitação
 do tema e roundtrip da prévia. Teste de navegador usa tenant isolado e servidor
 compilado: quatro layouts em 390 e 1440 px, modos claro e escuro, fotos reais
 do repositório, nenhuma gravação pela prévia, navegação e estado sem catálogo.
-Artefato contém capturas e JSON com versão, ambiente e resultados.
+Artefato contém capturas e JSON com versão, ambiente e resultados. O workflow
+`rodas-apresentacao.yml` compila os componentes TSX reais com as versões do
+lockfile, usa catálogo demonstrativo identificado, verifica carrinho e overflow
+e gera comparações lado a lado com as quatro imagens anexadas pelo proprietário.
+É evidência visual dos componentes, separada da integração Next.js/PostgreSQL.
+Não se apresenta montagem por alteração do DOM como captura da aplicação.
 
 ## Revisão
 

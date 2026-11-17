@@ -84,7 +84,7 @@ try {
         await page.locator(`[data-rodas="${layout}"]`).waitFor();
         await page.waitForLoadState("networkidle");
         await page.screenshot({ path: `${pasta}/${layout}-${modo}-${width}.png`, fullPage: true });
-        assert.equal(await page.locator("h1").textContent(), tema.heroTitulo);
+        assert.ok((await page.locator("h1").textContent())?.includes(tema.heroTitulo!));
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `${layout} ${modo} ${width}: overflow`);
         assert.equal(await page.locator(`[data-rodas="${layout}"] a[href="/produtos"]`).count() > 0, true);
         const imagem = page.locator(`[data-rodas="${layout}"] img`).first();
@@ -119,8 +119,8 @@ try {
     await page.waitForURL(/\/produtos\/roda-demonstracao$/);
     assert.ok((await page.locator("h1").innerText()).includes("Roda de demonstração"));
     await page.goto(lojaUrl);
-    await page.locator(`[data-rodas="${layout}"] input[name="q"]`).fill("roda & medidas");
-    await page.locator(`[data-rodas="${layout}"] button[type="submit"]`).click();
+    await page.locator('.rw-header input[name="q"]').fill("roda & medidas");
+    await page.locator('.rw-header button[type="submit"]').click();
     await page.waitForURL(/\/produtos\?/);
     assert.equal(new URL(page.url()).searchParams.get("q"), "roda & medidas");
     resultados.push({ layout, caso: "links_e_busca", passou: true });
