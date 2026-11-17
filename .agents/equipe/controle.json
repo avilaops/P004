@@ -13,6 +13,17 @@
   ],
   "tasks": [
     {
+      "id": "BERETA-TEMPLATES-RODAS-20261117",
+      "title": "Bereta • implementar e ativar o Carbon aprovado",
+      "objective": "Concluir a integração real, publicar e ativar Carbon na Bereta, conforme escolha explícita do proprietário; preservar as demais opções e lojas.",
+      "assignee": "codex",
+      "priority": "normal",
+      "status": "em-andamento",
+      "acceptanceCriteria": ["Quatro composições inspiradas nas imagens enviadas pelo proprietário.", "Prévia não publica nem altera dados.", "Mobile, desktop, modos claro e escuro e catálogo vazio verificados no CI.", "Preços e disponibilidade usam os componentes compartilhados."],
+      "environment": "GitHub CI isolado; publicação e ativação Carbon na Bereta autorizadas pelo proprietário",
+      "evidence": "PR274; design-qa.md; plano2026-11-17-carbon-bereta-entrega.md. Proprietário escolheu Carbon e pediu continuar até tudo implementado. CI44106268519 tentativa2 aprovou tipos, lint, unitários, três fatias PostgreSQL e build, preservando limites. Navegador reproduziu overflow de nome longo em390px, marcas inacessíveis no domínio do painel e biblioteca ONNX ausente do standalone; correções e regressões em desenvolvimento. Catálogo real lido:6473 produtos ativos; tema anterior preservado para reversão. Publicação/ativação ainda pendentes."
+    },
+    {
       "id": "FAVICONS-SELETOR-LOJAS-20261116",
       "title": "Exibir a identidade de cada loja no seletor da equipe",
       "objective": "Usar o pacote de favicon cadastrado por tenant nos cartões da equipe e preservar uma inicial legível quando a loja ainda não tiver pacote próprio.",

@@ -30,7 +30,7 @@ runs:
               mkdir -p "$RUNNER_TEMP/lojas-image"
               tar --zstd -xf "$pasta/payload.tar.zst" -C "$RUNNER_TEMP/lojas-image"
               ;;
-            dependencias|modelo|ferramenta-navegador)
+            dependencias|dependencias-qualidade|tipos-next|modelo|ferramenta-navegador)
               tar --zstd -xf "$pasta/payload.tar.zst"
               ;;
             build)

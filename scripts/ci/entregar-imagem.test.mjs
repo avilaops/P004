@@ -95,6 +95,11 @@ test("evento, ramo, operação e destino inválidos falham antes de conectar", a
 
 test("política do projeto exige timeout nativo e permite folga nos jobs longos", async () => {
   const timeoutsPorJob = new Map([
+    ["instalacao_dependencias", "2"],
+    ["dependencias_qualidade", "2"],
+    ["qualidade", "2"],
+    ["unitarios", "2"],
+    ["build", "2"],
     ["integracao", "10"],
     ["fontes", "10"],
     ["b2b", "10"],

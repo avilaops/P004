@@ -15,6 +15,11 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CabecalhoPremium from "@/components/templates/automotivo-premium/Cabecalho";
 import { identidadePublica } from "@/lib/identidade-publica";
+import { CabecalhoRodas, RodapeRodas } from "@/components/home/rodas/Elementos";
+import { montarLojaRodas } from "@/lib/rodas-modelo";
+import { ehTemplateRodas } from "@/lib/templates-rodas";
+import { demonstracaoRodas } from "@/lib/rodas-demonstracao";
+import { politicasPublicadas } from "@/lib/politicas";
 
 /**
  * Prévia do tema: a home como ficaria com o rascunho que o lojista ainda não
@@ -69,7 +74,7 @@ export default async function PreviaDoTema({ searchParams }: { searchParams: Pro
   const contrato = contratoDo(tema);
   const identidade = identidadeDa(previa);
   const publico = tenantPublico(previa);
-  const { categorias, vitrine } = catalogoDeDemonstracao();
+  const { categorias, vitrine } = catalogoDeDemonstracao(tema.layout);
   const pecasDoLook = [
     ...vitrine,
     ...slugsDosLooks(tema).filter((slug) => !vitrine.some((produto) => produto.slug === slug)).map(produtoParaLookDeDemonstracao),
@@ -104,7 +109,9 @@ export default async function PreviaDoTema({ searchParams }: { searchParams: Pro
       <div inert data-layout={tema.layout} className="flex min-h-screen flex-col pb-14">
         <SemPreCarregamento>
           <CartProvider slug={`previa-${loja.slug}`}>
-            {usaBlocoProprio(tema, "cabecalho")
+            {ehTemplateRodas(tema.layout)
+              ? <CabecalhoRodas loja={montarLojaRodas(previa, tema, categorias, lojaVende(previa), identidadePublica(previa), politicasPublicadas(previa))} />
+              : usaBlocoProprio(tema, "cabecalho")
               ? <CabecalhoPremium loja={publico} logo={previa.logoUrl} logoCompacta={previa.faviconUrl} logoEscuro={tema.premium?.logoEscuroUrl} mostrarNome={tema.premium?.mostrarNome} categorias={menu} modo={tema.modo} />
               : <Header loja={publico} logoUrl={previa.logoUrl} mostrarNome={tema.mostrarNomeNoCabecalho} categorias={menu} mostrarPromocoes={campanhasDaLoja(tema).length > 0} />}
             <main className="flex-1">
@@ -113,14 +120,16 @@ export default async function PreviaDoTema({ searchParams }: { searchParams: Pro
                 identidade,
                 identidadePublica: identidadePublica(previa),
                 categorias,
-                marcas: ["SKF", "Sabó", "Corteco", "Freudenberg"],
+                marcas: ehTemplateRodas(tema.layout) ? demonstracaoRodas(tema.layout).marcas : ["SKF", "Sabó", "Corteco", "Freudenberg"],
                 vitrine,
                 temDestaques: vitrine.some((p) => p.destaque),
                 vende: lojaVende(previa),
                 looks,
               })}
             </main>
-            <Footer tenant={previa} categorias={menu} />
+            {ehTemplateRodas(tema.layout) && previa.segmento !== "farmacia"
+              ? <RodapeRodas loja={montarLojaRodas(previa, tema, categorias, lojaVende(previa), identidadePublica(previa), politicasPublicadas(previa))} />
+              : <Footer tenant={previa} categorias={menu} />}
           </CartProvider>
         </SemPreCarregamento>
       </div>

@@ -3,7 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import MedirSessao from "@/components/MedirSessao";
 import Pixels from "@/components/Pixels";
-import Consentimento from "@/components/Consentimento";
+import Consentimento, { PreferenciasCookies } from "@/components/Consentimento";
 import { pixelsDo, temRastreio } from "@/lib/pixels";
 import { SeloAvaliacaoGoogle } from "@/components/AvaliacoesGoogle";
 import { headers } from "next/headers";
@@ -25,6 +25,11 @@ import Footer from "@/components/Footer";
 import CabecalhoPremium from "@/components/templates/automotivo-premium/Cabecalho";
 import CarrinhoLateral from "@/components/templates/automotivo-premium/CarrinhoLateral";
 import "@/components/templates/automotivo-premium/premium.css";
+import "@/components/home/rodas/rodas.css";
+import { CabecalhoRodas, RodapeRodas } from "@/components/home/rodas/Elementos";
+import { montarLojaRodas } from "@/lib/rodas-modelo";
+import { ehTemplateRodas } from "@/lib/templates-rodas";
+import { politicasPublicadas } from "@/lib/politicas";
 import WhatsAppFlutuante from "@/components/WhatsAppFlutuante";
 import BarraInferior from "@/components/BarraInferior";
 import LojaNaoEncontrada from "@/components/LojaNaoEncontrada";
@@ -247,10 +252,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </Suspense>
         <CartProvider slug={t.slug} painelHabilitado={carrinhoProprio}>
           {t.status === "SUSPENSA" && <AvisoSuspensa />}
+          {ehTemplateRodas(publicado.layout) ? <CabecalhoRodas loja={montarLojaRodas(t, publicado, categorias, publico.vende, identidadeComercial, politicasPublicadas(t))} /> : <>
           {t.avisoTopo && !cabecalhoProprio && (
             <p className="barra-aviso" role="status">{t.avisoTopo}</p>
           )}
           {cabecalhoProprio ? <CabecalhoPremium loja={publico} logo={t.logoUrl} logoCompacta={marcaQuadradaDa(t)} logoEscuro={tema.premium?.logoEscuroUrl} mostrarNome={tema.premium?.mostrarNome} categorias={[...categorias].sort((a,b)=>a.ordem-b.ordem).map(c=>({slug:c.slug,nome:c.nome}))} modo={tema.modo}/> : <Header loja={publico} logoUrl={t.logoUrl} mostrarNome={tema.mostrarNomeNoCabecalho} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} exemploBusca={exemploBusca} mostrarPromocoes={temPromocoes} />}
+          </>}
           {t.segmento === "motopecas" && <BarraGaragem tenantId={t.id} />}
           {t.slug !== "pkvedacoes" && t.pedidoMinimoCentavos != null && t.pedidoMinimoCentavos > 0 && (
             <p className="container-loja py-2 text-center text-sm">
@@ -258,7 +265,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </p>
           )}
           <main id="conteudo-loja" className="flex-1">{children}</main>
-          <Footer tenant={t} rastreioAtivo={temRastreio(pixels)} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} temBlog={publicacoes > 0 || artigosDomiRio(t.slug).length > 0} />
+          {ehTemplateRodas(publicado.layout) && t.segmento !== "farmacia"
+            ? <RodapeRodas loja={montarLojaRodas(t, publicado, categorias, publico.vende, identidadeComercial, politicasPublicadas(t))} preferencias={temRastreio(pixels) ? <PreferenciasCookies /> : undefined} />
+            : <Footer tenant={t} rastreioAtivo={temRastreio(pixels)} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} temBlog={publicacoes > 0 || artigosDomiRio(t.slug).length > 0} />}
           {carrinhoProprio && <CarrinhoLateral pedidoMinimoCentavos={publico.pedidoMinimoCentavos}/>}
           {identidadeComercial.whatsapp && <WhatsAppFlutuante numero={identidadeComercial.whatsapp.numero} nome={t.nome} />}
           {/* Navegação do celular. Vale para todos os layouts: é da loja, não

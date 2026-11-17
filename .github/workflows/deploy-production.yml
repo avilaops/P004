@@ -32,7 +32,7 @@ jobs:
   instalacao_dependencias:
     name: preparar dependências
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 2
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
     steps:
@@ -67,12 +67,12 @@ jobs:
           pasta: ${{ runner.temp }}/dependencias/
 
   dependencias:
-    name: distribuir dependências em partes verificadas
+    name: validar pacote completo de dependências
     needs: instalacao_dependencias
     runs-on: ubuntu-24.04
     timeout-minutes: 1
     outputs:
-      artifact_id: ${{ steps.partes.outputs.ids }}
+      artifact_id: ${{ needs.instalacao_dependencias.outputs.artifact_id }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -82,46 +82,30 @@ jobs:
         with:
           artifact-ids: ${{ needs.instalacao_dependencias.outputs.artifact_id }}
           path: ${{ runner.temp }}/dependencias-em-partes/
-      - name: Conferir origem e hash antes de repartir o mesmo arquivo
+      - name: Conferir origem e hash antes de encaminhar o mesmo artefato
         run: node scripts/ci/artefato.mjs verificar "$RUNNER_TEMP/dependencias-em-partes" dependencias
-      - uses: ./.github/actions/publicar-artefato
-        id: partes
-        with:
-          tipo: dependencias
-          partes: '4'
-          pasta: ${{ runner.temp }}/dependencias-em-partes/
 
   ferramenta-navegador:
     name: preparar CLI do navegador
-    needs: dependencias
+    needs: dependencias_qualidade
     runs-on: ubuntu-24.04
     timeout-minutes: 1
     outputs:
-      artifact_id: ${{ steps.ferramenta.outputs.ids }}
+      artifact_id: ${{ needs.dependencias_qualidade.outputs.artifact_id_ferramenta }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
-      - uses: ./.github/actions/preparar-node
+      - uses: ./.github/actions/preparar-artefatos
         with:
-          ids: ${{ needs.dependencias.outputs.artifact_id }}
-      - name: Arquivar somente a CLI de navegador da versão do lockfile
-        run: |
-          set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/ferramenta-navegador"
-          tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/ferramenta-navegador/payload.tar.zst" node_modules/playwright-core
-      - uses: ./.github/actions/publicar-artefato
-        id: ferramenta
-        with:
-          tipo: ferramenta-navegador
-          partes: '1'
-          pasta: ${{ runner.temp }}/ferramenta-navegador/
+          ids: ${{ needs.dependencias_qualidade.outputs.artifact_id_ferramenta }}
+          tipos: ferramenta-navegador
 
   unitarios:
     name: testes unitários / parte ${{ matrix.fatia }}
     needs: dependencias
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 2
     strategy:
       fail-fast: false
       matrix:
@@ -135,11 +119,59 @@ jobs:
           ids: ${{ needs.dependencias.outputs.artifact_id }}
       - run: npx tsx --test --test-shard=${{ matrix.fatia }} src/lib/*.test.ts packages/checkout/src/core/*.test.ts packages/checkout/src/server/*.test.ts packages/checkout/src/providers/*.test.ts
 
+  dependencias_qualidade:
+    name: preparar tipos e ferramentas verificadas
+    needs: instalacao_dependencias
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    outputs:
+      artifact_id: ${{ steps.arquivo.outputs.ids }}
+      artifact_id_tipos: ${{ steps.tipos.outputs.ids }}
+      artifact_id_ferramenta: ${{ steps.ferramenta.outputs.ids }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/preparar-artefatos
+        with:
+          ids: ${{ needs.instalacao_dependencias.outputs.artifact_id }}
+          tipos: dependencias
+      - run: npx next typegen
+      - name: Separar ferramentas JavaScript e declarações para tipos e lint
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/dependencias-qualidade"
+          tar -I 'zstd -T0 -1' \
+            --exclude='*.node' --exclude='*.so' --exclude='*.so.*' \
+            --exclude='*.dll' --exclude='*.dylib' --exclude='*.wasm' \
+            -cf "$RUNNER_TEMP/dependencias-qualidade/payload.tar.zst" node_modules
+          mkdir -p "$RUNNER_TEMP/tipos-next" "$RUNNER_TEMP/ferramenta-navegador"
+          tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/tipos-next/payload.tar.zst" .next/types next-env.d.ts
+          tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/ferramenta-navegador/payload.tar.zst" node_modules/playwright-core
+      - uses: ./.github/actions/publicar-artefato
+        id: arquivo
+        with:
+          tipo: dependencias-qualidade
+          partes: '1'
+          pasta: ${{ runner.temp }}/dependencias-qualidade/
+      - uses: ./.github/actions/publicar-artefato
+        id: tipos
+        with:
+          tipo: tipos-next
+          partes: '1'
+          pasta: ${{ runner.temp }}/tipos-next/
+      - uses: ./.github/actions/publicar-artefato
+        id: ferramenta
+        with:
+          tipo: ferramenta-navegador
+          partes: '1'
+          pasta: ${{ runner.temp }}/ferramenta-navegador/
+
   qualidade:
     name: qualidade / ${{ matrix.comando }} / ${{ matrix.grupo }}
-    needs: dependencias
+    needs: dependencias_qualidade
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 2
     strategy:
       fail-fast: false
       matrix:
@@ -156,11 +188,15 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
-      - uses: ./.github/actions/preparar-node
+      - uses: ./.github/actions/preparar-artefatos
         with:
-          ids: ${{ needs.dependencias.outputs.artifact_id }}
+          ids: ${{ needs.dependencias_qualidade.outputs.artifact_id }}
+          tipos: dependencias-qualidade
       - if: matrix.comando == 'typecheck'
-        run: npx next typegen
+        uses: ./.github/actions/preparar-artefatos
+        with:
+          ids: ${{ needs.dependencias_qualidade.outputs.artifact_id_tipos }}
+          tipos: tipos-next
       - if: matrix.comando == 'typecheck'
         run: npm run typecheck
       - if: matrix.grupo == 'paginas'
@@ -256,9 +292,9 @@ jobs:
 
   build:
     name: compilar aplicação
-    needs: [dependencias, qualidade]
+    needs: [instalacao_dependencias, qualidade]
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 2
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
     steps:
@@ -267,7 +303,9 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/preparar-artefatos
         with:
-          ids: ${{ needs.dependencias.outputs.artifact_id }}
+          # O produtor já fornece o mesmo arquivo completo e manifesto. Evita
+          # baixar e concatenar quatro partes antes da compilação de um minuto.
+          ids: ${{ needs.instalacao_dependencias.outputs.artifact_id }}
           tipos: dependencias
       - name: Compilar com o cliente Prisma já gerado nas dependências
         run: node node_modules/next/dist/bin/next build
@@ -409,6 +447,7 @@ jobs:
           ids: ${{ needs.dependencias.outputs.artifact_id }},${{ needs.build.outputs.artifact_id }},${{ needs.navegador.outputs.artifact_id }},${{ needs.fontes.outputs.artifact_id }}
           tipos: dependencias build navegador fontes
       - run: npx prisma migrate deploy
+      - run: node --import tsx scripts/qa-templates-rodas.mts
       - run: node --import tsx scripts/qa-cotacoes-b2b.mts
       - run: node --import tsx scripts/qa-conversao-loja.mts
       - run: node --import tsx scripts/qa-mdx-acesso.mts
@@ -418,6 +457,14 @@ jobs:
       - run: node --import tsx scripts/qa-pk-ferramentas.mts
       - run: node --import tsx scripts/qa-consentimento.mts
       - run: node --import tsx scripts/qa-seo-descoberta.mts
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: lojas-templates-rodas-browser-${{ github.sha }}
+          path: artifacts/templates-rodas-browser/
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 7
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:

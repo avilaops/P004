@@ -29,7 +29,7 @@ export const TemaSchema = z.object({
    * (banner, categorias, destaques, sobre) — o lojista escolhe uma, não
    * desenha. É o limite entre "personalizar" e "customizar".
    */
-  layout: z.enum(["spotlight", "mercado", "catalogo-tecnico", "distribuidora", "industrial", "automotivo", "automotivo-premium", "farmacia", "conversao", "classico", "vitrine", "editorial", "minimal", "atelie"]).default("classico"),
+  layout: z.enum(["spotlight", "mercado", "catalogo-tecnico", "distribuidora", "industrial", "automotivo", "automotivo-premium", "farmacia", "conversao", "classico", "vitrine", "editorial", "minimal", "atelie", "rodas-street", "rodas-racing", "rodas-carbon", "rodas-night"]).default("classico"),
   /**
    * Campos da home `industrial` (fabricante que vende por medida). A foto do
    * topo e os diferenciais são da loja; o resto da página sai do catálogo e
@@ -103,6 +103,10 @@ export const TemaSchema = z.object({
 });
 
 export const LAYOUTS: Array<{ valor: TemaLoja["layout"]; rotulo: string; descricao: string }> = [
+  { valor: "rodas-street", rotulo: "Rodas • Street", descricao: "Vermelho e branco, banner amplo e vitrines de destaques e ofertas. Inspirado no comércio clássico de rodas e pneus." },
+  { valor: "rodas-racing", rotulo: "Rodas • Racing", descricao: "Amarelo e preto, navegação marcada e produtos em painéis claros. Uma vitrine esportiva com foco no catálogo." },
+  { valor: "rodas-carbon", rotulo: "Rodas • Carbon", descricao: "Cinza e vermelho, banner panorâmico e categorias em menu lateral. Mais espaço para comparar o catálogo." },
+  { valor: "rodas-night", rotulo: "Rodas • Night", descricao: "Preto e amarelo, categorias fotográficas e grade de produtos sobre fundo escuro. Destaque para as imagens da loja." },
   { valor: "automotivo-premium", rotulo: "Automotivo Premium", descricao: "Experiência completa: navegação fotográfica, banner editorial, galeria ampliada e carrinho lateral. Mantém a identidade da marca em toda a compra." },
   { valor: "spotlight", rotulo: "Spotlight", descricao: "Hero de alto impacto, produto principal e navegação visual. Ideal para performance e marca." },
   { valor: "mercado", rotulo: "Mercado", descricao: "Catálogo denso, departamentos e mais produtos por tela. Ideal para distribuidoras." },

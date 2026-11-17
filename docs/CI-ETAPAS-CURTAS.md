@@ -1,7 +1,22 @@
 # CI em etapas curtas
 
-Todos os jobs de `Build e deploy` e `Merge automático` mantêm
-`timeout-minutes: 1`. Timeout reprova o job; não há build ou teste nos servidores.
+Os jobs curtos de `Build e deploy` e `Merge automático` usam timeout nativo de
+um minuto. `instalacao_dependencias`, `dependencias_qualidade`, `qualidade`, `unitarios` e
+`build` têm dois minutos; os jobs longos já definidos conservam dez minutos.
+Timeout reprova o job; não há build ou teste nos servidores.
+
+Em17/11/2026, na conclusão do Carbon solicitada pelo proprietário, os logs
+44106268519,44118063520,44119568016,44120583800 e44121863236 mostraram
+cancelamentos nativos em transferências, geração de tipos e finalização, além
+do limite consumido pela restauração do cache npm391MB. Após separar ferramentas
+e evitar reenvios, foi aplicada folga restrita de dois minutos nesses quatro
+jobs para permitir a validação integral. Essa é uma decisão de implementação
+registrada na entrega, não uma aprovação funcional presumida. Comandos, hashes,
+origem por revisão/execução/tentativa e gates de publicação continuam obrigatórios.
+
+No run44123669173, a segunda fatia unitária passou48s baixando dependências e
+foi cancelada na extração, antes dos testes. O mesmo limite de dois minutos
+passa a cobrir `unitarios`, totalizando cinco jobs com essa folga.
 Os jobs usam `ubuntu-24.04` explicitamente: o alias `ubuntu-latest` iniciou
 mudança para 26.04 em novembro de 2026. A base fixa evita mudança de sistema
 operacional durante a comparação dos tempos. O cache de Node continua validado
@@ -22,6 +37,17 @@ esse binário; a sessão CPU continua verificada dentro da imagem final.
 O arquivo Linux x64 não transfere os binários ONNX de Windows, macOS ou ARM.
 O manifesto também exige a mesma plataforma, arquitetura e versão principal
 do Node no consumidor.
+
+Tipos e lint recebem `dependencias-qualidade`, derivado do arquivo completo
+validado da mesma execução/tentativa. Apenas binários nativos e WebAssembly
+ficam fora: código JavaScript e declarações TypeScript são idênticos. O produtor
+usa as dependências completas, inclusive SWC, executa `next typegen` e publica
+`.next/types`/`next-env.d.ts` no artefato `tipos-next`, além da CLI mínima do
+navegador. Uma única restauração completa gera os três artefatos; os consumidores
+de tipos e da CLI não repetem o download do motor nativo. O TypeScript
+recebe esses tipos verificados antes de rodar `tsc`; lint conserva seus comandos.
+Build, testes e imagem usam o pacote completo. Cada variante tem seu próprio
+tipo, manifesto e SHA-256. Não há nova instalação nem reúso de outro run.
 O alvo é Linux x64 com glibc (runner Ubuntu e runtime Debian); o SWC de musl
 também fica fora do arquivo. O Node 22 presente em `RUNNER_TOOL_CACHE` é
 validado antes de entrar no PATH. Se não estiver disponível, a action oficial
@@ -32,8 +58,10 @@ contrato. Os nomes de artefatos incluem o SHA e o download não informa outro ru
 É necessário repetir a execução inteira ao mudar a tentativa: artefatos de uma
 tentativa anterior são recusados, inclusive em rerun somente dos jobs falhos.
 Jornadas e imagem recebem os IDs exatos dos produtores e baixam seus arquivos
-em paralelo. Dependências usam quatro partes para limitar o impacto de um
-download grande lento. Os arquivos menores (build, navegador, fontes, modelo,
+em paralelo. O gate de dependências verifica o arquivo completo e encaminha
+o próprio ID do instalador, sem publicar quatro cópias sequenciais: a repetição
+foi cancelada nativamente no terceiro envio em44119568016. O protocolo continua
+aceitando os pacotes antigos em quatro partes. Os arquivos menores (build, navegador, fontes, modelo,
 contexto Docker e CLI) usam um único envio, com o mesmo manifesto e hash, para
 evitar quatro inicializações e finalizações por pacote. O consumidor aceita
 ambos os formatos e reprova manifesto inválido sem tentar outro formato.
