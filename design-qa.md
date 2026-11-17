@@ -92,6 +92,13 @@ As capturas finais são do site publicado, sem alteração de DOM/CSS para a
 imagem. Detalhes de domínio, mídia, seleção dos destaques, versão e limites
 da evidência estão em [Carbon em produção](evidencias/bereta-carbon-2026-11-17.md).
 
+## Paleta amarela • atualização solicitada
+
+Atualização de paleta solicitada após a entrega: amarelo aplicado somente
+à configuração da Bereta. Cores fixas do Carbon passaram a seguir o tema,
+com tons legíveis para textos. CI e produção aprovadas na revisão `874c599`;
+detalhes em [paleta amarela](evidencias/bereta-carbon-amarelo-2026-11-17.md).
+
 ## Abrir o artefato da CI
 
 Baixar o artefato `rodas-comparacao-<layout>-<sha>` da execução visual. A pasta
