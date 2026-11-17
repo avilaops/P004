@@ -40,7 +40,7 @@ Inclui Next Link real, preços Racing mobile sem sobreposição e Night claro
 legível. Artefatos `rodas-comparacao-<layout>-2cf29bc…` contêm capturas desktop,
 mobile, comparação com a referência, páginas compiladas e `resultado.json`.
 Não há pendências visuais bloqueadoras identificadas nas quatro referências.
-A publicação continua condicionada ao CI completo.
+Essa era a aprovação visual; a entrega integrada está registrada abaixo.
 
 ## Diferenças intencionais
 
@@ -70,7 +70,27 @@ instalação; isso não equivale ao build completo do Next.js com `npm ci`.
 O adaptador LinkLoja usa Next real e pré-carregamento desativado na apresentação.
 
 Build completo, PostgreSQL, prévia autenticada e publicação são evidências
-separadas. O sucesso visual não os substitui. Nenhum tema ativo foi alterado.
+separadas. O sucesso visual não os substitui. Naquela etapa nenhum tema ativo
+havia sido alterado.
+
+## Carbon publicado • 17/11/2026
+
+O proprietário escolheu Carbon. PR274 integrou a implementação TypeScript/TSX;
+PR275 retirou o bloqueio de um minuto por sua orientação explícita. O run
+[44133809562](https://github.com/avilaops/P004/actions/runs/44133809562) aprovou
+tipos, lint, unitários, PostgreSQL, build, navegador, contratos, imagem,
+entrega, deploy e fumaça. Revisão publicada:
+`b2d87fd2bc12c78a3ba9bf6a7033824e2306a725`.
+
+Carbon está ativo em `https://beretarodas.com`. A inspeção real em 1440 px e 390 px
+confirmou ausência de overflow, nove fotos carregadas, categoria, detalhe,
+busca e adicionar/remover do carrinho, sem exceções de página ou pedido real.
+O proprietário pediu em seguida a imagem do Racing e uma nova foto bonita;
+foi gerado e aplicado um banner de roda dourada, mantendo Carbon.
+
+As capturas finais são do site publicado, sem alteração de DOM/CSS para a
+imagem. Detalhes de domínio, mídia, seleção dos destaques, versão e limites
+da evidência estão em [Carbon em produção](evidencias/bereta-carbon-2026-11-17.md).
 
 ## Abrir o artefato da CI
 

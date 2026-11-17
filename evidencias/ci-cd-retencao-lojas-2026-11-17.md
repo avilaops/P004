@@ -67,6 +67,57 @@ Leitura por SSH em 17/11/2026, aproximadamente às 16:43 UTC:
 Não havia terceira release do Lojas para exclusão nessa leitura. O acúmulo
 maior de imagens está em outros aplicativos, fora do escopo confirmado.
 
+## Limpeza executada durante a entrega
+
+Uma leitura posterior encontrou três imagens: o pull da tentativa cancelada
+terminou de registrar `8be3f480bd07…` depois da interrupção do job. A imagem
+era da revisão `f4095c4…` e não era usada por nenhum container. Sob a trava
+exclusiva do publicador do Lojas, conferi novamente a imagem ativa e removi
+somente essa imagem excedente por seu digest exato.
+
+Também removi o container `lojas-return-candidate`, parado havia dois dias,
+após conferir estado `exited`, imagem `161587b7120c…` e origem Lojas. A imagem
+de rollback foi preservada. O comando não incluiu exclusão de volumes; os
+bind mounts de uploads e segredos foram preservados.
+
+A releitura confirmou exatamente duas imagens (`36ea7a4162b2…` e
+`161587b7120c…`) e o container ativo saudável. Nenhum outro aplicativo foi
+alterado por essa limpeza.
+
+## Publicação concluída
+
+PR275 integrou a política de dez minutos por job. O run de produção
+[44133809562](https://github.com/avilaops/P004/actions/runs/44133809562) passou
+integralmente, na primeira tentativa: **17:09:20 a 17:21:41 UTC • 12min21s**.
+A PR275 foi aprovada no run 44131854877, em 10min12s.
+
+| Etapa final | Duração |
+| --- | ---: |
+| Build | 56s |
+| Navegador • cotação, HTTP e reinício | 3min12s |
+| Download da imagem no servidor | 39s |
+| Deploy e verificação de saúde | 1min17s |
+| Fumaça pública | 52s |
+
+O deploy de 1min17s comprova por que o antigo limite de um minuto cancelaria
+uma operação normal. O timeout de dez minutos é um teto, não uma espera fixa.
+
+Após a publicação e a conferência final, ficaram exatamente duas imagens:
+
+- Ativa `8a7ad9ccb273…`, revisão
+  `b2d87fd2bc12c78a3ba9bf6a7033824e2306a725` • 976 MB informados pelo Docker.
+- Anterior `36ea7a4162b2…`, revisão
+  `435bb5a8db8c142815609a345c1cdf1c9ecd3909` • 894 MB informados pelo Docker.
+
+O publicador removeu automaticamente a antiga `161587b7120c…`. O container
+ativo foi relido como `healthy`; o disco compartilhado continuou em 94%, com
+cerca de 2,5 GB livres. Não atribuir esse total do servidor ao Lojas nem excluir
+imagens dos demais aplicativos: o proprietário limitou explicitamente o escopo.
+
+O novo banner da Bereta ocupa 71.538 bytes no volume persistente de mídia,
+fora da imagem de execução. A original PNG gerada ocupa 2.061.817 bytes e foi
+preservada no workspace para edição futura.
+
 ## Retenção existente
 
 O publicador instalado em `/usr/local/sbin/avila-deploy` já executa
