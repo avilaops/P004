@@ -210,6 +210,13 @@
 [data-modo="claro"] [data-layout="rodas-night"] .rw-home,
 [data-modo="claro"] [data-layout="rodas-night"] .rw-header { background: var(--background, #fff); color: var(--foreground, #252525); }
 [data-modo="claro"] [data-layout="rodas-night"] .rw-product-name { color: var(--foreground, #252525); }
+[data-modo="claro"] [data-layout="rodas-night"] .rw-price { color: var(--foreground, #252525); }
+[data-modo="claro"] [data-layout="rodas-night"] .rw-top { color: #b8b8b8; }
+[data-modo="claro"] [data-layout="rodas-night"] .rw-nav a,
+[data-modo="claro"] [data-layout="rodas-night"] .rw-header-phone { color: var(--foreground, #252525); }
+[data-modo="claro"] [data-layout="rodas-night"] .rw-nav a:first-child { color: var(--foreground, #252525); border-bottom: 2px solid var(--primary); }
+[data-modo="escuro"] [data-layout^="rodas-"] .rw-footer { background: var(--muted, #202124); color: var(--muted-foreground, #aaa); }
+[data-modo="escuro"] [data-layout^="rodas-"] .rw-footer h2 { color: var(--foreground, #eee); }
 
 @media (max-width: 760px) {
   .rw-wrap { width: calc(100% - 24px); }

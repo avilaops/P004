@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, CircleDot, Search, ShoppingCart, Phone, Mail
 import { useCart } from "@/components/cart/CartProvider";
 import { adicionarAoCarrinho } from "@/lib/eventos-loja";
 import FotoDoCartao from "@/components/FotoDoCartao";
+import LinkLoja from "@/components/LinkLoja";
 import type { BannerRodas, CategoriaRodas, LojaRodas, ProdutoRodas } from "@/lib/rodas-modelo";
 
 const dinheiro = (valor: number) => (valor / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -17,11 +18,11 @@ export function CabecalhoRodas({ loja }: { loja: LojaRodas }) {
   const carrinho = useCart();
   return <header className="rw-header">
     {loja.aviso && <p className="rw-announcement">{loja.aviso}</p>}
-    <div className="rw-top"><div className="rw-wrap"><nav aria-label="Links da loja"><a href="/">Início</a><a href="/produtos">Produtos</a>{loja.politicas.some(p => p.tipo === "envio") && <a href="/politicas/envio">Entrega</a>}<a href="/contato">Contato</a></nav><span>Loja online • Brasil</span></div></div>
-    <div className="rw-wrap rw-header-main"><a className="rw-logo" href="/" aria-label={loja.nome}>{loja.logo ? <img src={loja.logo} alt={loja.nome} /> : <span className="rw-wordmark"><strong>{loja.nome}</strong><small>RODAS &amp; PNEUS</small></span>}</a>
+    <div className="rw-top"><div className="rw-wrap"><nav aria-label="Links da loja"><LinkLoja href="/">Início</LinkLoja><LinkLoja href="/produtos">Produtos</LinkLoja>{loja.politicas.some(p => p.tipo === "envio") && <LinkLoja href="/politicas/envio">Entrega</LinkLoja>}<LinkLoja href="/contato">Contato</LinkLoja></nav><span>Loja online • Brasil</span></div></div>
+    <div className="rw-wrap rw-header-main"><LinkLoja className="rw-logo" href="/" aria-label={loja.nome}>{loja.logo ? <img src={loja.logo} alt={loja.nome} /> : <span className="rw-wordmark"><strong>{loja.nome}</strong><small>RODAS &amp; PNEUS</small></span>}</LinkLoja>
       <div className="rw-header-right"><div className="rw-account"><span>Bem-vindo à nossa loja</span>{loja.vende && <a href="/conta">Minha conta</a>}{(loja.vende || loja.whatsapp) && <a className="rw-cart" href="/carrinho"><ShoppingCart size={16} aria-hidden="true" /> Carrinho ({carrinho.quantidade})</a>}</div><div className="rw-header-search">{loja.telefone && <a className="rw-header-phone" href={loja.telefoneUri ?? undefined}><Phone size={17} aria-hidden="true" />{loja.telefone}</a>}<BuscaRodas /></div></div>
     </div>
-    <nav className="rw-wrap rw-nav" aria-label="Categorias de produtos"><a href="/produtos">Todos os produtos</a>{loja.categorias.slice(0, 6).map(c => <a key={c.slug} href={`/categoria/${c.slug}`}>{c.nome}</a>)}</nav>
+    <nav className="rw-wrap rw-nav" aria-label="Categorias de produtos"><LinkLoja href="/produtos">Todos os produtos</LinkLoja>{loja.categorias.slice(0, 6).map(c => <LinkLoja key={c.slug} href={`/categoria/${c.slug}`}>{c.nome}</LinkLoja>)}</nav>
   </header>;
 }
 
@@ -67,12 +68,12 @@ export function CategoriasVisuaisRodas({ categorias, politica }: { categorias: C
 }
 
 export function LateralRodas({ loja, produtos }: { loja: LojaRodas; produtos: ProdutoRodas[] }) {
-  return <aside className="rw-sidebar"><section><h2>Coleções</h2><nav>{loja.categorias.slice(0, 8).map(c => <a key={c.slug} href={`/categoria/${c.slug}`}>{c.nome}</a>)}</nav></section><section><h2>Produtos</h2><nav><a href="/produtos">Todo o catálogo</a><a href="/contato">Fale com a equipe</a>{loja.politicas.some(p => p.tipo === "envio") && <a href="/politicas/envio">Entrega e envio</a>}</nav></section>
+  return <aside className="rw-sidebar"><section><h2>Coleções</h2><nav>{loja.categorias.slice(0, 8).map(c => <LinkLoja key={c.slug} href={`/categoria/${c.slug}`}>{c.nome}</LinkLoja>)}</nav></section><section><h2>Produtos</h2><nav><LinkLoja href="/produtos">Todo o catálogo</LinkLoja><LinkLoja href="/contato">Fale com a equipe</LinkLoja>{loja.politicas.some(p => p.tipo === "envio") && <LinkLoja href="/politicas/envio">Entrega e envio</LinkLoja>}</nav></section>
     {produtos.length > 0 && <section><h2>Em destaque</h2>{produtos.slice(0, 3).map(p => <a className="rw-mini-product" key={p.id} href={`/produtos/${p.slug}`}>{p.imagem && <img src={p.imagem} alt="" />}<span>{p.nome}<strong>{p.preco > 0 ? dinheiro(p.preco) : "Sob consulta"}</strong></span></a>)}</section>}
-    <a className="rw-sidebar-promo" href="/produtos"><span>ENCONTRE<br />SEU ESTILO</span><img src="/media/templates-rodas/racing-hero.png" alt="Coleção ilustrativa de rodas" /></a></aside>;
+    <LinkLoja className="rw-sidebar-promo" href="/produtos"><span>ENCONTRE<br />SEU ESTILO</span><img src="/media/templates-rodas/racing-hero.png" alt="Coleção ilustrativa de rodas" /></LinkLoja></aside>;
 }
 
 export function RodapeRodas({ loja, preferencias }: { loja: LojaRodas; preferencias?: ReactNode }) {
-  return <footer className="rw-footer"><div className="rw-wrap rw-footer-columns"><section><h2>Informações</h2><a href="/sobre">Sobre a loja</a><a href="/contato">Contato</a>{loja.politicas.map(p => <a key={p.tipo} href={`/politicas/${p.tipo}`}>{p.titulo}</a>)}</section><section><h2>Produtos</h2>{loja.categorias.slice(0, 5).map(c => <a key={c.slug} href={`/categoria/${c.slug}`}>{c.nome}</a>)}<a href="/produtos">Catálogo completo</a></section><section><h2>Sua conta</h2>{loja.vende && <a href="/conta">Minha conta</a>}{(loja.vende || loja.whatsapp) && <a href="/carrinho">Meu carrinho</a>}{preferencias}</section>
+  return <footer className="rw-footer"><div className="rw-wrap rw-footer-columns"><section><h2>Informações</h2><LinkLoja href="/sobre">Sobre a loja</LinkLoja><LinkLoja href="/contato">Contato</LinkLoja>{loja.politicas.map(p => <LinkLoja key={p.tipo} href={`/politicas/${p.tipo}`}>{p.titulo}</LinkLoja>)}</section><section><h2>Produtos</h2>{loja.categorias.slice(0, 5).map(c => <LinkLoja key={c.slug} href={`/categoria/${c.slug}`}>{c.nome}</LinkLoja>)}<LinkLoja href="/produtos">Catálogo completo</LinkLoja></section><section><h2>Sua conta</h2>{loja.vende && <LinkLoja href="/conta">Minha conta</LinkLoja>}{(loja.vende || loja.whatsapp) && <LinkLoja href="/carrinho">Meu carrinho</LinkLoja>}{preferencias}</section>
     <section className="rw-footer-contact"><h2>{loja.nome}</h2>{loja.endereco && <p><MapPin size={15} aria-hidden="true" />{loja.endereco}</p>}{loja.telefone && <a href={loja.telefoneUri ?? undefined}><Phone size={15} aria-hidden="true" />{loja.telefone}</a>}{loja.email && <a href={`mailto:${loja.email}`}><Mail size={15} aria-hidden="true" />{loja.email}</a>}{loja.whatsapp && <a href={loja.whatsapp} target="_blank" rel="noopener noreferrer">Atendimento pelo WhatsApp</a>}</section></div><p className="rw-wrap rw-copyright">© {new Date().getFullYear()} {loja.identificacao.join(" • ")} • Loja virtual por Avila Ops</p></footer>;
 }

@@ -16,14 +16,14 @@ jobs:
           node-version: 22
       - name: Preparar somente dependências da apresentação pelo lockfile
         run: |
-          node --input-type=module -e 'import fs from "node:fs";const l=JSON.parse(fs.readFileSync("package-lock.json"));const deps=Object.fromEntries(["react","react-dom","lucide-react","zod","tsx","esbuild","playwright"].map(n=>[n,l.packages["node_modules/"+n].version]));fs.mkdirSync(process.env.RUNNER_TEMP+"/rodas-deps",{recursive:true});fs.writeFileSync(process.env.RUNNER_TEMP+"/rodas-deps/package.json",JSON.stringify({private:true,dependencies:deps}));'
+          node --input-type=module -e 'import fs from "node:fs";const l=JSON.parse(fs.readFileSync("package-lock.json"));const deps=Object.fromEntries(["react","react-dom","next","lucide-react","zod","tsx","esbuild","playwright"].map(n=>[n,l.packages["node_modules/"+n].version]));fs.mkdirSync(process.env.RUNNER_TEMP+"/rodas-deps",{recursive:true});fs.writeFileSync(process.env.RUNNER_TEMP+"/rodas-deps/package.json",JSON.stringify({private:true,dependencies:deps}));'
           npm install --prefix "$RUNNER_TEMP/rodas-deps" --ignore-scripts --no-audit --no-fund
           ln -s "$RUNNER_TEMP/rodas-deps/node_modules" node_modules
       - run: node --import tsx scripts/gerar-apresentacao-rodas.mts
       - name: Arquivar apresentação e dependências mínimas
         run: |
           mkdir -p "$RUNNER_TEMP/rodas-build"
-          tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/rodas-build/preview.tar.zst" artifacts/rodas-fiel/site -C "$RUNNER_TEMP/rodas-deps" node_modules
+          tar --exclude='node_modules/next' --exclude='node_modules/@next' --exclude='node_modules/@img' --exclude='node_modules/sharp' -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/rodas-build/preview.tar.zst" artifacts/rodas-fiel/site -C "$RUNNER_TEMP/rodas-deps" node_modules
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: rodas-apresentacao-${{ github.sha }}

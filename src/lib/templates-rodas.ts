@@ -20,7 +20,7 @@ export function selecionarTemplateRodas(tema: TemaLoja, layout: keyof typeof PAL
 export function mudarModoTemplateRodas(tema: TemaLoja, modo: TemaLoja["modo"]): TemaLoja {
   return {
     ...tema, modo,
-    corFundo: modo === "escuro" ? "#0b0b0c" : "#ffffff",
+    corFundo: modo === "escuro" ? tema.layout === "rodas-night" ? "#191a1d" : "#0b0b0c" : "#ffffff",
     corTexto: modo === "escuro" ? "#fafafa" : "#18181b",
   };
 }
