@@ -175,7 +175,7 @@ export default function Inventario({
             }
           />
 
-          <Paginacao
+          {dados.total > 0 && <Paginacao
             pagina={dados.pagina}
             paginas={dados.paginas}
             total={dados.total}
@@ -183,7 +183,7 @@ export default function Inventario({
             ocupado={carregando || ocupado}
             aoMudar={setPagina}
             substantivo="produtos"
-          />
+          />}
         </>
       )}
     </Secao>

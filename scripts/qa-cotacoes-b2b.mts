@@ -77,9 +77,9 @@ async function comando(page: Page, name: string) {
   ]);
   assert.ok(response.ok(), `Comando recusado: ${name}`);
 }
-async function capturar(page: Page, file: string) {
+async function capturar(page: Page, file: string, fullPage = true) {
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), "Interface com overflow horizontal.");
-  await page.screenshot({ path: `${directory}/${file}`, fullPage: true, timeout: 10_000, animations: "disabled" });
+  await page.screenshot({ path: `${directory}/${file}`, fullPage, timeout: 10_000, animations: "disabled" });
   screenshots.push({ file, sha256: createHash("sha256").update(await readFile(`${directory}/${file}`)).digest("hex") });
 }
 
@@ -229,10 +229,13 @@ try {
   const pix = { provedor: "pix_manual", valores: { chavePix: "recebedor@example.invalid", nomeRecebedor: "Loja QA" } };
   assert.ok((await merchant.request.post(`${painel}/api/painel/recebimento/v2/salvar`, { data: pix })).ok());
   const conexoes = await merchant.newPage();
+  await conexoes.setViewportSize({ width: 390, height: 844 });
   await conexoes.goto(`${painel}/painel/conexoes`);
   const cartaoPix = conexoes.locator("article").filter({ has: conexoes.getByRole("heading", { name: /Pagamento.*pix_manual/i }) });
   await cartaoPix.getByRole("button", { name: "Validar formato" }).click();
   await cartaoPix.getByText(/Último teste.*Brasília.*Confira no aplicativo/).waitFor();
+  await cartaoPix.scrollIntoViewIfNeeded();
+  await capturar(conexoes, "conexao-teste-datado-390.png", false);
   await conexoes.close();
   stage = "permissao-clientes";
   for (const papel of ["GERENTE", "OPERADOR"]) {

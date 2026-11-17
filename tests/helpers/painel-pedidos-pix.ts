@@ -30,6 +30,7 @@ export async function verificarRecuperacaoPedidos(page: Page, painel: string, pe
   await page.goBack();
   await page.waitForURL(url);
   await linha.waitFor();
+  await capturar(page, `pedidos-retorno-filtrado-${largura}.png`);
 
   await page.route(api, route => route.abort("internetdisconnected"), { times: 1 });
   await busca.fill("sem-resultado-qa");

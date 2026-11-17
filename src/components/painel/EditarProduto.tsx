@@ -106,7 +106,9 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
     setCampoInvalido(invalido);
     if (invalido) {
       setErro(null);
-      document.getElementById(`catalogo-${invalido}`)?.focus();
+      const campo = document.getElementById(`catalogo-${invalido}`);
+      campo?.focus({ preventScroll: true });
+      campo?.scrollIntoView({ block: "center" });
       return;
     }
     // O banco recusaria isso com um 422 genérico. A cobrança tem que ser aqui,

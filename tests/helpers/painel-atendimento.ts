@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import type { Page } from "playwright";
 
-type Capturar = (page: Page, arquivo: string) => Promise<void>;
+type Capturar = (page: Page, arquivo: string, paginaInteira?: boolean) => Promise<void>;
 
 export async function verificarCatalogo(page: Page, painel: string, capturar: Capturar) {
   const largura = page.viewportSize()!.width;
@@ -11,6 +11,7 @@ export async function verificarCatalogo(page: Page, painel: string, capturar: Ca
   await page.getByText("Nenhum produto com esse filtro.", { exact: true }).waitFor();
   await busca.fill("qa-sem-contagem");
   await page.getByText("Estoque ainda não controlado", { exact: true }).waitFor();
+  assert.equal(await page.getByText("Nenhum produto encontrado.", { exact: true }).count(), 0);
   await capturar(page, `inventario-sem-contagem-${largura}.png`);
   await page.getByRole("link", { name: "Informar saldo" }).click();
   await page.locator("#catalogo-estoque:focus").waitFor();
@@ -26,6 +27,7 @@ export async function verificarCatalogo(page: Page, painel: string, capturar: Ca
     assert.ok(await controle.evaluate(el => el.getBoundingClientRect().top >= 0 && el.getBoundingClientRect().bottom <= innerHeight));
   }
   await capturar(page, `variacoes-abertas-${largura}.png`);
+  await capturar(page, `variacoes-foco-visivel-${largura}.png`, false);
   await page.getByRole("button", { name: "Fechar", exact: true }).click();
   assert.ok(await criar.evaluate(el => el === document.activeElement));
 
@@ -35,8 +37,13 @@ export async function verificarCatalogo(page: Page, painel: string, capturar: Ca
   await page.getByRole("button", { name: "Salvar produto" }).click();
   await page.getByText("Informe um preço válido em reais.", { exact: true }).waitFor();
   assert.ok(await preco.evaluate(el => el === document.activeElement));
+  assert.ok(await preco.evaluate(el => {
+    const caixa = el.getBoundingClientRect();
+    return document.elementFromPoint(caixa.x + caixa.width / 2, caixa.y + caixa.height / 2) === el;
+  }), "O preço deve estar visível acima da barra Salvar.");
   assert.equal(await page.locator("#catalogo-nome").inputValue(), "Caneca QA");
   await capturar(page, `produto-preco-invalido-${largura}.png`);
+  await capturar(page, `produto-preco-foco-visivel-${largura}.png`, false);
   await preco.fill(anterior);
 
   if (largura < 600) {
@@ -73,6 +80,7 @@ export async function verificarAtendimento(page: Page, painel: string, capturar:
   await capturar(page, `cliente-sem-pedido-${largura}.png`);
   await cadastrar(email.toUpperCase());
   await formulario.getByRole("alert").filter({ hasText: /já está na lista/ }).waitFor();
+  await capturar(page, `cliente-email-duplicado-${largura}.png`);
 
   await page.goto(`${painel}/painel/promocoes`);
   await page.getByText("1 de 3 no ar.", { exact: true }).waitFor();
