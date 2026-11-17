@@ -41,6 +41,15 @@ export async function verificarRecuperacaoPedidos(page: Page, painel: string, pe
   await page.getByText("Nenhum pedido com esse filtro.", { exact: true }).waitFor();
   assert.equal(new URL(page.url()).searchParams.get("q"), "sem-resultado-qa");
   assert.equal(new URL(page.url()).searchParams.get("situacao"), pedido.status);
+  const semResultado = page.url();
+  await page.goBack();
+  await page.waitForURL(url);
+  await linha.waitFor();
+  assert.equal(await busca.inputValue(), String(pedido.numero));
+  await page.goForward();
+  await page.waitForURL(semResultado);
+  await page.getByText("Nenhum pedido com esse filtro.", { exact: true }).waitFor();
+  assert.equal(await busca.inputValue(), "sem-resultado-qa");
 }
 
 export async function verificarFormatoPix(page: Page, painel: string, capturar: Capturar) {

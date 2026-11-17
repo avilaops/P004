@@ -1,8 +1,8 @@
 "use client";
 
 import { situacaoNaLista } from "@/lib/situacao-pedido";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Secao, brl, inputClasse } from "./campos";
 import ListaDeRegistros from "@/components/aplicacao/ListaDeRegistros";
 import Filtros from "@/components/aplicacao/Filtros";
@@ -75,8 +75,6 @@ export default function Pedidos({
   chamar: (c: string, m: string, b?: unknown, s?: string) => Promise<unknown>;
   ocupado: boolean;
 }) {
-  const router = useRouter();
-  const caminho = usePathname();
   const params = useSearchParams();
 
   // A URL é a fonte: o estado local só existe para a busca não disparar a
@@ -84,7 +82,7 @@ export default function Pedidos({
   const situacao = params.get("situacao") ?? "";
   const aplicada = params.get("q") ?? "";
   const pagina = paginaValida(params.get("pagina"));
-  const [busca, setBusca] = useState(aplicada);
+  const [rascunhoBusca, setRascunhoBusca] = useState<string | null>(null);
   const [revisao, setRevisao] = useState(0);
   const [dados, setDados] = useState<(Resposta & { consulta: string; revisao: number }) | null>(null);
   const [falha, setFalha] = useState<{ consulta: string; revisao: number } | null>(null);
@@ -99,25 +97,36 @@ export default function Pedidos({
   const carregando = !erro && !listaAtual;
   const relogio = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const irPara = useCallback(
-    (mudanca: Record<string, string | null>) => {
-      const p = new URLSearchParams(params.toString());
-      for (const [k, v] of Object.entries(mudanca)) {
-        if (v) p.set(k, v);
-        else p.delete(k);
-      }
-      const qs = p.toString();
-      router.push(qs ? `${caminho}?${qs}` : caminho, { scroll: false });
-    },
-    [params, caminho, router],
-  );
+  function irPara(mudanca: Record<string, string | null>) {
+    if (relogio.current) clearTimeout(relogio.current);
+    const url = new URL(window.location.href);
+    for (const [campo, valor] of Object.entries(mudanca)) {
+      if (valor) url.searchParams.set(campo, valor);
+      else url.searchParams.delete(campo);
+    }
+    if (url.href !== window.location.href) window.history.pushState(null, "", url);
+    setRascunhoBusca(null);
+  }
+
+  function buscar(texto: string) {
+    if (relogio.current) clearTimeout(relogio.current);
+    setRascunhoBusca(texto);
+    if (texto.trim() !== aplicada) {
+      relogio.current = setTimeout(() => irPara({ q: texto.trim() || null, pagina: null }), 300);
+    }
+  }
 
   useEffect(() => {
-    if (busca === aplicada) return;
-    if (relogio.current) clearTimeout(relogio.current);
-    relogio.current = setTimeout(() => irPara({ q: busca.trim() || null, pagina: null }), 300);
-    return () => { if (relogio.current) clearTimeout(relogio.current); };
-  }, [busca, aplicada, irPara]);
+    function restaurarFila() {
+      if (relogio.current) clearTimeout(relogio.current);
+      setRascunhoBusca(null);
+    }
+    window.addEventListener("popstate", restaurarFila);
+    return () => {
+      window.removeEventListener("popstate", restaurarFila);
+      if (relogio.current) clearTimeout(relogio.current);
+    };
+  }, []);
 
   useEffect(() => {
     const controle = new AbortController();
@@ -185,12 +194,12 @@ export default function Pedidos({
   return (
     <Secao titulo="Pedidos" descricao="Procure pelo número, nome ou telefone. Toque no pedido para ver os itens, o endereço e a etiqueta.">
       <Filtros
-        busca={busca}
-        aoBuscar={setBusca}
+        busca={rascunhoBusca ?? aplicada}
+        aoBuscar={buscar}
         exemplo="Número do pedido, nome ou telefone"
         fichas={fichas}
         ativa={situacao}
-        aoEscolher={(v) => irPara({ situacao: v || null, pagina: null })}
+        aoEscolher={(v) => irPara({ q: (rascunhoBusca ?? aplicada).trim(), situacao: v || null, pagina: null })}
       />
 
       {erro && (
@@ -250,7 +259,7 @@ export default function Pedidos({
                   ? "Tente outro termo, ou volte para “Todos”."
                   : "Quando alguém comprar, o pedido aparece aqui com os itens, o endereço e a etiqueta de envio."
               }
-              acao={filtrando ? { rotulo: "Ver todos", onClick: () => { setBusca(""); irPara({ q: null, situacao: null, pagina: null }); } } : undefined}
+              acao={filtrando ? { rotulo: "Ver todos", onClick: () => irPara({ q: null, situacao: null, pagina: null }) } : undefined}
             />
           )
         }
@@ -262,7 +271,7 @@ export default function Pedidos({
           paginas={dados.paginas}
           total={dados.total}
           porPagina={dados.porPagina}
-          ocupado={carregando}
+          ocupado={carregando || (rascunhoBusca !== null && rascunhoBusca.trim() !== aplicada)}
           aoMudar={(p) => irPara({ pagina: p > 1 ? String(p) : null })}
           substantivo="pedidos"
         />

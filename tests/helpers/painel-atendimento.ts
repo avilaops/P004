@@ -32,7 +32,6 @@ export async function verificarCatalogo(page: Page, painel: string, capturar: Ca
   assert.ok(await criar.evaluate(el => el === document.activeElement));
 
   const preco = page.locator("#catalogo-preco");
-  const anterior = await preco.inputValue();
   await preco.fill("");
   await page.getByRole("button", { name: "Salvar produto" }).click();
   await page.getByText("Informe um preço válido em reais.", { exact: true }).waitFor();
@@ -44,7 +43,25 @@ export async function verificarCatalogo(page: Page, painel: string, capturar: Ca
   assert.equal(await page.locator("#catalogo-nome").inputValue(), "Caneca QA");
   await capturar(page, `produto-preco-invalido-${largura}.png`);
   await capturar(page, `produto-preco-foco-visivel-${largura}.png`, false);
-  await preco.fill(anterior);
+  const referencia = page.locator("#catalogo-precoDe");
+  await preco.fill("R$ 1.234,56");
+  await referencia.fill("12,50,3");
+  await page.getByRole("button", { name: "Salvar produto" }).click();
+  await page.getByText("Informe um preço de referência válido em reais ou deixe em branco.").waitFor();
+  assert.ok(await referencia.evaluate(el => el === document.activeElement));
+  await referencia.fill("2.345,67");
+  const [gravacao] = await Promise.all([
+    page.waitForResponse(r => r.request().method() === "PATCH" && new URL(r.url()).pathname === "/api/painel/produtos"),
+    page.getByRole("button", { name: "Salvar produto" }).click(),
+  ]);
+  assert.ok(gravacao.ok(), "Gravação do preço formatado");
+  await page.getByText("Produto atualizado.", { exact: true }).waitFor();
+  await page.reload();
+  await preco.waitFor();
+  assert.equal(await preco.inputValue(), "1234,56");
+  assert.equal(await referencia.inputValue(), "2345,67");
+  await preco.scrollIntoViewIfNeeded();
+  await capturar(page, `produto-preco-persiste-${largura}.png`, false);
 
   if (largura < 600) {
     await page.goto(`${painel}/painel/produtos`);

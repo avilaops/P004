@@ -26,7 +26,7 @@
         "Dono e Gerente cadastram contatos por loja, com duplicidade de e-mail tratada. Balcão conserva acesso de consulta."
       ],
       "environment": "GitHub CI • painel autenticado com dados sintéticos",
-      "evidence": "PR 279 e documento da auditoria no projeto Lojas do Linear."
+      "evidence": "PR 279 e documento da auditoria no projeto Lojas do Linear. A revisão também verifica gravação e releitura de preços com milhares, validação do preço de referência e navegação entre consultas pelo histórico."
     },
     {
       "id": "PAINEL-AUDITORIA-P1-20261117",
