@@ -13,6 +13,17 @@
   ],
   "tasks": [
     {
+      "id": "BERETA-CARBON-AMARELO-20261117",
+      "title": "Bereta • trocar os destaques vermelhos por amarelo",
+      "objective": "Aplicar amarelo na loja Bereta preservando Carbon, banner dourado, catálogo e domínio principal; remover cores vermelhas fixas da composição.",
+      "assignee": "codex",
+      "priority": "normal",
+      "status": "em-andamento",
+      "acceptanceCriteria": ["Destaques e botões seguem amarelo com texto escuro.", "Linhas e links editoriais seguem a paleta configurada.", "Textos em fundos claros e escuros permanecem legíveis.", "CI e produção verificadas sem alterar outras lojas ou o catálogo."],
+      "environment": "worktree isolada • builds e testes somente GitHub CI",
+      "evidence": "Solicitação explícita do proprietário após aprovação do Carbon e banner. Paleta prevista #f5c518 e texto #17181b. CSS usa cor de tema para linha editorial e links, com tonalidade escura para texto em fundo branco e clara no modo escuro. Ativação e verificação de produção pendentes."
+    },
+    {
       "id": "BERETA-TEMPLATES-RODAS-20261117",
       "title": "Bereta • implementar e ativar o Carbon aprovado",
       "objective": "Concluir a integração real, publicar e ativar Carbon em beretarodas.com, conforme escolha explícita do proprietário; preservar as demais opções e lojas.",
