@@ -24,12 +24,13 @@ O manifesto também exige a mesma plataforma, arquitetura e versão principal
 do Node no consumidor.
 
 Tipos e lint recebem `dependencias-qualidade`, derivado do arquivo completo
-validado da mesma execução/tentativa. Somente `onnxruntime-node/bin` fica fora
-desse pacote: código JavaScript, declarações TypeScript e compilador SWC são
-idênticos. O motor nativo continua no build, testes e imagem. Cada variante
-tem seu próprio tipo, manifesto e SHA-256. Não há nova instalação ou reúso de
-outro run. A divisão evita transferir o motor de inferência para quatro jobs
-que não o executam e conserva o timeout nativo de um minuto.
+validado da mesma execução/tentativa. Apenas binários nativos e WebAssembly
+ficam fora: código JavaScript e declarações TypeScript são idênticos. O job
+`tipos_next` usa as dependências completas, inclusive SWC, executa `next typegen`
+e publica `.next/types`/`next-env.d.ts` no artefato `tipos-next`. O TypeScript
+recebe esses tipos verificados antes de rodar `tsc`; lint conserva seus comandos.
+Build, testes e imagem usam o pacote completo. Cada variante tem seu próprio
+tipo, manifesto e SHA-256. Não há nova instalação nem reúso de outro run.
 O alvo é Linux x64 com glibc (runner Ubuntu e runtime Debian); o SWC de musl
 também fica fora do arquivo. O Node 22 presente em `RUNNER_TOOL_CACHE` é
 validado antes de entrar no PATH. Se não estiver disponível, a action oficial
@@ -40,8 +41,10 @@ contrato. Os nomes de artefatos incluem o SHA e o download não informa outro ru
 É necessário repetir a execução inteira ao mudar a tentativa: artefatos de uma
 tentativa anterior são recusados, inclusive em rerun somente dos jobs falhos.
 Jornadas e imagem recebem os IDs exatos dos produtores e baixam seus arquivos
-em paralelo. Dependências usam quatro partes para limitar o impacto de um
-download grande lento. Os arquivos menores (build, navegador, fontes, modelo,
+em paralelo. O gate de dependências verifica o arquivo completo e encaminha
+o próprio ID do instalador, sem publicar quatro cópias sequenciais: a repetição
+foi cancelada nativamente no terceiro envio em44119568016. O protocolo continua
+aceitando os pacotes antigos em quatro partes. Os arquivos menores (build, navegador, fontes, modelo,
 contexto Docker e CLI) usam um único envio, com o mesmo manifesto e hash, para
 evitar quatro inicializações e finalizações por pacote. O consumidor aceita
 ambos os formatos e reprova manifesto inválido sem tentar outro formato.
