@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
+import { resolve } from "node:path";
 import { chromium } from "playwright";
 import { prisma } from "../src/lib/db.ts";
 import { emitirToken } from "../src/lib/sessao.ts";
@@ -30,9 +32,12 @@ const servidor = spawn(process.execPath, [".next/standalone/server.js"], {
 
 try {
   await mkdir(pasta, { recursive: true });
+  const requireDoBuild = createRequire(resolve(".next/standalone/server.js"));
+  assert.equal(typeof requireDoBuild("onnxruntime-node").InferenceSession.create, "function", "Bundle inclui as bibliotecas nativas do ONNX");
   const temaInicial = TemaSchema.parse({ layout: "classico", corPrimaria: "#f2cb05", fonte: "montserrat", corFundo: "#123456", corTexto: "#ffffff" });
   const t = await prisma.tenant.create({ data: {
     slug, nome: "Rodas • demonstração", status: "ATIVA", tema: temaInicial,
+    mpAccessTokenEnc: "fixture-sem-credencial-real",
     slogan: "Seu próximo conjunto começa aqui", sobre: "Compare os produtos do catálogo e consulte a equipe para escolher.",
     bannerUrl: "/media/bereta/hero/bereta-hero-desktop.webp",
   } });
@@ -56,6 +61,9 @@ try {
     await new Promise(resolve => setTimeout(resolve, 500));
   }
   assert.ok(pronto, "Aplicação compilada iniciou");
+  const marca = await fetch(origem + "/marcas/automotivo/krmai.svg");
+  assert.equal(marca.status, 200, "Marca estática também é acessível no domínio do painel");
+  assert.match(marca.headers.get("content-type") ?? "", /image\/svg\+xml/);
   const contexto = await navegador.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
   await contexto.addCookies([{ name: "lojas_sessao", value: emitirToken(slug), url: origem }]);
   await contexto.route("**/*", rota => {
@@ -124,6 +132,25 @@ try {
     await page.waitForURL(/\/produtos\?/);
     assert.equal(new URL(page.url()).searchParams.get("q"), "roda & medidas");
     resultados.push({ layout, caso: "links_e_busca", passou: true });
+    if (layout === "rodas-carbon") {
+      await page.goto(lojaUrl);
+      await page.locator('.rw-nav a[href="/categoria/rodas"]').click();
+      await page.waitForURL(/\/categoria\/rodas$/);
+      assert.ok((await page.locator("h1").textContent())?.includes(categoria.nome));
+      await page.goto(lojaUrl);
+      const cartaoCompravel = page.locator(".rw-product").filter({ has: page.locator(".rw-add") }).first();
+      const nomeDoItem = await cartaoCompravel.locator(".rw-product-name").textContent();
+      await cartaoCompravel.locator(".rw-add").click();
+      assert.ok((await page.locator(".rw-cart").textContent())?.includes("(1)"));
+      await page.locator(".rw-cart").click();
+      await page.waitForURL(/\/carrinho$/);
+      await page.getByRole("button", { name: "Remover", exact: true }).waitFor();
+      assert.ok((await page.locator("main").textContent())?.includes(nomeDoItem!));
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, "Carbon mantém o carrinho dentro da tela");
+      await page.getByRole("button", { name: "Remover", exact: true }).click();
+      assert.ok((await page.locator(".rw-cart").textContent())?.includes("(0)"));
+      resultados.push({ layout, caso: "categoria_carrinho_adicionar_remover", passou: true });
+    }
   }
   await prisma.produto.deleteMany({ where: { tenantId: t.id } });
   await prisma.categoria.deleteMany({ where: { tenantId: t.id } });

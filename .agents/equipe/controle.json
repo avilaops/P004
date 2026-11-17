@@ -14,14 +14,14 @@
   "tasks": [
     {
       "id": "BERETA-TEMPLATES-RODAS-20261117",
-      "title": "Bereta • quatro templates conforme referências visuais",
-      "objective": "Oferecer Street, Racing, Carbon e Night na seleção e prévia do painel sem alterar o tema ativo.",
+      "title": "Bereta • implementar e ativar o Carbon aprovado",
+      "objective": "Concluir a integração real, publicar e ativar Carbon na Bereta, conforme escolha explícita do proprietário; preservar as demais opções e lojas.",
       "assignee": "codex",
       "priority": "normal",
-      "status": "em-revisao",
+      "status": "em-andamento",
       "acceptanceCriteria": ["Quatro composições inspiradas nas imagens enviadas pelo proprietário.", "Prévia não publica nem altera dados.", "Mobile, desktop, modos claro e escuro e catálogo vazio verificados no CI.", "Preços e disponibilidade usam os componentes compartilhados."],
-      "environment": "GitHub CI isolado; produção somente para disponibilizar as opções",
-      "evidence": "PR274; design-qa.md. CI visual final44105546998 aprovado nos quatro templates TSX em2cf29bc, com desktop/mobile, carrossel, carrinho e Next Link. Tipos, lint, unitários, três fatias PostgreSQL e contratos de infraestrutura aprovados em44104228504 para20e267d. Build completo atingiu limite nativo de1min; navegador integrado e publicação pendentes. Tema ativo preservado."
+      "environment": "GitHub CI isolado; publicação e ativação Carbon na Bereta autorizadas pelo proprietário",
+      "evidence": "PR274; design-qa.md; plano2026-11-17-carbon-bereta-entrega.md. Proprietário escolheu Carbon e pediu continuar até tudo implementado. CI44106268519 tentativa2 aprovou tipos, lint, unitários, três fatias PostgreSQL e build, preservando limites. Navegador reproduziu overflow de nome longo em390px, marcas inacessíveis no domínio do painel e biblioteca ONNX ausente do standalone; correções e regressões em desenvolvimento. Catálogo real lido:6473 produtos ativos; tema anterior preservado para reversão. Publicação/ativação ainda pendentes."
     },
     {
       "id": "FAVICONS-SELETOR-LOJAS-20261116",

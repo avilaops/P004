@@ -345,7 +345,8 @@
         { "kind": "test", "path": "scripts/qa-templates-rodas.mts" },
         { "kind": "test", "path": "scripts/qa-rodas-apresentacao.mts" },
         { "kind": "contract", "path": "docs/superpowers/plans/2026-11-17-templates-rodas.md" },
-        { "kind": "contract", "path": "design-qa.md" }
+        { "kind": "contract", "path": "design-qa.md" },
+        { "kind": "contract", "path": "docs/superpowers/plans/2026-11-17-carbon-bereta-entrega.md" }
       ],
       "flows": []
     },

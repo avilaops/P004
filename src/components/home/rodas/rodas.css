@@ -11,10 +11,11 @@
 .rw-top > div { display: flex; justify-content: space-between; align-items: center; min-height: 30px; gap: 12px; }
 .rw-top nav { display: flex; gap: 20px; }
 .rw-header-main { display: flex; align-items: center; justify-content: space-between; gap: 30px; min-height: 126px; }
-.rw-logo { display: flex; align-items: center; gap: 12px; max-width: 40%; }
+.rw-logo { display: flex; align-items: center; gap: 12px; min-width: 0; max-width: 40%; }
 .rw-logo img { max-width: 210px; max-height: 72px; object-fit: contain; }
-.rw-logo strong { display: block; font-size: 35px; font-weight: 900; font-style: italic; line-height: .95; text-transform: uppercase; letter-spacing: -1px; }
+.rw-logo strong { display: block; overflow-wrap: anywhere; font-size: 35px; font-weight: 900; font-style: italic; line-height: .95; text-transform: uppercase; letter-spacing: -1px; }
 .rw-logo > span { display: block; margin-top: 5px; font-size: 17px; font-style: italic; font-weight: 700; }
+.rw-wordmark { min-width: 0; }
 .rw-wordmark small { display: block; margin-top: 5px; font-size: .7em; font-weight: 600; }
 .rw-header-right { width: 56%; max-width: 560px; }
 .rw-account { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 20px; margin-bottom: 18px; font-size: 10px; text-transform: uppercase; }
@@ -238,6 +239,7 @@
 @media (max-width: 480px) {
   .rw-top nav { gap: 10px; }.rw-top > div > span { display: none; }.rw-header-main { min-height: 100px; }.rw-logo strong { font-size: 19px; }.rw-logo > span { font-size: 10px; }.rw-logo img { max-width: 100px; }
   .rw-search { height: 36px; }.rw-search input { font-size: 16px; }.rw-search button { width: 32px; }.rw-account > a { font-size: 9px; }.rw-account > a:not(.rw-cart) { display: none; }
+  [data-layout="rodas-street"] .rw-logo strong, [data-layout="rodas-racing"] .rw-logo strong { font-size: 24px; }
   .rw-hero-signature { font-size: 23px; letter-spacing: -1px; }.rw-hero h1 { font-size: 12px; }.rw-hero-copy { top: 10%; right: 5%; }
   .rw-grid, [data-layout="rodas-racing"] .rw-grid, [data-layout="rodas-night"] .rw-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 14px; }
   .rw-product-name { font-size: 12px; }.rw-product-actions > a, .rw-add { min-height: 44px; }.rw-section > h2 { font-size: 15px; }.rw-brands { gap: 14px; padding: 16px; min-height: 60px; }.rw-brands a { font-size: 14px; }
