@@ -145,6 +145,7 @@ const MENSAGENS_SEGURAS = {
   limite_temporario: "A conexão já foi testada no último minuto. Aguarde para testar novamente.",
   falha_externa: "O provedor recusou ou não concluiu o teste. Tente novamente.",
   conexao_confirmada: "Conexão confirmada.",
+  formato_pix_valido: "Formato válido. Confira no aplicativo do banco se a chave Pix pertence ao recebedor informado.",
 } as const
 
 export type CodigoSeguroSaude = keyof typeof MENSAGENS_SEGURAS
@@ -349,8 +350,10 @@ export async function testarCanal(tenantId: string, canal: string, ator: string,
     // Cada cliente aplica AbortSignal.timeout na própria chamada. Assim não
     // respondemos timeout enquanto uma renovação de token continua ao fundo.
     await teste()
-    resultado = { codigo: "conexao_confirmada", mensagem: MENSAGENS_SEGURAS.conexao_confirmada }
+    const codigo = pagamento === "pix_manual" ? "formato_pix_valido" : "conexao_confirmada"
+    resultado = { codigo, mensagem: MENSAGENS_SEGURAS[codigo] }
   } catch (erro) { resultado = mensagemSegura(erro) }
-  await prisma.eventoSaudeCanal.create({ data: { tenantId, canal, tipo: "teste", resultado: resultado.codigo === "conexao_confirmada" ? "sucesso" : "erro", codigo: resultado.codigo, mensagem: resultado.mensagem, ator: ator.slice(0, 160) } })
-  return { ok: resultado.codigo === "conexao_confirmada", ...resultado }
+  const ok = resultado.codigo === "conexao_confirmada" || resultado.codigo === "formato_pix_valido"
+  await prisma.eventoSaudeCanal.create({ data: { tenantId, canal, tipo: "teste", resultado: ok ? "sucesso" : "erro", codigo: resultado.codigo, mensagem: resultado.mensagem, ator: ator.slice(0, 160) } })
+  return { ok, ...resultado }
 }

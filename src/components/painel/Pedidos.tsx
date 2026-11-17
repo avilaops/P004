@@ -85,12 +85,17 @@ export default function Pedidos({
   const aplicada = params.get("q") ?? "";
   const pagina = paginaValida(params.get("pagina"));
   const [busca, setBusca] = useState(aplicada);
-  // A resposta guarda a chave dos filtros que a geraram. "Carregando" é a
-  // resposta na tela não ser a da URL atual: derivado, sem setState no efeito.
-  const [dados, setDados] = useState<(Resposta & { chave: string }) | null>(null);
+  const [revisao, setRevisao] = useState(0);
+  const [dados, setDados] = useState<(Resposta & { consulta: string; revisao: number }) | null>(null);
+  const [falha, setFalha] = useState<{ consulta: string; revisao: number } | null>(null);
   const [rastreio, setRastreio] = useState<Record<string, string>>({});
-  const chave = `${pagina}|${aplicada}|${situacao}`;
-  const carregando = dados?.chave !== chave;
+  const filtros = new URLSearchParams({ pagina: String(pagina) });
+  if (aplicada) filtros.set("q", aplicada);
+  if (situacao) filtros.set("situacao", situacao);
+  const consulta = filtros.toString();
+  const erro = falha?.consulta === consulta && falha.revisao === revisao;
+  const listaAtual = dados?.consulta === consulta && dados.revisao === revisao;
+  const carregando = !erro && !listaAtual;
   const relogio = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const irPara = useCallback(
@@ -113,26 +118,33 @@ export default function Pedidos({
     return () => { if (relogio.current) clearTimeout(relogio.current); };
   }, [busca, aplicada, irPara]);
 
-  const carregar = useCallback(async () => {
-    const p = new URLSearchParams({ pagina: String(pagina) });
-    if (aplicada) p.set("q", aplicada);
-    if (situacao) p.set("situacao", situacao);
-    try {
-      const r = await fetch(`/api/painel/pedidos?${p}`);
-      if (r.ok) setDados({ ...((await r.json()) as Resposta), chave });
-    } catch {
-      // Falha de rede não apaga a lista que já está na tela.
+  useEffect(() => {
+    const controle = new AbortController();
+    async function carregar() {
+      try {
+        const r = await fetch(`/api/painel/pedidos?${consulta}`, { signal: controle.signal });
+        if (!r.ok) throw new Error("Falha ao consultar pedidos");
+        const lista: Resposta = await r.json();
+        if (controle.signal.aborted) return;
+        setDados({ ...lista, consulta, revisao });
+        setFalha(null);
+      } catch {
+        if (!controle.signal.aborted) setFalha({ consulta, revisao });
+      }
     }
-  }, [pagina, aplicada, situacao, chave]);
+    void carregar();
+    return () => controle.abort();
+  }, [consulta, revisao]);
 
-  /* eslint-disable-next-line react-hooks/set-state-in-effect -- a lista vem do servidor; o setState é o resultado do fetch, não um cálculo derivado de props */
-  useEffect(() => { void carregar(); }, [carregar]);
+  function recarregar() {
+    setRevisao((atual) => atual + 1);
+  }
 
   async function avancar(p: Item) {
     const corpo: Record<string, unknown> = { id: p.id };
     if (p.status === "EM_SEPARACAO" && rastreio[p.id]) corpo.rastreio = rastreio[p.id];
     await chamar("/api/painel/pedidos", "PATCH", corpo, "Pedido atualizado.");
-    void carregar();
+    recarregar();
   }
 
   const r = dados?.resumo ?? {};
@@ -161,7 +173,7 @@ export default function Pedidos({
 
   const acao = (p: Item) =>
     PROXIMO[p.status] ? (
-      <button className="btn-secundario inline-flex h-11 items-center px-3 text-xs" disabled={ocupado} onClick={() => avancar(p)}>
+      <button className="btn-secundario inline-flex h-11 items-center px-3 text-xs" disabled={ocupado || !listaAtual || erro} onClick={() => avancar(p)}>
         {PROXIMO[p.status]}
       </button>
     ) : null;
@@ -180,6 +192,13 @@ export default function Pedidos({
         aoEscolher={(v) => irPara({ situacao: v || null, pagina: null })}
       />
 
+      {erro && (
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-800">
+          <p>Não foi possível carregar os pedidos.{itens.length > 0 && " A lista abaixo mostra o último resultado carregado."}</p>
+          <button type="button" className="btn-secundario min-h-11 px-3" onClick={recarregar}>Tentar novamente</button>
+        </div>
+      )}
+      {carregando && itens.length > 0 && <p role="status" className="text-sm text-muted-foreground">Atualizando pedidos…</p>}
       <ListaDeRegistros
         itens={itens}
         carregando={carregando}
@@ -202,6 +221,7 @@ export default function Pedidos({
                 className={`${inputClasse} ml-auto h-11 w-40`}
                 placeholder="Código de rastreio"
                 aria-label={`Código de rastreio do pedido ${p.numero}`}
+                disabled={!listaAtual || erro}
                 value={rastreio[p.id] ?? ""}
                 onClick={(e) => e.stopPropagation()}
                 onChange={(e) => setRastreio({ ...rastreio, [p.id]: e.target.value })}
@@ -219,8 +239,8 @@ export default function Pedidos({
         ]}
         acoes={acao}
         vazio={
-          dados === null ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">Carregando pedidos…</p>
+          erro ? null : carregando ? (
+            <p role="status" className="py-6 text-center text-sm text-muted-foreground">Carregando pedidos…</p>
           ) : (
             <Vazio
               titulo={filtrando ? "Nenhum pedido com esse filtro." : "Nenhum pedido ainda."}
@@ -235,7 +255,7 @@ export default function Pedidos({
         }
       />
 
-      {dados && dados.total > 0 && (
+      {listaAtual && !erro && dados.total > 0 && (
         <Paginacao
           pagina={dados.pagina}
           paginas={dados.paginas}
@@ -247,7 +267,7 @@ export default function Pedidos({
         />
       )}
 
-      {dados && dados.total > 0 && (
+      {listaAtual && !erro && dados.total > 0 && (
         <BaixarPlanilha
           tipo="pedidos"
           total={dados.total}

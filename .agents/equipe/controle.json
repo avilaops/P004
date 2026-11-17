@@ -13,6 +13,21 @@
   ],
   "tasks": [
     {
+      "id": "PAINEL-AUDITORIA-P1-20261117",
+      "title": "Painel • validação do Pix direto e recuperação da lista de pedidos",
+      "objective": "Explicar o alcance da validação local do Pix e recuperar a consulta de pedidos após falhas de leitura.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Com chave fictícia válida, orientar a conferir o recebedor no banco. Chave ausente impede salvar.",
+        "Falhas HTTP e de rede encerram o carregamento. Tentar novamente preserva a consulta e recupera os pedidos.",
+        "Quando já houver resultados, identificá-los como anteriores e mantê-los visíveis durante a falha."
+      ],
+      "environment": "GitHub CI • tenant de teste isolado • painel desktop e mobile",
+      "evidence": "Backlog e aceite no projeto Lojas no Linear. Regressões em packages/checkout/src/providers/pix-manual.test.ts e tests/helpers/painel-pedidos-pix.ts."
+    },
+    {
       "id": "BERETA-CARBON-AMARELO-20261117",
       "title": "Bereta • trocar os destaques vermelhos por amarelo",
       "objective": "Aplicar amarelo na loja Bereta preservando Carbon, banner dourado, catálogo e domínio principal; remover cores vermelhas fixas da composição.",

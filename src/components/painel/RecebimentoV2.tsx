@@ -66,7 +66,7 @@ export default function RecebimentoV2({ dados, retorno, retornoMp }: { dados: Da
   return (
     <Secao
       titulo="Onde você recebe"
-      descricao={`O dinheiro das vendas cai direto na sua conta do provedor escolhido. A conta marcada como padrão é a que cobra os pedidos novos.${temPadrao ? "" : " Você ainda não tem uma conta padrão: conecte uma para começar a vender."}`}
+      descricao={`Escolha como receber pelas vendas. Os pedidos novos usam a opção marcada como padrão.${temPadrao ? "" : " Configure uma opção para começar a vender."}`}
     >
       {recado && (
         <p role={recado.tom === "erro" ? "alert" : "status"} className={`rounded-lg p-3 text-sm ${recado.tom === "erro" ? "bg-red-50 text-red-700" : "bg-emerald-50 text-emerald-800"}`}>
@@ -83,6 +83,7 @@ export default function RecebimentoV2({ dados, retorno, retornoMp }: { dados: Da
 
 function CartaoProvedor({ provedor, credencial, aoUsarComoPadrao, aoSalvar }: { provedor: Provedor; credencial?: Credencial; aoUsarComoPadrao: (c: Credencial) => void; aoSalvar: () => void }) {
   const status = STATUS[credencial?.status ?? "nenhum"];
+  const pixDireto = provedor.tipoConexao === "pix_direto";
   const [aberto, setAberto] = useState(false);
   const meios = [provedor.capacidades.pix && "Pix", provedor.capacidades.cartao && "cartão", provedor.capacidades.boleto && "boleto"].filter(Boolean).join(", ");
 
@@ -97,9 +98,9 @@ function CartaoProvedor({ provedor, credencial, aoUsarComoPadrao, aoSalvar }: { 
             Recebe {meios || "—"}.{!provedor.capacidades.confirmacaoAutomatica && " O pagamento não se confirma sozinho: você confere no app do banco e dá baixa no pedido."}
           </p>
         </div>
-        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${status.classe}`}>{status.rotulo}</span>
+        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${status.classe}`}>{pixDireto && credencial?.status === "conectado" ? "Configurado" : status.rotulo}</span>
       </div>
-      {credencial?.conta && <p className="mt-2 text-sm">Conta: {credencial.conta}</p>}
+      {credencial?.conta && <p className="mt-2 text-sm">{pixDireto ? "Recebedor informado" : "Conta"}: {credencial.conta}</p>}
       {credencial?.mensagem && TOM_DA_MENSAGEM[credencial.status] && (
         <p role={credencial.status === "erro" ? "alert" : undefined} className={`mt-2 rounded p-2 text-sm ${TOM_DA_MENSAGEM[credencial.status]}`}>{credencial.mensagem}</p>
       )}
@@ -128,6 +129,7 @@ function CartaoProvedor({ provedor, credencial, aoUsarComoPadrao, aoSalvar }: { 
 }
 
 function FormularioChaves({ provedor, aoSalvar }: { provedor: Provedor; aoSalvar: () => void }) {
+  const pixDireto = provedor.tipoConexao === "pix_direto";
   const [valores, setValores] = useState<Record<string, string>>({});
   const [teste, setTeste] = useState<Teste | null>(null);
   const [ocupado, setOcupado] = useState<"testar" | "salvar" | null>(null);
@@ -135,6 +137,7 @@ function FormularioChaves({ provedor, aoSalvar }: { provedor: Provedor; aoSalvar
 
   async function enviar(acao: "testar" | "salvar") {
     setErro(null);
+    if (acao === "testar") setTeste(null);
     setOcupado(acao);
     try {
       const r = await fetch(`/api/painel/recebimento/v2/${acao}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ provedor: provedor.id, valores }) });
@@ -168,6 +171,7 @@ function FormularioChaves({ provedor, aoSalvar }: { provedor: Provedor; aoSalvar
             className={inputClasse}
             type={c.segredo ? "password" : "text"}
             autoComplete="off"
+            disabled={Boolean(ocupado)}
             value={valores[c.chave] ?? ""}
             onChange={(e) => { setTeste(null); setValores((v) => ({ ...v, [c.chave]: e.target.value })); }}
           />
@@ -182,10 +186,12 @@ function FormularioChaves({ provedor, aoSalvar }: { provedor: Provedor; aoSalvar
       )}
       {erro && <p role="alert" className="rounded bg-red-50 p-2 text-sm text-red-700">{erro}</p>}
       <div className="flex gap-2">
-        <button className="btn-secundario h-9 px-3 text-sm" disabled={Boolean(ocupado)} onClick={() => void enviar("testar")}>{ocupado === "testar" ? "Testando…" : "Testar conexão"}</button>
+        <button className="btn-secundario h-9 px-3 text-sm" disabled={Boolean(ocupado)} onClick={() => void enviar("testar")}>
+          {ocupado === "testar" ? "Aguarde…" : pixDireto ? "Validar formato" : "Testar conexão"}
+        </button>
         <button className="btn-primario h-9 px-3 text-sm" disabled={Boolean(ocupado) || !teste?.ok} onClick={() => void enviar("salvar")}>{ocupado === "salvar" ? "Salvando…" : "Salvar"}</button>
       </div>
-      {!teste?.ok && <p className="text-xs text-slate-500">Teste a conexão antes de salvar.</p>}
+      {!teste?.ok && <p className="text-xs text-slate-500">{pixDireto ? "Valide o formato da chave antes de salvar." : "Teste a conexão antes de salvar."}</p>}
     </div>
   );
 }

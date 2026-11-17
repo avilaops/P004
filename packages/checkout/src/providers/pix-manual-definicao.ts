@@ -51,7 +51,7 @@ export const definicaoPixManual: DefinicaoProvedor = {
     }
     return {
       ok: true,
-      mensagem: "Chave conferida. O Pix cai direto nesta conta e a loja confirma o pagamento na mão.",
+      mensagem: "Formato válido. Confira no aplicativo do banco se a chave Pix pertence ao recebedor informado.",
       conta: nome,
       avisos: [AVISO],
     };

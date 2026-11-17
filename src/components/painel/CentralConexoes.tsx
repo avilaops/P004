@@ -75,7 +75,7 @@ export default function CentralConexoes({ dados, podeTestar }: { dados: CentralS
               </div>
               <div className="flex shrink-0 gap-2">
                 {destino && <Link href={destino} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-300 px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">Gerenciar <ExternalLink size={14} /></Link>}
-                {testavel && podeTestar && <button onClick={() => testar(canal.id)} disabled={testando === canal.id} className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-slate-950 px-3 text-sm font-semibold text-white disabled:opacity-50"><RefreshCw size={14} className={testando === canal.id ? "animate-spin" : ""} />Testar</button>}
+                {testavel && podeTestar && <button onClick={() => testar(canal.id)} disabled={testando === canal.id} className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-slate-950 px-3 text-sm font-semibold text-white disabled:opacity-50"><RefreshCw size={14} className={testando === canal.id ? "animate-spin" : ""} />{canal.id === "pagamento:pix_manual" ? "Validar formato" : "Testar"}</button>}
               </div>
             </div>
           </article>

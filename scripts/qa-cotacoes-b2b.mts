@@ -9,6 +9,7 @@ import { emitirToken, gerarHashSenha } from "../src/lib/sessao.ts";
 import { salvarProdutoNoCatalogo } from "../src/lib/catalogo-escrita.ts";
 import { registrarCheckCotacao } from "../tests/helpers/mlops-evidence.ts";
 import { verificarPublicacaoTextoHttp } from "../tests/helpers/publicacao-texto-http.ts";
+import { verificarFormatoPix, verificarRecuperacaoPedidos } from "../tests/helpers/painel-pedidos-pix.ts";
 
 const database = new URL(process.env.DATABASE_URL ?? "http://invalid");
 assert.equal(process.env.CI, "true", "Jornada executada exclusivamente na CI.");
@@ -203,6 +204,17 @@ try {
     await sellerPage.close(); await buyerPage.close();
   }
   await registrarCheckCotacao("jornada", { assertions: { desktopJourney: true, mobileJourney: true, buyerApproval: true, orderOpened: true, noHorizontalOverflow: true, noPageError: true }, metrics: { viewports: 2 } });
+  await prisma.tenant.update({ where: { id: tenant.id }, data: { recursos: { push: ["recebimento_v2", "pagamentos_pix_manual"] } } });
+  const pedidoAuditado = await prisma.pedido.findUniqueOrThrow({ where: { id: ultimoPedido }, select: { id: true, numero: true, status: true } });
+  for (const width of [1440, 390, 360]) {
+    const page = await merchant.newPage();
+    await page.setViewportSize({ width, height: width === 1440 ? 900 : 844 });
+    stage = `pedidos-recuperacao-${width}`;
+    await verificarRecuperacaoPedidos(page, painel, pedidoAuditado, capturar);
+    stage = `pix-formato-${width}`;
+    await verificarFormatoPix(page, painel, capturar);
+    await page.close();
+  }
   stage = "reiniciar";
   await parar(); await iniciar();
   const response = await merchant.request.get(`${painel}/api/painel/cotacoes-b2b/${ultimaCotacao}`);
