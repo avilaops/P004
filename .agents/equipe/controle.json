@@ -18,10 +18,11 @@
       "objective": "Aplicar amarelo na loja Bereta preservando Carbon, banner dourado, catálogo e domínio principal; remover cores vermelhas fixas da composição.",
       "assignee": "codex",
       "priority": "normal",
-      "status": "em-andamento",
+      "status": "concluida",
       "acceptanceCriteria": ["Destaques e botões seguem amarelo com texto escuro.", "Linhas e links editoriais seguem a paleta configurada.", "Textos em fundos claros e escuros permanecem legíveis.", "CI e produção verificadas sem alterar outras lojas ou o catálogo."],
-      "environment": "worktree isolada • builds e testes somente GitHub CI",
-      "evidence": "Solicitação explícita do proprietário após aprovação do Carbon e banner. Paleta prevista #f5c518 e texto #17181b. CSS usa cor de tema para linha editorial e links, com tonalidade escura para texto em fundo branco e clara no modo escuro. Ativação e verificação de produção pendentes."
+      "environment": "producao • beretarodas.com • builds e testes somente GitHub CI",
+      "evidence": "PR 277 integrada em 874c5999f42fe0beb7e16fc9f00bdbae1ce99072. CI de produção 44165079446 integralmente aprovada, incluindo entrega, deploy e fumaça. Paleta #f5c518 com texto #17181b salva pela API administrativa somente na Bereta. Releitura confirma demais campos do tema e banner preservados. Navegador em 1440 px e 390 px confirmou botões, navegação e linha amarela, links em tom escuro legível e checkout com a mesma paleta; home, catálogo e carrinho sem overflow ou exceções. Container saudável e duas imagens mantidas. Evidência: evidencias/bereta-carbon-amarelo-2026-11-17.md.",
+      "review": "Revisão estática independente sem bloqueadores. CSS escopado ao Carbon; navegação móvel e modos claro/escuro conservam legibilidade. CI integral e inspeção visual real aprovadas."
     },
     {
       "id": "BERETA-TEMPLATES-RODAS-20261117",

@@ -126,3 +126,10 @@ não houve erro de console ou falha de navegação nos fluxos conferidos.
 
 Retenção e tempos: [auditoria de CI/CD](ci-cd-retencao-lojas-2026-11-17.md).
 Estado final • concluído, sem pendência obrigatória da entrega Carbon.
+
+## Atualização posterior • paleta amarela
+
+Após esta entrega, o proprietário pediu trocar vermelho por amarelo. A
+atualização foi publicada e conferida com `#f5c518` e texto `#17181b`,
+mantendo o Carbon e o banner. A revisão atual e a evidência dessa alteração
+estão em [paleta amarela](bereta-carbon-amarelo-2026-11-17.md).
