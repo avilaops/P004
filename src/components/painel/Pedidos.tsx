@@ -8,7 +8,7 @@ import ListaDeRegistros from "@/components/aplicacao/ListaDeRegistros";
 import Filtros from "@/components/aplicacao/Filtros";
 import Paginacao from "@/components/aplicacao/Paginacao";
 import Vazio from "@/components/aplicacao/Vazio";
-import { paginaValida } from "@/lib/pedidos-painel";
+import { paginaValida, sufixoFilaPedidos } from "@/lib/pedidos-painel";
 import BaixarPlanilha from "./BaixarPlanilha";
 
 /**
@@ -93,6 +93,7 @@ export default function Pedidos({
   if (aplicada) filtros.set("q", aplicada);
   if (situacao) filtros.set("situacao", situacao);
   const consulta = filtros.toString();
+  const origem = sufixoFilaPedidos(aplicada, situacao, params.get("pagina"));
   const erro = falha?.consulta === consulta && falha.revisao === revisao;
   const listaAtual = dados?.consulta === consulta && dados.revisao === revisao;
   const carregando = !erro && !listaAtual;
@@ -202,7 +203,7 @@ export default function Pedidos({
       <ListaDeRegistros
         itens={itens}
         carregando={carregando}
-        href={(p) => `/painel/pedidos/${p.id}`}
+        href={(p) => `/painel/pedidos/${p.id}${origem}`}
         titulo={(p) => (
           <>
             <span className="font-mono">#{p.numero}</span>

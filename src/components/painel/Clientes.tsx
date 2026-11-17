@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import ListaDeRegistros from "@/components/aplicacao/ListaDeRegistros";
-import { Secao, brl } from "./campos";
+import { Campo, Secao, brl, inputClasse } from "./campos";
 import BaixarPlanilha from "./BaixarPlanilha";
 
 export interface ClienteView {
@@ -14,8 +15,8 @@ export interface ClienteView {
   pedidos: number;
   pedidosPagos: number;
   gastoCentavos: number;
-  primeiraCompra: string;
-  ultimaCompra: string;
+  primeiraCompra: string | null;
+  ultimaCompra: string | null;
   endereco: string;
 }
 
@@ -75,8 +76,44 @@ function acoes(cliente: ClienteView) {
 }
 
 /** Lista comercial dos clientes, com compras pagas separadas de pedidos iniciados. */
-export default function Clientes({ clientes }: { clientes: ClienteView[] }) {
+function CadastroCliente({ aoConcluir, aoCancelar }: { aoConcluir: (email: string) => void; aoCancelar: () => void }) {
+  const [ocupado, setOcupado] = useState(false);
+  const [erro, setErro] = useState("");
+  async function cadastrar(evento: React.FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    const campos = new FormData(evento.currentTarget);
+    setOcupado(true);
+    setErro("");
+    try {
+      const r = await fetch("/api/painel/clientes", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.fromEntries(campos)),
+      });
+      const resposta = await r.json();
+      if (!r.ok) { setErro(resposta.erro ?? "Não foi possível cadastrar o cliente."); return; }
+      aoConcluir(resposta.email);
+    } catch {
+      setErro("Não foi possível confirmar o cadastro. Confira sua conexão e tente novamente.");
+    } finally { setOcupado(false); }
+  }
+  return (
+    <form onSubmit={cadastrar} aria-label="Cadastro de cliente" className="grid gap-3 rounded-xl border border-border p-4">
+      <Campo label="Nome" obrigatorio><input name="nome" required maxLength={160} className={inputClasse} autoComplete="off" /></Campo>
+      <Campo label="E-mail" obrigatorio><input name="email" required type="email" maxLength={254} className={inputClasse} autoComplete="off" /></Campo>
+      <Campo label="Telefone (opcional)"><input name="telefone" type="tel" maxLength={30} className={inputClasse} autoComplete="off" /></Campo>
+      {erro && <p role="alert" className="text-sm text-red-700">{erro}</p>}
+      <div className="flex flex-wrap gap-2">
+        <button type="submit" disabled={ocupado} className="btn-primario min-h-11 px-4">{ocupado ? "Salvando…" : "Cadastrar cliente"}</button>
+        <button type="button" disabled={ocupado} onClick={aoCancelar} className="btn-secundario min-h-11 px-4">Cancelar</button>
+      </div>
+    </form>
+  );
+}
+
+export default function Clientes({ clientes, podeCadastrar = false }: { clientes: ClienteView[]; podeCadastrar?: boolean }) {
+  const router = useRouter();
   const [busca, setBusca] = useState("");
+  const [criando, setCriando] = useState(false);
+  const [aviso, setAviso] = useState("");
 
   const lista = useMemo<ClienteRegistro[]>(() => {
     const termo = busca.trim().toLowerCase();
@@ -92,8 +129,12 @@ export default function Clientes({ clientes }: { clientes: ClienteView[] }) {
   return (
     <>
       <Secao titulo={`Clientes (${clientes.length})`} descricao="Contato, relacionamento e valor pago, sem confundir pedido iniciado com compra concluída.">
+        {podeCadastrar && (criando
+          ? <CadastroCliente aoCancelar={() => setCriando(false)} aoConcluir={(email) => { setCriando(false); setBusca(email); setAviso("Cliente cadastrado."); router.refresh(); }} />
+          : <button className="btn-primario min-h-11 justify-self-start px-4" onClick={() => { setCriando(true); setAviso(""); }}>Novo cliente</button>)}
+        {aviso && <p role="status">{aviso}</p>}
         {clientes.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Ninguém comprou ainda. Assim que o primeiro pedido entrar, a pessoa aparece aqui.</p>
+          <p className="text-sm text-muted-foreground">Nenhum cliente cadastrado. Clientes que fizerem pedidos também aparecerão aqui.</p>
         ) : (
           <>
             <div className="grid gap-3 sm:grid-cols-3">
@@ -144,7 +185,7 @@ export default function Clientes({ clientes }: { clientes: ClienteView[] }) {
                   celula: (cliente) => (
                     <span className="grid min-w-0 gap-0.5">
                       <span className="truncate font-medium">{cliente.nome || "(sem nome)"}</span>
-                      <span className="truncate text-xs text-muted-foreground">{cliente.endereco || (cliente.temConta ? "Conta sem endereço" : "Compra sem conta")}</span>
+                      <span className="truncate text-xs text-muted-foreground">{cliente.endereco || (cliente.temConta ? "Conta sem endereço" : cliente.pedidos ? "Compra sem conta" : "Contato de atendimento")}</span>
                     </span>
                   ),
                 },
@@ -152,7 +193,7 @@ export default function Clientes({ clientes }: { clientes: ClienteView[] }) {
                 { rotulo: "Relacionamento", largura: "w-48", celula: relacionamento },
                 { rotulo: "Total gasto", largura: "w-28", numero: true, celula: (cliente) => brl(cliente.gastoCentavos) },
                 { rotulo: "Ticket médio", largura: "w-28", numero: true, celula: (cliente) => brl(ticketMedio(cliente)) },
-                { rotulo: "Última compra", largura: "w-28", celula: (cliente) => dia(cliente.ultimaCompra) },
+                { rotulo: "Última compra", largura: "w-28", celula: (cliente) => cliente.ultimaCompra ? dia(cliente.ultimaCompra) : "Sem compra" },
               ]}
               acoes={acoes}
               vazio={<p className="py-3 text-sm text-muted-foreground">Ninguém com esse termo.</p>}

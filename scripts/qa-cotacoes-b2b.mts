@@ -10,6 +10,7 @@ import { salvarProdutoNoCatalogo } from "../src/lib/catalogo-escrita.ts";
 import { registrarCheckCotacao } from "../tests/helpers/mlops-evidence.ts";
 import { verificarPublicacaoTextoHttp } from "../tests/helpers/publicacao-texto-http.ts";
 import { verificarFormatoPix, verificarRecuperacaoPedidos } from "../tests/helpers/painel-pedidos-pix.ts";
+import { verificarAtendimento, verificarCatalogo } from "../tests/helpers/painel-atendimento.ts";
 
 const database = new URL(process.env.DATABASE_URL ?? "http://invalid");
 assert.equal(process.env.CI, "true", "Jornada executada exclusivamente na CI.");
@@ -206,6 +207,11 @@ try {
   await registrarCheckCotacao("jornada", { assertions: { desktopJourney: true, mobileJourney: true, buyerApproval: true, orderOpened: true, noHorizontalOverflow: true, noPageError: true }, metrics: { viewports: 2 } });
   await prisma.tenant.update({ where: { id: tenant.id }, data: { recursos: { push: ["recebimento_v2", "pagamentos_pix_manual"] } } });
   const pedidoAuditado = await prisma.pedido.findUniqueOrThrow({ where: { id: ultimoPedido }, select: { id: true, numero: true, status: true } });
+  await salvarProdutoNoCatalogo(tenant.id, null, { nome: "Caneca QA", slug: "qa-sem-contagem", sku: "QA-SEM-CONTAGEM", estoque: null, precoCentavos: 1200, imagens: [] });
+  await prisma.cupom.createMany({ data: ["QA-ATUAL", "QA-ANTIGO-1", "QA-ANTIGO-2"].map((codigo, i) => ({
+    tenantId: tenant.id, codigo, tipo: "PERCENTUAL" as const, valor: 10, validoAte: i > 0 ? new Date("2000-01-01") : null,
+  })) });
+  await prisma.credencialPagamento.create({ data: { tenantId: tenant.id, provedor: "mercadopago", tipoConexao: "chave", status: "conectado", webhookToken: randomUUID() } });
   for (const width of [1440, 390, 360]) {
     const page = await merchant.newPage();
     await page.setViewportSize({ width, height: width === 1440 ? 900 : 844 });
@@ -213,7 +219,31 @@ try {
     await verificarRecuperacaoPedidos(page, painel, pedidoAuditado, capturar);
     stage = `pix-formato-${width}`;
     await verificarFormatoPix(page, painel, capturar);
+    stage = `catalogo-auditoria-${width}`;
+    await verificarCatalogo(page, painel, capturar);
+    stage = `atendimento-auditoria-${width}`;
+    await verificarAtendimento(page, painel, capturar);
     await page.close();
+  }
+  stage = "teste-datado-na-central";
+  const pix = { provedor: "pix_manual", valores: { chavePix: "recebedor@example.invalid", nomeRecebedor: "Loja QA" } };
+  assert.ok((await merchant.request.post(`${painel}/api/painel/recebimento/v2/salvar`, { data: pix })).ok());
+  const conexoes = await merchant.newPage();
+  await conexoes.goto(`${painel}/painel/conexoes`);
+  const cartaoPix = conexoes.locator("article").filter({ has: conexoes.getByRole("heading", { name: /Pagamento.*pix_manual/i }) });
+  await cartaoPix.getByRole("button", { name: "Validar formato" }).click();
+  await cartaoPix.getByText(/Último teste.*Brasília.*Confira no aplicativo/).waitFor();
+  await conexoes.close();
+  stage = "permissao-clientes";
+  for (const papel of ["GERENTE", "OPERADOR"]) {
+    const operador = await prisma.operadorLoja.create({ data: { tenantId: tenant.id, papel, nome: papel, email: `${papel}@example.invalid`, senhaHash: gerarHashSenha(randomUUID()) } });
+    const contexto = await browser.newContext();
+    await contexto.addCookies([{ name: "lojas_sessao", value: emitirToken(tenant.slug, operador.id), url: painel, httpOnly: true, sameSite: "Lax" }]);
+    const email = `contato-${papel.toLowerCase()}@example.invalid`;
+    const cadastro = await contexto.request.post(`${painel}/api/painel/clientes`, { data: { nome: "Contato QA", email } });
+    assert.equal(cadastro.status(), papel === "GERENTE" ? 201 : 403);
+    assert.equal(await prisma.contatoAtendimento.count({ where: { tenantId: tenant.id, email } }), papel === "GERENTE" ? 1 : 0);
+    await contexto.close();
   }
   stage = "reiniciar";
   await parar(); await iniciar();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Campo, inputClasse } from "./campos";
 
 interface Linha { id?: string; valores: Record<string, string>; sku: string; gtin: string; mpn: string; preco: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string; imagem: string; imagemAlterada?: boolean; estoqueAlterado?: boolean }
@@ -16,6 +16,11 @@ export default function GradeVariantes({ produtoId, produtoNome, aoFechar, aoSal
   const [erro, setErro] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const [carregado, setCarregado] = useState(false);
+  const titulo = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    titulo.current?.focus({ preventScroll: true });
+    titulo.current?.scrollIntoView({ block: "start" });
+  }, []);
   const [versao, setVersao] = useState<number>();
 
   useEffect(() => {
@@ -73,7 +78,7 @@ export default function GradeVariantes({ produtoId, produtoNome, aoFechar, aoSal
     <div className="rounded-2xl border border-primary/40 bg-card p-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="font-semibold">Variações de {produtoNome}</h3>
+          <h3 id="titulo-grade-variantes" className="scroll-mt-20 font-semibold" ref={titulo} tabIndex={-1}>Variações de {produtoNome}</h3>
           <p className="text-sm text-muted-foreground">Ex.: Tamanho: P, M, G · Cor: Preto, Branco. Depois clique em “Gerar grade”, preencha estoque e salve.</p>
         </div>
         <button className="btn-secundario h-9 px-3 text-xs" onClick={aoFechar}>Fechar</button>

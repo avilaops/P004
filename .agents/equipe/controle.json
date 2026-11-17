@@ -13,6 +13,22 @@
   ],
   "tasks": [
     {
+      "id": "PAINEL-AUDITORIA-P2-P3-20261117",
+      "title": "Painel • cadastro de clientes e melhorias operacionais",
+      "objective": "Implementar os itens 03 a 10 da auditoria do painel. O proprietário aprovou o cadastro antes da compra por quem gerencia clientes.",
+      "assignee": "codex",
+      "priority": "normal",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "SKU sem contagem leva ao campo de saldo. Variações e validação do preço recebem foco. Filtros do catálogo ficam acessíveis em 360 px.",
+        "A ficha de pedido e o navegador retornam à consulta original. A contagem de cupons aplica a vigência da linha.",
+        "A Central informa separadamente configuração, teste datado e atividade.",
+        "Dono e Gerente cadastram contatos por loja, com duplicidade de e-mail tratada. Balcão conserva acesso de consulta."
+      ],
+      "environment": "GitHub CI • painel autenticado com dados sintéticos",
+      "evidence": "PR 279 e documento da auditoria no projeto Lojas do Linear."
+    },
+    {
       "id": "PAINEL-AUDITORIA-P1-20261117",
       "title": "Painel • validação do Pix direto e recuperação da lista de pedidos",
       "objective": "Explicar o alcance da validação local do Pix e recuperar a consulta de pedidos após falhas de leitura.",

@@ -53,6 +53,7 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
   /** O que esta loja pergunta além do padrão. Vem junto do produto no GET. */
   const [definicoes, setDefinicoes] = useState<CampoPersonalizado[]>([]);
   const [erro, setErro] = useState<string | null>(null);
+  const [campoInvalido, setCampoInvalido] = useState<"nome" | "preco" | null>(null);
   const [ocupado, setOcupado] = useState(false);
 
   useEffect(() => {
@@ -79,6 +80,12 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
   }, [produtoId]);
 
   const sujo = Boolean(f && inicial && JSON.stringify(f) !== JSON.stringify(inicial));
+  const carregado = f !== null;
+  useEffect(() => {
+    if (carregado && window.location.hash === "#catalogo-estoque") {
+      document.getElementById("catalogo-estoque")?.focus();
+    }
+  }, [carregado, produtoId]);
 
   // Fechar a aba com preço alterado e não salvo é perder o trabalho sem aviso.
   // Só o navegador pergunta; a navegação interna continua livre, e a barra de
@@ -95,7 +102,13 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
   async function salvar() {
     if (!f) return;
     const preco = centavos(f.preco);
-    if (!f.nome.trim() || !Number.isFinite(preco)) return setErro("Nome e preço são obrigatórios.");
+    const invalido = !f.nome.trim() ? "nome" : !f.temVariacoes && (!Number.isFinite(preco) || preco < 0) ? "preco" : null;
+    setCampoInvalido(invalido);
+    if (invalido) {
+      setErro(null);
+      document.getElementById(`catalogo-${invalido}`)?.focus();
+      return;
+    }
     // O banco recusaria isso com um 422 genérico. A cobrança tem que ser aqui,
     // dizendo para que serve: sem a série não há como achar todos os produtos
     // que usam a foto no dia em que ela for trocada.
@@ -149,7 +162,10 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
   }
 
   if (!f) return <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground sm:p-6">{erro ?? "Carregando…"}</div>;
-  const set = (k: keyof Form, v: unknown) => setF({ ...f, [k]: v });
+  const set = (k: keyof Form, v: unknown) => {
+    if (campoInvalido === k) setCampoInvalido(null);
+    setF({ ...f, [k]: v });
+  };
   const setImagens = (imagens: string[]) => setF({ ...f, imagens, imagemConfirmada: false, correspondenciaImagem: "nao_confirmada" });
 
   // O que falta aparece na linha fechada do bloco: recolher não pode esconder
@@ -172,10 +188,10 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
       {/* Aberto: o que se mexe todo dia. O resto entra em bloco fechado, na
           ordem em que o lojista precisa, não na ordem do banco. */}
       <div className="grid min-w-0 gap-4 sm:grid-cols-2">
-        <Campo label="Nome"><input id="catalogo-nome" className={inputClasse} value={f.nome} onChange={(e) => set("nome", e.target.value)} /></Campo>
+        <Campo label="Nome" erro={campoInvalido === "nome" ? "Informe o nome do produto." : undefined}><input id="catalogo-nome" aria-invalid={campoInvalido === "nome"} className={inputClasse} value={f.nome} onChange={(e) => set("nome", e.target.value)} /></Campo>
         <Campo label="Categoria"><input id="catalogo-categoria" className={inputClasse} value={f.categoria} onChange={(e) => set("categoria", e.target.value)} /></Campo>
         <Campo label="Categoria Google (opcional)" ajuda="Use o ID ou caminho completo da taxonomia oficial. Vazio mantém a classificação automática do Google."><input id="catalogo-google-category" className={inputClasse} value={f.googleProductCategory} onChange={(e) => set("googleProductCategory", e.target.value)} placeholder="ID ou caminho oficial confirmado" /></Campo>
-        <Campo label="Preço (R$)"><input id="catalogo-preco" readOnly={f.temVariacoes} className={inputClasse} value={f.preco} onChange={(e) => set("preco", e.target.value)} inputMode="decimal" /></Campo>
+        <Campo label="Preço (R$)" erro={campoInvalido === "preco" ? "Informe um preço válido em reais." : undefined}><input id="catalogo-preco" aria-invalid={campoInvalido === "preco"} readOnly={f.temVariacoes} className={inputClasse} value={f.preco} onChange={(e) => set("preco", e.target.value)} inputMode="decimal" /></Campo>
         <Campo label="Preço “de” (R$)" ajuda="Riscado na loja, ao lado do preço."><input id="catalogo-precoDe" readOnly={f.temVariacoes} className={inputClasse} value={f.precoDe} onChange={(e) => set("precoDe", e.target.value)} inputMode="decimal" /></Campo>
         <Campo label="Estoque físico" ajuda="Quantidade física; as reservas são descontadas automaticamente. Vazio = não controla."><input id="catalogo-estoque" readOnly={f.temVariacoes} className={inputClasse} value={f.estoque} onChange={(e) => set("estoque", e.target.value)} inputMode="numeric" /></Campo>
         <Campo label="Disponibilidade">

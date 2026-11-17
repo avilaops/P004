@@ -7,6 +7,7 @@ import { AlertTriangle, CheckCircle2, CircleOff, Clock3, ExternalLink, RefreshCw
 import type { CentralSaudeCanais, EstadoSaudeCanal } from "@/lib/saude-canais"
 
 const APRESENTACAO: Record<EstadoSaudeCanal, { rotulo: string; classe: string; Icone: typeof CheckCircle2 }> = {
+  configurado: { rotulo: "Configurado", classe: "bg-slate-100 text-slate-700", Icone: ShieldCheck },
   saudavel: { rotulo: "Saudável", classe: "bg-emerald-50 text-emerald-700", Icone: CheckCircle2 },
   atencao: { rotulo: "Atenção", classe: "bg-amber-50 text-amber-800", Icone: AlertTriangle },
   erro: { rotulo: "Erro", classe: "bg-rose-50 text-rose-700", Icone: CircleOff },
@@ -35,11 +36,16 @@ export default function CentralConexoes({ dados, podeTestar }: { dados: CentralS
   const [retorno, setRetorno] = useState<Record<string, string>>({})
   async function testar(canal: string) {
     setTestando(canal)
-    const resposta = await fetch(`/api/painel/conexoes/${encodeURIComponent(canal)}/testar`, { method: "POST" })
-    const corpo = await resposta.json().catch(() => ({ mensagem: "Não foi possível concluir o teste." }))
-    setRetorno((atual) => ({ ...atual, [canal]: corpo.mensagem }))
-    setTestando(null)
-    router.refresh()
+    try {
+      const resposta = await fetch(`/api/painel/conexoes/${encodeURIComponent(canal)}/testar`, { method: "POST" })
+      const corpo = await resposta.json()
+      setRetorno((atual) => ({ ...atual, [canal]: corpo.mensagem ?? "Não foi possível concluir o teste." }))
+      router.refresh()
+    } catch {
+      setRetorno((atual) => ({ ...atual, [canal]: "Não foi possível confirmar o teste. Confira a conexão e tente novamente." }))
+    } finally {
+      setTestando(null)
+    }
   }
   const criticos = dados.canais.filter((c) => c.estado === "erro").length
   const atencao = dados.canais.filter((c) => c.estado === "atencao").length
@@ -65,6 +71,8 @@ export default function CentralConexoes({ dados, podeTestar }: { dados: CentralS
                 </div>
                 <p className="mt-1 text-sm text-slate-600">{canal.conta ?? "Nenhuma conta identificada"}</p>
                 <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-500">
+                  <span>Configuração • {canal.conectado ? "Cadastrada" : "Sem conexão cadastrada"}</span>
+                  <span>{canal.ultimoTeste ? `Último teste • ${new Date(canal.ultimoTeste.ocorridoEm).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} (Brasília) • ${canal.ultimoTeste.mensagem}` : "Ainda sem teste registrado"}</span>
                   <span className="inline-flex items-center gap-1"><ShieldCheck size={14} />{canal.autenticacao} · {canal.escopos.join(", ")}</span>
                   <span className="inline-flex items-center gap-1"><Clock3 size={14} />Última atividade: {relativo(canal.ultimaAtividadeEm)}</span>
                   {canal.webhooks.total > 0 && <span>{canal.webhooks.ativos}/{canal.webhooks.total} webhooks ativos</span>}

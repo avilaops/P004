@@ -10,7 +10,7 @@ export async function verificarRecuperacaoPedidos(page: Page, painel: string, pe
   const api = (u: URL) => u.pathname === "/api/painel/pedidos" && u.searchParams.has("pagina");
   const tentar = page.getByRole("button", { name: "Tentar novamente" });
   const busca = page.getByPlaceholder("Número do pedido, nome ou telefone");
-  const linha = page.locator(`a[href="/painel/pedidos/${pedido.id}"]:visible`).first();
+  const linha = page.locator(`a[href^="/painel/pedidos/${pedido.id}?"]:visible`).first();
 
   await page.route(api, route => route.fulfill({ status: 503, body: "" }), { times: 1 });
   await page.goto(url);
@@ -22,6 +22,14 @@ export async function verificarRecuperacaoPedidos(page: Page, painel: string, pe
   assert.equal(await busca.inputValue(), String(pedido.numero));
   assert.equal(page.url(), url);
   await capturar(page, `pedidos-recuperados-${largura}.png`);
+  await linha.click();
+  await page.locator(`a[href="/painel/pedidos?${filtros}"]`).click();
+  await page.waitForURL(url);
+  await linha.click();
+  await page.waitForURL(u => u.pathname.endsWith(pedido.id));
+  await page.goBack();
+  await page.waitForURL(url);
+  await linha.waitFor();
 
   await page.route(api, route => route.abort("internetdisconnected"), { times: 1 });
   await busca.fill("sem-resultado-qa");

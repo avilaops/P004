@@ -64,7 +64,7 @@ export function montarPlanilha(linhas: Valor[][], formato: Formato, aba: string)
   return montarCsv(linhas.map((l) => l.map((v) => (eDecimal(v) ? v.numero.toFixed(v.casas).replace(".", ",") : v))));
 }
 
-const data = (d: Date) => d.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+const data = (d: Date | null) => d?.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) ?? "";
 const reais = (centavos: number) => decimal(centavos / 100);
 
 export async function pedidosEmLinhas(tenantId: string): Promise<Valor[][]> {
