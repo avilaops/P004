@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { PALETA_ATELIE } from "@/lib/atelie";
-import { ehTemplateRodas, selecionarTemplateRodas } from "@/lib/templates-rodas";
+import { ehTemplateRodas, mudarModoTemplateRodas, selecionarTemplateRodas } from "@/lib/templates-rodas";
 import { LAYOUTS, type TemaLoja } from "@/lib/tema";
 import { LIMITE_RASCUNHO, codificarRascunho } from "@/lib/previa-tema";
 import { criarDirecaoVisual, PERSONALIDADES, SEGMENTOS, type IdentidadeLoja } from "@/lib/identidade";
@@ -241,7 +241,7 @@ export default function Marca({
         <Secao titulo={BLOCOS.visual.titulo} descricao="O que dá a cara da loja. Troque e veja na loja na hora.">
           <div className="grid gap-4 sm:grid-cols-2">
             <Campo label="Cor principal"><div className="flex gap-2"><input type="color" aria-label="Escolher cor principal" value={tema.corPrimaria} onChange={(e) => setTema({ ...tema, corPrimaria: e.target.value })} className="h-11 w-14 rounded-lg border border-border" /><input className={inputClasse} value={tema.corPrimaria} onChange={(e) => setTema({ ...tema, corPrimaria: e.target.value })} /></div></Campo>
-            <Campo label="Modo"><select className={inputClasse} value={tema.modo} onChange={(e) => setTema({ ...tema, modo: e.target.value as TemaLoja["modo"] })}>{Object.entries(MODO).map(([v, n]) => <option value={v} key={v}>{n}</option>)}</select></Campo>
+            <Campo label="Modo"><select className={inputClasse} value={tema.modo} onChange={(e) => { const modo = e.target.value as TemaLoja["modo"]; setTema(ehTemplateRodas(tema.layout) ? mudarModoTemplateRodas(tema, modo) : { ...tema, modo }); }}>{Object.entries(MODO).map(([v, n]) => <option value={v} key={v}>{n}</option>)}</select></Campo>
             <Campo label="Fonte"><select className={inputClasse} value={tema.fonte} onChange={(e) => setTema({ ...tema, fonte: e.target.value as TemaLoja["fonte"] })}>{FONTES.map((f) => <option value={f.valor} key={f.valor}>{f.rotulo}</option>)}</select></Campo>
             <Campo label="Cantos"><select className={inputClasse} value={tema.raio} onChange={(e) => setTema({ ...tema, raio: e.target.value as TemaLoja["raio"] })}>{Object.entries(RAIO).map(([v, n]) => <option value={v} key={v}>{n}</option>)}</select></Campo>
           </div>

@@ -13,5 +13,14 @@ export function ehTemplateRodas(layout: string): layout is keyof typeof PALETAS 
 }
 
 export function selecionarTemplateRodas(tema: TemaLoja, layout: keyof typeof PALETAS): TemaLoja {
-  return { ...tema, ...PALETAS[layout], layout, corFundo: undefined, corTexto: undefined };
+  return mudarModoTemplateRodas({ ...tema, ...PALETAS[layout], layout }, PALETAS[layout].modo);
+}
+
+/** Valores explícitos atravessam o PATCH, que mescla o JSON com o tema salvo. */
+export function mudarModoTemplateRodas(tema: TemaLoja, modo: TemaLoja["modo"]): TemaLoja {
+  return {
+    ...tema, modo,
+    corFundo: modo === "escuro" ? "#0b0b0c" : "#ffffff",
+    corTexto: modo === "escuro" ? "#fafafa" : "#18181b",
+  };
 }

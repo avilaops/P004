@@ -4,7 +4,7 @@ import { layoutsOferecidos, temaNaVitrine } from "./flags";
 import { codificarRascunho, examinarRascunho } from "./previa-tema";
 import { TemaSchema } from "./tema";
 import { contratoDo } from "./templates";
-import { ehTemplateRodas, selecionarTemplateRodas } from "./templates-rodas";
+import { ehTemplateRodas, mudarModoTemplateRodas, selecionarTemplateRodas } from "./templates-rodas";
 import { contraste } from "./tema";
 
 const layouts = ["rodas-street", "rodas-racing", "rodas-carbon", "rodas-night"];
@@ -35,9 +35,21 @@ test("paletas iniciais têm contraste legível e mantêm conteúdo e fonte da lo
     assert.ok(contraste(escolhido.corPrimaria, escolhido.corPrimariaTexto) >= 4.5);
     assert.equal(escolhido.fonte, atual.fonte);
     assert.equal(escolhido.heroTitulo, atual.heroTitulo);
-    assert.equal(escolhido.corFundo, undefined);
+    assert.notEqual(escolhido.corFundo, atual.corFundo);
+    // O escritor mescla o PATCH serializado com o JSON que já estava salvo.
+    assert.deepEqual({ ...atual, ...JSON.parse(JSON.stringify(escolhido)) }, escolhido);
     assert.ok(TemaSchema.safeParse(escolhido).success);
   }
   assert.equal(ehTemplateRodas("__proto__"), false);
   assert.equal(atual.corFundo, "#123456");
+});
+
+test("trocar o modo dos templates substitui fundo e texto inclusive após serializar", () => {
+  const escuro = selecionarTemplateRodas(TemaSchema.parse({}), "rodas-night");
+  const claro = mudarModoTemplateRodas(escuro, "claro");
+  assert.equal(claro.modo, "claro");
+  assert.equal(claro.corFundo, "#ffffff");
+  assert.ok(contraste(claro.corTexto!, claro.corFundo!) >= 4.5);
+  assert.deepEqual({ ...escuro, ...JSON.parse(JSON.stringify(claro)) }, claro);
+  assert.deepEqual(mudarModoTemplateRodas(claro, "escuro"), escuro);
 });
