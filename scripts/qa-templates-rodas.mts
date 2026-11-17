@@ -33,6 +33,7 @@ const servidor = spawn(process.execPath, [".next/standalone/server.js"], {
 try {
   await mkdir(pasta, { recursive: true });
   const requireDoBuild = createRequire(resolve(".next/standalone/server.js"));
+  assert.ok(requireDoBuild.resolve("onnxruntime-node").startsWith(resolve(".next/standalone/node_modules") + "/"), "ONNX pertence ao standalone, sem fallback nas dependências do job");
   assert.equal(typeof requireDoBuild("onnxruntime-node").InferenceSession.create, "function", "Bundle inclui as bibliotecas nativas do ONNX");
   const temaInicial = TemaSchema.parse({ layout: "classico", corPrimaria: "#f2cb05", fonte: "montserrat", corFundo: "#123456", corTexto: "#ffffff" });
   const t = await prisma.tenant.create({ data: {
@@ -133,6 +134,7 @@ try {
     assert.equal(new URL(page.url()).searchParams.get("q"), "roda & medidas");
     resultados.push({ layout, caso: "links_e_busca", passou: true });
     if (layout === "rodas-carbon") {
+      await page.setViewportSize({ width: 390, height: 844 });
       await page.goto(lojaUrl);
       await page.locator('.rw-nav a[href="/categoria/rodas"]').click();
       await page.waitForURL(/\/categoria\/rodas$/);

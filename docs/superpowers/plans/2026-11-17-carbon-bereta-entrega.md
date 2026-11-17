@@ -6,6 +6,9 @@ com catálogo real e verificação completa. Não encerrar com publicação pend
 **Arquitetura:** conservar os componentes TSX de `home/rodas`, o modelo público
 `rodas-modelo.ts` e os fluxos existentes de catálogo, carrinho e checkout.
 Selecionar somente `rodas-carbon` na Bereta após a versão aprovada estar no ar.
+O proprietário também determinou usar somente `beretarodas.com` para o cliente.
+Esse domínio passa a ser o principal; os aliases antigos redirecionam com
+preservação de caminho e consulta. Isso substitui a separação institucional/loja.
 Os outros modelos permanecem disponíveis, sem alterar outras lojas.
 
 **Stack:** TypeScript/TSX, Next.js, Prisma, CSS e PostgreSQL existentes.
@@ -18,7 +21,8 @@ entregue ao proprietário; detalhes em `design-qa.md`.
 - Preservar gates, hashes, origem dos artefatos e limites nativos do projeto.
 - Usar preços, imagens, disponibilidade e identidade legal reais da Bereta.
 - Não criar pedidos, pagamentos, mensagens ao cliente ou eventos fiscais reais.
-- Não alterar o institucional nem as configurações de outras lojas.
+- Preservar o projeto institucional anterior para reversão, sem mantê-lo como
+  uma segunda experiência pública. Não alterar configurações de outras lojas.
 - Guardar o tema anterior para permitir reversão da seleção.
 
 ## Implementação e verificação
@@ -36,6 +40,10 @@ entregue ao proprietário; detalhes em `design-qa.md`.
 - [ ] Preservar o tema anterior e ativar Carbon somente na Bereta por mecanismo
   administrativo autorizado, conservando conteúdo/catálogo real e aplicando a
   paleta Carbon aprovada. Conferir carrossel e identidade da loja.
+- [ ] Configurar `beretarodas.com` como domínio principal, ajustar DNS web e
+  origem, redirecionar `www` e `loja.beretarodas.com` para o apex mantendo
+  caminhos/consulta e verificar TLS, canonical, sitemap e links da loja.
+  Preservar e-mail, outros registros DNS e implantação antiga para reversão.
 - [ ] Inspecionar produção em desktop/celular, conferir navegação e ausência de
   overflow/erros; registrar capturas, versão, run e estado em evidência versionada
   e no controle da equipe. Concluir somente após todos os itens obrigatórios.
