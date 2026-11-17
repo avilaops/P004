@@ -14,6 +14,10 @@ import { MCP_TOOLS } from "./mcp-tools";
 
 /** Layouts que a landing não ilustra, e o motivo. Some da lista, entra na vitrine. */
 const FORA_DA_LANDING: Record<string, string> = {
+  "rodas-street": "comparação no painel com identidade da loja; disponível na prévia",
+  "rodas-racing": "comparação no painel com identidade da loja; disponível na prévia",
+  "rodas-carbon": "catálogo lateral depende dos dados da loja; disponível na prévia",
+  "rodas-night": "comparação no painel com identidade da loja; disponível na prévia",
   "automotivo-premium": "é a loja inteira, não uma home; miniatura de home não o representa",
   "catalogo-tecnico": "tabela de peças não cabe numa miniatura de home; quem quer ver como fica abre a prévia do painel (/painel/previa)",
   industrial: "a home é a busca por medida sobre a foto da fábrica e as linhas com a descrição de cada categoria: sem os dados da loja a miniatura seria um formulário vazio",

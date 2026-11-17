@@ -13,6 +13,17 @@
   ],
   "tasks": [
     {
+      "id": "BERETA-TEMPLATES-RODAS-20261117",
+      "title": "Bereta • quatro templates conforme referências visuais",
+      "objective": "Oferecer Street, Racing, Carbon e Night na seleção e prévia do painel sem alterar o tema ativo.",
+      "assignee": "codex",
+      "priority": "normal",
+      "status": "em-andamento",
+      "acceptanceCriteria": ["Quatro composições inspiradas nas imagens enviadas pelo proprietário.", "Prévia não publica nem altera dados.", "Mobile, desktop, modos claro e escuro e catálogo vazio verificados no CI.", "Preços e disponibilidade usam os componentes compartilhados."],
+      "environment": "GitHub CI isolado; produção somente para disponibilizar as opções",
+      "evidence": "Plano docs/superpowers/plans/2026-11-17-templates-rodas.md; PR274. Validação pendente."
+    },
+    {
       "id": "FAVICONS-SELETOR-LOJAS-20261116",
       "title": "Exibir a identidade de cada loja no seletor da equipe",
       "objective": "Usar o pacote de favicon cadastrado por tenant nos cartões da equipe e preservar uma inicial legível quando a loja ainda não tiver pacote próprio.",

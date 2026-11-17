@@ -4,8 +4,10 @@ import { layoutsOferecidos, temaNaVitrine } from "./flags";
 import { codificarRascunho, examinarRascunho } from "./previa-tema";
 import { TemaSchema } from "./tema";
 import { contratoDo } from "./templates";
+import { ehTemplateRodas, selecionarTemplateRodas } from "./templates-rodas";
+import { contraste } from "./tema";
 
-const layouts = ["rodas-performance", "rodas-showroom", "rodas-catalogo"];
+const layouts = ["rodas-street", "rodas-racing", "rodas-carbon", "rodas-night"];
 
 for (const layout of layouts) {
   test(`${layout}: pode ser escolhido e visualizado sem perder a identidade`, () => {
@@ -23,4 +25,19 @@ for (const layout of layouts) {
 test("adicionar templates não muda o layout padrão de lojas existentes", () => {
   assert.equal(TemaSchema.parse({}).layout, "classico");
   assert.equal(TemaSchema.parse({ layout: "distribuidora" }).layout, "distribuidora");
+});
+
+test("paletas iniciais têm contraste legível e mantêm conteúdo e fonte da loja", () => {
+  const atual = TemaSchema.parse({ fonte: "montserrat", corFundo: "#123456", heroTitulo: "Meu catálogo" });
+  for (const layout of layouts) {
+    assert.ok(ehTemplateRodas(layout));
+    const escolhido = selecionarTemplateRodas(atual, layout);
+    assert.ok(contraste(escolhido.corPrimaria, escolhido.corPrimariaTexto) >= 4.5);
+    assert.equal(escolhido.fonte, atual.fonte);
+    assert.equal(escolhido.heroTitulo, atual.heroTitulo);
+    assert.equal(escolhido.corFundo, undefined);
+    assert.ok(TemaSchema.safeParse(escolhido).success);
+  }
+  assert.equal(ehTemplateRodas("__proto__"), false);
+  assert.equal(atual.corFundo, "#123456");
 });

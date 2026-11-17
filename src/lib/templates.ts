@@ -49,6 +49,10 @@ function soHome(layout: TemaLoja["layout"]): ContratoTemplate {
 }
 
 export const CONTRATOS: Record<TemaLoja["layout"], ContratoTemplate> = {
+  "rodas-street": soHome("rodas-street"),
+  "rodas-racing": soHome("rodas-racing"),
+  "rodas-carbon": soHome("rodas-carbon"),
+  "rodas-night": soHome("rodas-night"),
   "automotivo-premium": {
     layout: "automotivo-premium",
     versao: VERSAO_CONTRATO,

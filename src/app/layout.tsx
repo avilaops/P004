@@ -25,6 +25,7 @@ import Footer from "@/components/Footer";
 import CabecalhoPremium from "@/components/templates/automotivo-premium/Cabecalho";
 import CarrinhoLateral from "@/components/templates/automotivo-premium/CarrinhoLateral";
 import "@/components/templates/automotivo-premium/premium.css";
+import "@/components/home/rodas/rodas.css";
 import WhatsAppFlutuante from "@/components/WhatsAppFlutuante";
 import BarraInferior from "@/components/BarraInferior";
 import LojaNaoEncontrada from "@/components/LojaNaoEncontrada";

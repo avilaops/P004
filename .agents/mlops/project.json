@@ -325,6 +325,25 @@
       "flows": []
     },
     {
+      "id": "templates-rodas",
+      "name": "Templates de rodas • comparação na vitrine",
+      "state": "existing",
+      "dependsOn": ["fundacao"],
+      "sources": [
+        { "kind": "code", "path": "src/lib/tema.ts" },
+        { "kind": "code", "path": "src/lib/templates.ts" },
+        { "kind": "code", "path": "src/components/home/composicao.tsx" },
+        { "kind": "code", "path": "src/lib/templates-rodas.ts" },
+        { "kind": "code", "path": "src/components/home/rodas/Home.tsx" },
+        { "kind": "code", "path": "src/components/home/rodas/Blocos.tsx" },
+        { "kind": "code", "path": "src/components/home/rodas/rodas.css" },
+        { "kind": "test", "path": "src/lib/templates-rodas.test.ts" },
+        { "kind": "test", "path": "scripts/qa-templates-rodas.mts" },
+        { "kind": "contract", "path": "docs/superpowers/plans/2026-11-17-templates-rodas.md" }
+      ],
+      "flows": []
+    },
+    {
       "id": "cms",
       "name": "Conteúdo e publicação — módulo CMS",
       "state": "planned",

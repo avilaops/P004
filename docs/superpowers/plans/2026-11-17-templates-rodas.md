@@ -1,16 +1,19 @@
 # Templates de rodas • plano e contrato
 
-**Objetivo:** oferecer três novas composições para testar na Bereta pelo painel.
+**Objetivo:** oferecer quatro novas composições para testar na Bereta pelo painel.
 **Responsável:** agente Codex (`codex`).
 **Stack:** TypeScript, Next.js, React e CSS Modules existentes.
 
 ## Decisões de implementação
 
-Criar `rodas-performance` (hero escuro e categorias numeradas),
-`rodas-showroom` (composição editorial com fotografia e categorias visuais) e
-`rodas-catalogo` (busca inicial e catálogo compacto). São decisões do agente
-para atender ao pedido de alguns templates novos, sem preferência visual definida.
-Usar três composições de home sobre os dados existentes, em vez de duplicar
+O proprietário enviou quatro imagens durante a implementação. Criar
+`rodas-street` (cabeçalho vermelho e vitrine clara), `rodas-racing`
+(amarelo/preto com painéis claros), `rodas-carbon` (menu lateral e catálogo
+com contorno) e `rodas-night` (escuro/amarelo e categorias fotográficas).
+Preservar a hierarquia das referências, usando fotos, logo e dados reais
+da loja. Paletas iniciais são aplicadas ao selecionar no painel; o lojista
+pode personalizá-las antes de salvar. Fonte e conteúdo permanecem os existentes.
+Usar quatro composições de home sobre os dados existentes, em vez de duplicar
 checkout ou criar sites separados. Alterar só cores não oferece comparação
 de hierarquia; reimplementar a loja inteira amplia o escopo sem necessidade.
 
@@ -23,8 +26,8 @@ continuam configuráveis. O institucional permanece fora desta alteração.
 
 ## Tarefas
 
-- [ ] Registrar os três layouts no schema, catálogo, contrato e composição.
-- [ ] Implementar as três homes e os blocos comuns, com estilos responsivos.
+- [ ] Registrar os quatro layouts no schema, catálogo, contrato e composição.
+- [ ] Implementar as quatro variantes e os blocos comuns, com estilos responsivos.
 - [ ] Conferir seleção, prévia sem escrita, links, ausência de imagem e catálogo
   vazio; executar matriz mobile/desktop, claro/escuro no GitHub CI.
 - [ ] Vincular fontes ao perfil MLOps, registrar evidências e entregar opções
@@ -34,7 +37,7 @@ continuam configuráveis. O institucional permanece fora desta alteração.
 
 Testes e build exclusivamente no GitHub CI. Teste de contrato fixa aceitação
 do tema e roundtrip da prévia. Teste de navegador usa tenant isolado e servidor
-compilado: três layouts em 390 e 1440 px, modos claro e escuro, fotos reais
+compilado: quatro layouts em 390 e 1440 px, modos claro e escuro, fotos reais
 do repositório, nenhuma gravação pela prévia, navegação e estado sem catálogo.
 Artefato contém capturas e JSON com versão, ambiente e resultados.
 
