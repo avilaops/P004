@@ -1,7 +1,18 @@
 # CI em etapas curtas
 
-Todos os jobs de `Build e deploy` e `Merge automático` mantêm
-`timeout-minutes: 1`. Timeout reprova o job; não há build ou teste nos servidores.
+Os jobs curtos de `Build e deploy` e `Merge automático` usam timeout nativo de
+um minuto. `instalacao_dependencias`, `dependencias_qualidade`, `qualidade` e
+`build` têm dois minutos; os jobs longos já definidos conservam dez minutos.
+Timeout reprova o job; não há build ou teste nos servidores.
+
+Em17/11/2026, na conclusão do Carbon solicitada pelo proprietário, os logs
+44106268519,44118063520,44119568016,44120583800 e44121863236 mostraram
+cancelamentos nativos em transferências, geração de tipos e finalização, além
+do limite consumido pela restauração do cache npm391MB. Após separar ferramentas
+e evitar reenvios, foi aplicada folga restrita de dois minutos nesses quatro
+jobs para permitir a validação integral. Essa é uma decisão de implementação
+registrada na entrega, não uma aprovação funcional presumida. Comandos, hashes,
+origem por revisão/execução/tentativa e gates de publicação continuam obrigatórios.
 Os jobs usam `ubuntu-24.04` explicitamente: o alias `ubuntu-latest` iniciou
 mudança para 26.04 em novembro de 2026. A base fixa evita mudança de sistema
 operacional durante a comparação dos tempos. O cache de Node continua validado

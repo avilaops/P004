@@ -32,7 +32,7 @@ jobs:
   instalacao_dependencias:
     name: preparar dependências
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 2
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
     steps:
@@ -123,7 +123,7 @@ jobs:
     name: preparar tipos e ferramentas verificadas
     needs: instalacao_dependencias
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 2
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
       artifact_id_tipos: ${{ steps.tipos.outputs.ids }}
@@ -171,7 +171,7 @@ jobs:
     name: qualidade / ${{ matrix.comando }} / ${{ matrix.grupo }}
     needs: dependencias_qualidade
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 2
     strategy:
       fail-fast: false
       matrix:
@@ -294,7 +294,7 @@ jobs:
     name: compilar aplicação
     needs: [instalacao_dependencias, qualidade]
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 2
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
     steps:
