@@ -24,7 +24,7 @@ try {
     const contexto = await navegador.newContext({ viewport: { width: indice < 2 ? 1280 : 1440, height: 1000 } });
     const page = await contexto.newPage();
     const erros: string[] = [];
-    page.on("pageerror", e => erros.push(e.message));
+    page.on("pageerror", e => { erros.push(e.message); console.error(`Erro de renderização ${nome}: ${e.stack ?? e.message}`); });
     await page.goto(`http://127.0.0.1:3118/${nome}.html`);
     await page.locator(".rw-product").first().waitFor();
     await page.evaluate(async () => { for (const img of document.images) img.loading = "eager"; await Promise.all([...document.images].map(img => img.decode())); });

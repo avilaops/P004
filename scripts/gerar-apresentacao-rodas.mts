@@ -5,7 +5,7 @@ import { build } from "esbuild";
 assert.equal(process.env.CI, "true", "Build de apresentação exclusivo do GitHub CI");
 const destino = "artifacts/rodas-fiel/site";
 await mkdir(destino, { recursive: true });
-await build({ entryPoints: ["scripts/rodas-apresentacao.tsx"], outfile: `${destino}/app.js`, bundle: true, platform: "browser", format: "esm", jsx: "automatic", minify: true, define: { "process.env.NODE_ENV": '"production"' }, tsconfig: "tsconfig.json" });
+await build({ entryPoints: ["scripts/rodas-apresentacao.tsx"], outfile: `${destino}/app.js`, bundle: true, platform: "browser", format: "esm", jsx: "automatic", minify: true, define: { "process.env": JSON.stringify({ NODE_ENV: "production" }) }, tsconfig: "tsconfig.json" });
 await cp("public/media/templates-rodas", `${destino}/media/templates-rodas`, { recursive: true });
 await cp("public/media/bereta/categories", `${destino}/media/bereta/categories`, { recursive: true });
 await cp("public/marcas/automotivo", `${destino}/marcas/automotivo`, { recursive: true });
