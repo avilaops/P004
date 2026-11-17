@@ -1,22 +1,28 @@
-# CI em etapas curtas
+# CI • execução e entrega verificadas
 
-Os jobs curtos de `Build e deploy` e `Merge automático` usam timeout nativo de
-um minuto. `instalacao_dependencias`, `dependencias_qualidade`, `qualidade`, `unitarios` e
-`build` têm dois minutos; os jobs longos já definidos conservam dez minutos.
-Timeout reprova o job; não há build ou teste nos servidores.
+Todos os jobs dos workflows do Lojas usam timeout nativo de **dez minutos**.
+Em 17/11/2026, o proprietário determinou explicitamente retirar o bloqueio
+de um minuto após dois cancelamentos no download da imagem de produção.
+Essa orientação substitui a política anterior e suas exceções de dois minutos.
+O timeout encerra um job travado; não exige que a execução use os dez minutos.
+Testes, gates, hashes, origem dos artefatos e retenção de duas imagens permanecem.
+Não há build ou teste nos servidores.
+
+## Histórico do diagnóstico
 
 Em17/11/2026, na conclusão do Carbon solicitada pelo proprietário, os logs
 44106268519,44118063520,44119568016,44120583800 e44121863236 mostraram
 cancelamentos nativos em transferências, geração de tipos e finalização, além
 do limite consumido pela restauração do cache npm391MB. Após separar ferramentas
-e evitar reenvios, foi aplicada folga restrita de dois minutos nesses quatro
+e evitar reenvios, havia sido aplicada folga restrita de dois minutos nesses quatro
 jobs para permitir a validação integral. Essa é uma decisão de implementação
 registrada na entrega, não uma aprovação funcional presumida. Comandos, hashes,
 origem por revisão/execução/tentativa e gates de publicação continuam obrigatórios.
 
 No run44123669173, a segunda fatia unitária passou48s baixando dependências e
 foi cancelada na extração, antes dos testes. O mesmo limite de dois minutos
-passa a cobrir `unitarios`, totalizando cinco jobs com essa folga.
+passou a cobrir `unitarios`, totalizando cinco jobs com essa folga intermediária.
+Essa etapa do diagnóstico foi substituída pela decisão explícita acima.
 Os jobs usam `ubuntu-24.04` explicitamente: o alias `ubuntu-latest` iniciou
 mudança para 26.04 em novembro de 2026. A base fixa evita mudança de sistema
 operacional durante a comparação dos tempos. O cache de Node continua validado
@@ -110,7 +116,7 @@ completa e o navegador dessa mesma versão.
 Esse comando apenas baixa a imagem autorizada. Não migra nem troca o container.
 O job `deploy` recebe o mesmo digest e executa a ativação completa existente,
 incluindo backup em migração pendente, migração, saúde, conferência da imagem
-e rollback. Cada job mantém `timeout-minutes: 1` e a mesma fila de publicação.
+e rollback. Cada job usa `timeout-minutes: 10` e conserva a mesma fila de publicação.
 
 As duas etapas conferem se existe run mais novo antes de conectar ao servidor;
 um run que perdeu a vez não ativa a imagem nem executa fumaça como se tivesse

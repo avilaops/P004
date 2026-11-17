@@ -17,7 +17,7 @@ jobs:
   fiscal_pdf:
     name: fiscal / gerador privado de DANFE
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -32,7 +32,7 @@ jobs:
   instalacao_dependencias:
     name: preparar dependências
     runs-on: ubuntu-24.04
-    timeout-minutes: 2
+    timeout-minutes: 10
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
     steps:
@@ -70,7 +70,7 @@ jobs:
     name: validar pacote completo de dependências
     needs: instalacao_dependencias
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 10
     outputs:
       artifact_id: ${{ needs.instalacao_dependencias.outputs.artifact_id }}
     steps:
@@ -89,7 +89,7 @@ jobs:
     name: preparar CLI do navegador
     needs: dependencias_qualidade
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 10
     outputs:
       artifact_id: ${{ needs.dependencias_qualidade.outputs.artifact_id_ferramenta }}
     steps:
@@ -105,7 +105,7 @@ jobs:
     name: testes unitários / parte ${{ matrix.fatia }}
     needs: dependencias
     runs-on: ubuntu-24.04
-    timeout-minutes: 2
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -123,7 +123,7 @@ jobs:
     name: preparar tipos e ferramentas verificadas
     needs: instalacao_dependencias
     runs-on: ubuntu-24.04
-    timeout-minutes: 2
+    timeout-minutes: 10
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
       artifact_id_tipos: ${{ steps.tipos.outputs.ids }}
@@ -171,7 +171,7 @@ jobs:
     name: qualidade / ${{ matrix.comando }} / ${{ matrix.grupo }}
     needs: dependencias_qualidade
     runs-on: ubuntu-24.04
-    timeout-minutes: 2
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -210,7 +210,7 @@ jobs:
     name: contratos de payload e infraestrutura de CI
     needs: dependencias
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -294,7 +294,7 @@ jobs:
     name: compilar aplicação
     needs: [instalacao_dependencias, qualidade]
     runs-on: ubuntu-24.04
-    timeout-minutes: 2
+    timeout-minutes: 10
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
     steps:
@@ -304,7 +304,7 @@ jobs:
       - uses: ./.github/actions/preparar-artefatos
         with:
           # O produtor já fornece o mesmo arquivo completo e manifesto. Evita
-          # baixar e concatenar quatro partes antes da compilação de um minuto.
+          # baixar e concatenar quatro partes antes da compilação.
           ids: ${{ needs.instalacao_dependencias.outputs.artifact_id }}
           tipos: dependencias
       - name: Compilar com o cliente Prisma já gerado nas dependências
@@ -331,7 +331,7 @@ jobs:
     name: preparar Chromium headless
     needs: [dependencias, ferramenta-navegador]
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 10
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
     steps:
@@ -389,7 +389,7 @@ jobs:
     name: preparar modelo ONNX
     needs: dependencias
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 10
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
     steps:
@@ -684,7 +684,7 @@ jobs:
     name: imagem / preparar contexto verificado
     needs: [dependencias, build, modelo]
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 10
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
     steps:
@@ -787,7 +787,7 @@ jobs:
       && vars.DEPLOY_ENABLED == 'true'
       && vars.DEPLOY_TARGET == 'ssh'
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 10
     environment: production
     permissions:
       contents: read
@@ -819,7 +819,7 @@ jobs:
     needs: [image, preparar_entrega]
     if: needs.preparar_entrega.outputs.publicado == 'true'
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 10
     environment: production
     permissions:
       contents: read
@@ -851,7 +851,7 @@ jobs:
   # Sem dependência instalada — é o node do runner e `fetch`.
   fumaca:
     runs-on: ubuntu-24.04
-    timeout-minutes: 1
+    timeout-minutes: 10
     needs: deploy
     if: needs.deploy.outputs.publicado == 'true'
     steps:
