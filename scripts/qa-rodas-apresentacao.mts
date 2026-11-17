@@ -7,7 +7,7 @@ import { chromium } from "playwright";
 assert.equal(process.env.CI, "true", "Verificação exclusiva do GitHub CI");
 const pasta = "artifacts/rodas-fiel";
 const raiz = resolve(`${pasta}/site`);
-const tipos: Record<string, string> = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".png": "image/png", ".webp": "image/webp" };
+const tipos: Record<string, string> = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".png": "image/png", ".webp": "image/webp", ".svg": "image/svg+xml" };
 const servidor = createServer(async (req, res) => {
   const nome = new URL(req.url ?? "/", "http://localhost").pathname;
   const arquivo = resolve(raiz, "." + decodeURIComponent(nome));
@@ -20,6 +20,7 @@ const resultados: unknown[] = [];
 try {
   await mkdir(`${pasta}/capturas`, { recursive: true });
   for (const [indice, nome] of ["street", "racing", "night", "carbon"].entries()) {
+    if (process.env.RODAS_LAYOUT && process.env.RODAS_LAYOUT !== nome) continue;
     const contexto = await navegador.newContext({ viewport: { width: indice < 2 ? 1280 : 1440, height: 1000 } });
     const page = await contexto.newPage();
     const erros: string[] = [];
@@ -31,6 +32,10 @@ try {
     assert.equal(await page.locator("h1").count(), 1);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `${nome}: overflow desktop`);
     await page.screenshot({ path: `${pasta}/capturas/${nome}.png`, fullPage: true });
+    const arteInicial = await page.locator('.rw-hero-link > img').getAttribute('src');
+    await page.getByRole('button', { name: 'Próximo banner', exact: true }).click();
+    assert.notEqual(await page.locator('.rw-hero-link > img').getAttribute('src'), arteInicial);
+    await page.getByRole('button', { name: 'Banner anterior', exact: true }).click();
     const adicionar = page.locator(".rw-add").first();
     if (await adicionar.count()) { await adicionar.click(); assert.ok((await page.locator(".rw-cart").innerText()).includes("(1)")); }
     await page.setViewportSize({ width: 390, height: 844 });

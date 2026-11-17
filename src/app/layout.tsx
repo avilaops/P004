@@ -29,6 +29,7 @@ import "@/components/home/rodas/rodas.css";
 import { CabecalhoRodas, RodapeRodas } from "@/components/home/rodas/Elementos";
 import { montarLojaRodas } from "@/lib/rodas-modelo";
 import { ehTemplateRodas } from "@/lib/templates-rodas";
+import { politicasPublicadas } from "@/lib/politicas";
 import WhatsAppFlutuante from "@/components/WhatsAppFlutuante";
 import BarraInferior from "@/components/BarraInferior";
 import LojaNaoEncontrada from "@/components/LojaNaoEncontrada";
@@ -251,7 +252,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </Suspense>
         <CartProvider slug={t.slug} painelHabilitado={carrinhoProprio}>
           {t.status === "SUSPENSA" && <AvisoSuspensa />}
-          {ehTemplateRodas(publicado.layout) ? <CabecalhoRodas loja={montarLojaRodas(t, publicado, categorias, publico.vende, identidadeComercial)} /> : <>
+          {ehTemplateRodas(publicado.layout) ? <CabecalhoRodas loja={montarLojaRodas(t, publicado, categorias, publico.vende, identidadeComercial, politicasPublicadas(t))} /> : <>
           {t.avisoTopo && !cabecalhoProprio && (
             <p className="barra-aviso" role="status">{t.avisoTopo}</p>
           )}
@@ -264,8 +265,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </p>
           )}
           <main id="conteudo-loja" className="flex-1">{children}</main>
-          {ehTemplateRodas(publicado.layout)
-            ? <RodapeRodas loja={montarLojaRodas(t, publicado, categorias, publico.vende, identidadeComercial)} preferencias={temRastreio(pixels) ? <PreferenciasCookies /> : undefined} />
+          {ehTemplateRodas(publicado.layout) && t.segmento !== "farmacia"
+            ? <RodapeRodas loja={montarLojaRodas(t, publicado, categorias, publico.vende, identidadeComercial, politicasPublicadas(t))} preferencias={temRastreio(pixels) ? <PreferenciasCookies /> : undefined} />
             : <Footer tenant={t} rastreioAtivo={temRastreio(pixels)} categorias={categorias.map((c) => ({ slug: c.slug, nome: c.nome }))} temBlog={publicacoes > 0 || artigosDomiRio(t.slug).length > 0} />}
           {carrinhoProprio && <CarrinhoLateral pedidoMinimoCentavos={publico.pedidoMinimoCentavos}/>}
           {identidadeComercial.whatsapp && <WhatsAppFlutuante numero={identidadeComercial.whatsapp.numero} nome={t.nome} />}

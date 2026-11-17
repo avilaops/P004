@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { ChevronLeft, ChevronRight, Search, ShoppingCart, Phone, Mail, MapPin, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, CircleDot, Search, ShoppingCart, Phone, Mail, MapPin, Check } from "lucide-react";
 import { useCart } from "@/components/cart/CartProvider";
 import { adicionarAoCarrinho } from "@/lib/eventos-loja";
 import FotoDoCartao from "@/components/FotoDoCartao";
@@ -17,9 +17,9 @@ export function CabecalhoRodas({ loja }: { loja: LojaRodas }) {
   const carrinho = useCart();
   return <header className="rw-header">
     {loja.aviso && <p className="rw-announcement">{loja.aviso}</p>}
-    <div className="rw-top"><div className="rw-wrap"><nav aria-label="Links da loja"><a href="/">Início</a><a href="/produtos">Produtos</a><a href="/politicas/envio">Entrega</a><a href="/contato">Contato</a></nav><span>Loja online • Brasil</span></div></div>
+    <div className="rw-top"><div className="rw-wrap"><nav aria-label="Links da loja"><a href="/">Início</a><a href="/produtos">Produtos</a>{loja.politicas.some(p => p.tipo === "envio") && <a href="/politicas/envio">Entrega</a>}<a href="/contato">Contato</a></nav><span>Loja online • Brasil</span></div></div>
     <div className="rw-wrap rw-header-main"><a className="rw-logo" href="/" aria-label={loja.nome}>{loja.logo ? <img src={loja.logo} alt={loja.nome} /> : <span className="rw-wordmark"><strong>{loja.nome}</strong><small>RODAS &amp; PNEUS</small></span>}</a>
-      <div className="rw-header-right"><div className="rw-account"><span>Bem-vindo à nossa loja</span>{loja.vende && <a href="/conta">Minha conta</a>}<a className="rw-cart" href="/carrinho"><ShoppingCart size={16} aria-hidden="true" /> Carrinho ({carrinho.quantidade})</a></div><div className="rw-header-search">{loja.telefone && <a className="rw-header-phone" href={loja.telefoneUri ?? undefined}><Phone size={17} aria-hidden="true" />{loja.telefone}</a>}<BuscaRodas /></div></div>
+      <div className="rw-header-right"><div className="rw-account"><span>Bem-vindo à nossa loja</span>{loja.vende && <a href="/conta">Minha conta</a>}{(loja.vende || loja.whatsapp) && <a className="rw-cart" href="/carrinho"><ShoppingCart size={16} aria-hidden="true" /> Carrinho ({carrinho.quantidade})</a>}</div><div className="rw-header-search">{loja.telefone && <a className="rw-header-phone" href={loja.telefoneUri ?? undefined}><Phone size={17} aria-hidden="true" />{loja.telefone}</a>}<BuscaRodas /></div></div>
     </div>
     <nav className="rw-wrap rw-nav" aria-label="Categorias de produtos"><a href="/produtos">Todos os produtos</a>{loja.categorias.slice(0, 6).map(c => <a key={c.slug} href={`/categoria/${c.slug}`}>{c.nome}</a>)}</nav>
   </header>;
@@ -56,21 +56,23 @@ export function VitrineRodas({ titulo, produtos, soVer }: { titulo: string; prod
 
 export function FaixaMarcasRodas({ marcas }: { marcas: string[] }) {
   if (!marcas.length) return null;
-  return <aside className="rw-brands" aria-label="Marcas do catálogo">{marcas.slice(0, 6).map(m => <a key={m} href={`/produtos?fabricante=${encodeURIComponent(m)}`}>{m}</a>)}</aside>;
+  const logos: Record<string, string> = { krmai: "krmai", raw: "raw", brw: "brw", pirelli: "pirelli", yokohama: "yokohama", volcano: "volcano" };
+  return <aside className="rw-brands" aria-label="Marcas do catálogo">{marcas.slice(0, 6).map(m => <a key={m} href={`/produtos?fabricante=${encodeURIComponent(m)}`}>{logos[m.toLowerCase()] ? <img src={`/marcas/automotivo/${logos[m.toLowerCase()]}.svg`} alt={m} /> : m}</a>)}</aside>;
 }
 
-export function CategoriasVisuaisRodas({ categorias }: { categorias: CategoriaRodas[] }) {
-  const imagens = ["/media/templates-rodas/night-hero.png", "/media/bereta/categories/pneus.webp", "/media/bereta/categories/rodas.webp"];
-  return <nav className="rw-visual-categories" aria-label="Coleções">{categorias.slice(0, 3).map((c, i) => <a key={c.slug} href={`/categoria/${c.slug}`}><img src={c.imagem || imagens[i]} alt="" /><span>{c.nome}</span><ChevronRight aria-hidden="true" /></a>)}</nav>;
+export function CategoriasVisuaisRodas({ categorias, politica }: { categorias: CategoriaRodas[]; politica: LojaRodas["categoriaSemImagem"] }) {
+  const visiveis = categorias.filter(c => c.imagem || politica === "icone").slice(0, 3);
+  if (!visiveis.length) return null;
+  return <nav className="rw-visual-categories" aria-label="Coleções">{visiveis.map(c => <a key={c.slug} href={`/categoria/${c.slug}`}>{c.imagem ? <img src={c.imagem} alt="" /> : <CircleDot className="rw-category-icon" aria-hidden="true" />}<span>{c.nome}</span><ChevronRight aria-hidden="true" /></a>)}</nav>;
 }
 
 export function LateralRodas({ loja, produtos }: { loja: LojaRodas; produtos: ProdutoRodas[] }) {
-  return <aside className="rw-sidebar"><section><h2>Coleções</h2><nav>{loja.categorias.slice(0, 8).map(c => <a key={c.slug} href={`/categoria/${c.slug}`}>{c.nome}</a>)}</nav></section><section><h2>Produtos</h2><nav><a href="/produtos">Todo o catálogo</a><a href="/contato">Fale com a equipe</a><a href="/politicas/envio">Entrega e envio</a></nav></section>
+  return <aside className="rw-sidebar"><section><h2>Coleções</h2><nav>{loja.categorias.slice(0, 8).map(c => <a key={c.slug} href={`/categoria/${c.slug}`}>{c.nome}</a>)}</nav></section><section><h2>Produtos</h2><nav><a href="/produtos">Todo o catálogo</a><a href="/contato">Fale com a equipe</a>{loja.politicas.some(p => p.tipo === "envio") && <a href="/politicas/envio">Entrega e envio</a>}</nav></section>
     {produtos.length > 0 && <section><h2>Em destaque</h2>{produtos.slice(0, 3).map(p => <a className="rw-mini-product" key={p.id} href={`/produtos/${p.slug}`}>{p.imagem && <img src={p.imagem} alt="" />}<span>{p.nome}<strong>{p.preco > 0 ? dinheiro(p.preco) : "Sob consulta"}</strong></span></a>)}</section>}
-    <a className="rw-sidebar-promo" href="/produtos"><span>ENCONTRE<br />SEU ESTILO</span><img src="/media/templates-rodas/demo/roda-1.webp" alt="Coleção ilustrativa de rodas" /></a></aside>;
+    <a className="rw-sidebar-promo" href="/produtos"><span>ENCONTRE<br />SEU ESTILO</span><img src="/media/templates-rodas/racing-hero.png" alt="Coleção ilustrativa de rodas" /></a></aside>;
 }
 
 export function RodapeRodas({ loja, preferencias }: { loja: LojaRodas; preferencias?: ReactNode }) {
-  return <footer className="rw-footer"><div className="rw-wrap rw-footer-columns"><section><h2>Informações</h2><a href="/sobre">Sobre a loja</a><a href="/contato">Contato</a><a href="/politicas/envio">Entrega e envio</a><a href="/politicas/privacidade">Privacidade</a><a href="/politicas/devolucao">Trocas e devoluções</a></section><section><h2>Produtos</h2>{loja.categorias.slice(0, 5).map(c => <a key={c.slug} href={`/categoria/${c.slug}`}>{c.nome}</a>)}<a href="/produtos">Catálogo completo</a></section><section><h2>Sua conta</h2>{loja.vende && <a href="/conta">Minha conta</a>}<a href="/carrinho">Meu carrinho</a><a href="/politicas/termos">Termos de serviço</a>{preferencias}</section>
+  return <footer className="rw-footer"><div className="rw-wrap rw-footer-columns"><section><h2>Informações</h2><a href="/sobre">Sobre a loja</a><a href="/contato">Contato</a>{loja.politicas.map(p => <a key={p.tipo} href={`/politicas/${p.tipo}`}>{p.titulo}</a>)}</section><section><h2>Produtos</h2>{loja.categorias.slice(0, 5).map(c => <a key={c.slug} href={`/categoria/${c.slug}`}>{c.nome}</a>)}<a href="/produtos">Catálogo completo</a></section><section><h2>Sua conta</h2>{loja.vende && <a href="/conta">Minha conta</a>}{(loja.vende || loja.whatsapp) && <a href="/carrinho">Meu carrinho</a>}{preferencias}</section>
     <section className="rw-footer-contact"><h2>{loja.nome}</h2>{loja.endereco && <p><MapPin size={15} aria-hidden="true" />{loja.endereco}</p>}{loja.telefone && <a href={loja.telefoneUri ?? undefined}><Phone size={15} aria-hidden="true" />{loja.telefone}</a>}{loja.email && <a href={`mailto:${loja.email}`}><Mail size={15} aria-hidden="true" />{loja.email}</a>}{loja.whatsapp && <a href={loja.whatsapp} target="_blank" rel="noopener noreferrer">Atendimento pelo WhatsApp</a>}</section></div><p className="rw-wrap rw-copyright">© {new Date().getFullYear()} {loja.identificacao.join(" • ")} • Loja virtual por Avila Ops</p></footer>;
 }

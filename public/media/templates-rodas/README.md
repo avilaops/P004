@@ -8,6 +8,8 @@ fotográfica das quatro referências do proprietário, sem marcas ou preços:
 - `racing-hero.png`: roda dourada ampliada à esquerda, metal cinza claro à direita.
 - `night-hero.png`: macro de pneu preto/cinza com sulcos diagonais.
 - `carbon-hero.png`: supercarro grafite em cenário noturno, área esquerda livre.
+- `carbon-background.png`: estrada noturna monocromática com rastros nas
+  laterais e transição inferior para branco, para a moldura externa do Carbon.
 
 O diretório `demo` é exclusivamente ilustrativo. Os WebP foram obtidos das
 imagens públicas relacionadas em `https://loja.beretarodas.com/sitemap-imagens.xml`

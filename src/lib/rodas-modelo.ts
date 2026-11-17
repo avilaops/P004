@@ -13,6 +13,8 @@ export interface LojaRodas {
   telefoneUri: string | null; email: string | null; endereco: string | null;
   whatsapp: string | null; aviso: string | null;
   identificacao: string[];
+  politicas: { tipo: string; titulo: string }[];
+  categoriaSemImagem: "ocultar" | "icone";
 }
 export interface ProdutoRodas {
   id: string; slug: string; nome: string; descricao: string | null;
@@ -23,16 +25,18 @@ export interface ProdutoRodas {
 export interface BannerRodas { imagem: string; alt: string; link: string }
 
 /** Projeções públicas: nenhum token ou campo privado chega aos componentes. */
-export function montarLojaRodas(t: Tenant, tema: TemaLoja, categorias: Categoria[], vende: boolean, identidade?: IdentidadePublica): LojaRodas {
+export function montarLojaRodas(t: Tenant, tema: TemaLoja, categorias: Categoria[], vende: boolean, identidade?: IdentidadePublica, politicas: LojaRodas["politicas"] = []): LojaRodas {
   return {
     nome: t.nome, slug: t.slug, logo: t.logoUrl,
     layout: ehTemplateRodas(tema.layout) ? tema.layout : "rodas-street",
     categorias: categorias.map(c => ({ nome: c.nome, slug: c.slug, imagem: c.imagemUrl })),
     vende, telefone: identidade?.telefone?.exibicao ?? null,
-    telefoneUri: identidade?.telefone?.uri ?? null, email: identidade?.email ?? null,
+    telefoneUri: identidade?.telefone ? `tel:${identidade.telefone.uri}` : null, email: identidade?.email ?? null,
     endereco: identidade?.enderecoVisita?.texto ?? null,
     whatsapp: identidade?.whatsapp?.url ?? null, aviso: t.avisoTopo,
-    identificacao: [identidade?.razaoSocial || t.nome, identidade?.cnpj ? `CNPJ ${identidade.cnpj}` : null].filter((valor): valor is string => Boolean(valor)),
+    identificacao: [identidade?.razaoSocial || t.nome, identidade?.cnpj ? `CNPJ ${identidade.cnpj}` : null, identidade?.enderecoLegal?.texto].filter((valor): valor is string => Boolean(valor)),
+    politicas: politicas.map(p => ({ tipo: p.tipo, titulo: p.titulo })),
+    categoriaSemImagem: tema.categoriaSemImagem,
   };
 }
 
@@ -59,5 +63,10 @@ export function bannersRodas(tema: TemaLoja, banner: string | null): BannerRodas
   const campanhas = (tema.campanhasHome ?? []).filter(c => c.imagemUrl);
   if (campanhas.length) return campanhas.map(c => ({ imagem: c.imagemUrl, alt: c.alt, link: c.link }));
   const layout = ehTemplateRodas(tema.layout) ? tema.layout : "rodas-street";
-  return [{ imagem: banner || HERO_RODAS[layout], alt: "Coleção de rodas e pneus", link: "/produtos" }];
+  if (banner) return [{ imagem: banner, alt: "Coleção de rodas e pneus", link: "/produtos" }];
+  const alternativa = layout === "rodas-street" ? "rodas-racing" : layout === "rodas-racing" ? "rodas-street" : layout === "rodas-night" ? "rodas-carbon" : "rodas-night";
+  return [
+    { imagem: HERO_RODAS[layout], alt: "Coleção de rodas e pneus", link: "/produtos" },
+    { imagem: HERO_RODAS[alternativa], alt: "Explore a coleção automotiva", link: "/produtos" },
+  ];
 }

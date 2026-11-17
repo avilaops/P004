@@ -1,4 +1,5 @@
-import { HERO_RODAS, type LayoutRodas, type LojaRodas, type ProdutoRodas } from "./rodas-modelo";
+import { bannersRodas, type LayoutRodas, type LojaRodas, type ProdutoRodas } from "./rodas-modelo";
+import { TemaSchema } from "./tema";
 
 /** Catálogo ilustrativo da prévia. Não grava nem substitui produtos da loja. */
 export function demonstracaoRodas(layout: LayoutRodas) {
@@ -14,6 +15,8 @@ export function demonstracaoRodas(layout: LayoutRodas) {
     telefone: "Atendimento", telefoneUri: null, email: null, endereco: null,
     whatsapp: null, aviso: "Catálogo de demonstração • nenhum pedido real",
     identificacao: ["Catálogo ilustrativo de demonstração"],
+    categoriaSemImagem: "ocultar",
+    politicas: [{ tipo: "envio", titulo: "Entrega e envio" }, { tipo: "devolucao", titulo: "Trocas e devoluções" }, { tipo: "privacidade", titulo: "Privacidade" }, { tipo: "termos", titulo: "Termos de serviço" }],
   };
   const modelos = [
     { nome: "Roda esportiva grafite", imagem: "roda-1-transparente.png", marca: "Rodas" },
@@ -33,8 +36,8 @@ export function demonstracaoRodas(layout: LayoutRodas) {
     };
   });
   return {
-    loja, produtos, marcas: ["Goodyear", "Pirelli", "Yokohama", "Michelin"],
-    banners: [{ imagem: HERO_RODAS[layout], alt: "Banner ilustrativo da coleção", link: "/produtos" }],
+    loja, produtos, marcas: ["KRMAI", "RAW", "BRW", "Pirelli", "Yokohama", "Volcano"],
+    banners: bannersRodas(TemaSchema.parse({ layout }), null),
     sobre: "Demonstração de layout para comparar rodas, pneus e acessórios.",
   };
 }
