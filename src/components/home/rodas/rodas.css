@@ -76,6 +76,7 @@
 [data-layout="rodas-street"] .rd-hero-conteudo { margin-left: auto; }
 [data-layout="rodas-street"] .rd-hero::before { background: linear-gradient(270deg, rgb(0 0 0 / 86%), rgb(0 0 0 / 48%) 70%, rgb(0 0 0 / 15%)); }
 [data-layout="rodas-street"] .rd-titulo h2 { color: var(--primary); }
+[data-modo="escuro"] [data-layout="rodas-street"] .rd-titulo h2 { color: var(--foreground); }
 [data-layout="rodas-street"] .rd-produtos { gap: 22px; }
 
 /* Racing • moldura escura e painéis, como na referência amarela. */

@@ -83,12 +83,12 @@ try {
         assert.equal(resposta?.status(), 200);
         await page.locator(`[data-rodas="${layout}"]`).waitFor();
         await page.waitForLoadState("networkidle");
-        assert.equal(await page.locator("h1").innerText(), tema.heroTitulo);
+        await page.screenshot({ path: `${pasta}/${layout}-${modo}-${width}.png`, fullPage: true });
+        assert.equal(await page.locator("h1").textContent(), tema.heroTitulo);
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `${layout} ${modo} ${width}: overflow`);
         assert.equal(await page.locator(`[data-rodas="${layout}"] a[href="/produtos"]`).count() > 0, true);
         const imagem = page.locator(`[data-rodas="${layout}"] img`).first();
         if (await imagem.count()) assert.ok(await imagem.evaluate(img => (img as HTMLImageElement).naturalWidth > 0), "Imagem local carregada");
-        await page.screenshot({ path: `${pasta}/${layout}-${modo}-${width}.png`, fullPage: true });
         resultados.push({ layout, modo, width, previa: true, passou: true });
       }
     }

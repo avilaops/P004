@@ -26,8 +26,8 @@ continuam configuráveis. O institucional permanece fora desta alteração.
 
 ## Tarefas
 
-- [ ] Registrar os quatro layouts no schema, catálogo, contrato e composição.
-- [ ] Implementar as quatro variantes e os blocos comuns, com estilos responsivos.
+- [x] Registrar os quatro layouts no schema, catálogo, contrato e composição.
+- [x] Implementar as quatro variantes e os blocos comuns, com estilos responsivos.
 - [ ] Conferir seleção, prévia sem escrita, links, ausência de imagem e catálogo
   vazio; executar matriz mobile/desktop, claro/escuro no GitHub CI.
 - [ ] Vincular fontes ao perfil MLOps, registrar evidências e entregar opções
@@ -46,3 +46,11 @@ Artefato contém capturas e JSON com versão, ambiente e resultados.
 Conferir overflow com nomes longos; ausência de foto ou produtos; catálogo
 somente consulta; busca com caracteres escapados; seleção sem publicação.
 Não executar testes locais nem reutilizar o checkout fiscal em andamento.
+
+Revisão independente em `78ab837`: corrigidos contraste do cabeçalho,
+persistência da paleta no PATCH e cobertura visual da home com catálogo.
+CI `44084998509`: tipos, lint, unitários e build aprovados; navegador detectou
+asserção de conteúdo que comparava `innerText` transformado pelo CSS com texto
+original. Usar `textContent` conserva a verificação exata do conteúdo salvo.
+Resultado final será vinculado à PR274 e ao artefato versionado
+`lojas-templates-rodas-browser-<sha>` da mesma execução de CI.
