@@ -344,7 +344,8 @@
         { "kind": "test", "path": "src/lib/rodas-modelo.test.ts" },
         { "kind": "test", "path": "scripts/qa-templates-rodas.mts" },
         { "kind": "test", "path": "scripts/qa-rodas-apresentacao.mts" },
-        { "kind": "contract", "path": "docs/superpowers/plans/2026-11-17-templates-rodas.md" }
+        { "kind": "contract", "path": "docs/superpowers/plans/2026-11-17-templates-rodas.md" },
+        { "kind": "contract", "path": "design-qa.md" }
       ],
       "flows": []
     },

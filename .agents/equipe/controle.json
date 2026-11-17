@@ -21,7 +21,7 @@
       "status": "em-andamento",
       "acceptanceCriteria": ["Quatro composições inspiradas nas imagens enviadas pelo proprietário.", "Prévia não publica nem altera dados.", "Mobile, desktop, modos claro e escuro e catálogo vazio verificados no CI.", "Preços e disponibilidade usam os componentes compartilhados."],
       "environment": "GitHub CI isolado; produção somente para disponibilizar as opções",
-      "evidence": "Plano docs/superpowers/plans/2026-11-17-templates-rodas.md; PR274. Validação pendente."
+        "evidence": "PR274; plano docs/superpowers/plans/2026-11-17-templates-rodas.md; comparação design-qa.md. Quatro templates reais TSX conforme referências, catálogo demonstrativo identificado. CI visual44102475375 aprovado em d87803e; tipos, lint, unitários e contratos de infraestrutura aprovados em44104228504 para20e267d. Ajustes finais de links Next, contraste e preços mobile em validação; build completo, navegador integrado e publicação ainda pendentes. Tema ativo preservado."
     },
     {
       "id": "FAVICONS-SELETOR-LOJAS-20261116",

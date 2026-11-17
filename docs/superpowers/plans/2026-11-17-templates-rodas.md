@@ -44,7 +44,7 @@ compilado: quatro layouts em 390 e 1440 px, modos claro e escuro, fotos reais
 do repositório, nenhuma gravação pela prévia, navegação e estado sem catálogo.
 Artefato contém capturas e JSON com versão, ambiente e resultados. O workflow
 `rodas-apresentacao.yml` compila os componentes TSX reais com as versões do
-lockfile, usa catálogo demonstrativo identificado, verifica carrinho e overflow
+lockfile para dependências diretas, usa catálogo demonstrativo identificado, verifica carrinho e overflow
 e gera comparações lado a lado com as quatro imagens anexadas pelo proprietário.
 É evidência visual dos componentes, separada da integração Next.js/PostgreSQL.
 Não se apresenta montagem por alteração do DOM como captura da aplicação.
@@ -72,3 +72,9 @@ existente. O gate de qualidade e o timeout de um minuto são preservados.
 O mesmo arquivo completo é usado pela matriz de qualidade: em `44089948211`
 a restauração de quatro partes consumiu 44 segundos antes do ESLint e o job
 foi cancelado pelo limite nativo. A matriz, os comandos e o limite permanecem.
+
+Conferência das referências, correções por comparação e limites da evidência
+registrados em `design-qa.md`. O CI visual `44102475375` passou para os quatro
+templates em `d87803e`. Tipos, lint, unitários e contratos de infraestrutura
+passaram em `44104228504` para `20e267d`; integração e publicação ainda exigem
+suas próprias evidências.

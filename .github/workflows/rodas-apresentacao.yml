@@ -73,7 +73,12 @@ jobs:
           tar --zstd -xf "$RUNNER_TEMP/apresentacao/preview.tar.zst"
           mkdir -p "$HOME/.cache/ms-playwright"
           tar --zstd -xf "$RUNNER_TEMP/browser/browser.tar.zst" -C "$HOME/.cache/ms-playwright"
-          node node_modules/playwright-core/cli.js install-deps chromium
+          RODAS_CHROMIUM=$(find "$HOME/.cache/ms-playwright" -name chrome-headless-shell -type f -print -quit)
+          test -n "$RODAS_CHROMIUM"
+          if ldd "$RODAS_CHROMIUM" | rg 'not found'; then
+            node node_modules/playwright-core/cli.js install-deps chromium
+          fi
+          fc-match Arial
       - run: node --import tsx scripts/qa-rodas-apresentacao.mts
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
