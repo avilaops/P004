@@ -15,13 +15,15 @@
     {
       "id": "BERETA-TEMPLATES-RODAS-20261117",
       "title": "Bereta • implementar e ativar o Carbon aprovado",
-      "objective": "Concluir a integração real, publicar e ativar Carbon na Bereta, conforme escolha explícita do proprietário; preservar as demais opções e lojas.",
+      "objective": "Concluir a integração real, publicar e ativar Carbon em beretarodas.com, conforme escolha explícita do proprietário; preservar as demais opções e lojas.",
       "assignee": "codex",
       "priority": "normal",
-      "status": "em-andamento",
+      "status": "concluida",
       "acceptanceCriteria": ["Quatro composições inspiradas nas imagens enviadas pelo proprietário.", "Prévia não publica nem altera dados.", "Mobile, desktop, modos claro e escuro e catálogo vazio verificados no CI.", "Preços e disponibilidade usam os componentes compartilhados."],
-      "environment": "GitHub CI isolado; publicação e ativação Carbon na Bereta autorizadas pelo proprietário",
-      "evidence": "PR274; design-qa.md; plano2026-11-17-carbon-bereta-entrega.md. Proprietário escolheu Carbon e pediu continuar até tudo implementado. CI44106268519 tentativa2 aprovou tipos, lint, unitários, três fatias PostgreSQL e build, preservando limites. Navegador reproduziu overflow de nome longo em390px, marcas inacessíveis no domínio do painel e biblioteca ONNX ausente do standalone; correções e regressões em desenvolvimento. Catálogo real lido:6473 produtos ativos; tema anterior preservado para reversão. Publicação/ativação ainda pendentes."
+      "environment": "producao • beretarodas.com • builds e testes somente GitHub CI",
+      "evidence": "PR 274 integrou Carbon em TypeScript e Next.js; PR 275 retirou o limite de um minuto por orientação explícita. CI 44133809562 aprovada integralmente, incluindo imagem, entrega, deploy e fumaça; revisão b2d87fd2bc12c78a3ba9bf6a7033824e2306a725. Carbon ativo no domínio principal; aliases públicos retornam 308 preservando caminho e consulta. Inspeção em 1440 px e 390 px sem overflow, nove fotos, categoria, detalhe, busca e carrinho, sem exceções ou pedido real. Novo banner dourado gerado com imagegen a pedido do proprietário, publicado com 71.538 bytes. Catálogo com 8426 produtos e 6473 ativos; seleção de destaques ajustada sem alterar preços, estoque ou fotos. Duas imagens de execução mantidas; limpeza restrita ao Lojas. Evidências: evidencias/bereta-carbon-2026-11-17.md e evidencias/ci-cd-retencao-lojas-2026-11-17.md.",
+      "review": "Revisão independente sem bloqueadores na integração, QA e política de timeout; CI integral e inspeção de produção aprovadas. Fonte e catálogo reais preservados.",
+      "history": [{ "at": "2026-11-17", "status": "concluida", "note": "Carbon publicado e ativado; domínio único e banner dourado aplicados conforme orientação do proprietário. Navegador e retenção de duas releases verificados." }]
     },
     {
       "id": "FAVICONS-SELETOR-LOJAS-20261116",
