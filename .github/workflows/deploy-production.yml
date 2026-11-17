@@ -87,29 +87,19 @@ jobs:
 
   ferramenta-navegador:
     name: preparar CLI do navegador
-    needs: dependencias
+    needs: dependencias_qualidade
     runs-on: ubuntu-24.04
     timeout-minutes: 1
     outputs:
-      artifact_id: ${{ steps.ferramenta.outputs.ids }}
+      artifact_id: ${{ needs.dependencias_qualidade.outputs.artifact_id_ferramenta }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
-      - uses: ./.github/actions/preparar-node
+      - uses: ./.github/actions/preparar-artefatos
         with:
-          ids: ${{ needs.dependencias.outputs.artifact_id }}
-      - name: Arquivar somente a CLI de navegador da versão do lockfile
-        run: |
-          set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/ferramenta-navegador"
-          tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/ferramenta-navegador/payload.tar.zst" node_modules/playwright-core
-      - uses: ./.github/actions/publicar-artefato
-        id: ferramenta
-        with:
-          tipo: ferramenta-navegador
-          partes: '1'
-          pasta: ${{ runner.temp }}/ferramenta-navegador/
+          ids: ${{ needs.dependencias_qualidade.outputs.artifact_id_ferramenta }}
+          tipos: ferramenta-navegador
 
   unitarios:
     name: testes unitários / parte ${{ matrix.fatia }}
@@ -130,12 +120,14 @@ jobs:
       - run: npx tsx --test --test-shard=${{ matrix.fatia }} src/lib/*.test.ts packages/checkout/src/core/*.test.ts packages/checkout/src/server/*.test.ts packages/checkout/src/providers/*.test.ts
 
   dependencias_qualidade:
-    name: preparar dependências de tipos e lint
+    name: preparar tipos e ferramentas verificadas
     needs: instalacao_dependencias
     runs-on: ubuntu-24.04
     timeout-minutes: 1
     outputs:
       artifact_id: ${{ steps.arquivo.outputs.ids }}
+      artifact_id_tipos: ${{ steps.tipos.outputs.ids }}
+      artifact_id_ferramenta: ${{ steps.ferramenta.outputs.ids }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -144,6 +136,7 @@ jobs:
         with:
           ids: ${{ needs.instalacao_dependencias.outputs.artifact_id }}
           tipos: dependencias
+      - run: npx next typegen
       - name: Separar ferramentas JavaScript e declarações para tipos e lint
         run: |
           set -euo pipefail
@@ -152,43 +145,31 @@ jobs:
             --exclude='*.node' --exclude='*.so' --exclude='*.so.*' \
             --exclude='*.dll' --exclude='*.dylib' --exclude='*.wasm' \
             -cf "$RUNNER_TEMP/dependencias-qualidade/payload.tar.zst" node_modules
+          mkdir -p "$RUNNER_TEMP/tipos-next" "$RUNNER_TEMP/ferramenta-navegador"
+          tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/tipos-next/payload.tar.zst" .next/types next-env.d.ts
+          tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/ferramenta-navegador/payload.tar.zst" node_modules/playwright-core
       - uses: ./.github/actions/publicar-artefato
         id: arquivo
         with:
           tipo: dependencias-qualidade
           partes: '1'
           pasta: ${{ runner.temp }}/dependencias-qualidade/
-
-  tipos_next:
-    name: gerar tipos de rotas Next
-    needs: instalacao_dependencias
-    runs-on: ubuntu-24.04
-    timeout-minutes: 1
-    outputs:
-      artifact_id: ${{ steps.arquivo.outputs.ids }}
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/preparar-node
-        with:
-          ids: ${{ needs.instalacao_dependencias.outputs.artifact_id }}
-      - run: npx next typegen
-      - name: Arquivar os tipos gerados desta revisão
-        run: |
-          set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/tipos-next"
-          tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/tipos-next/payload.tar.zst" .next/types next-env.d.ts
       - uses: ./.github/actions/publicar-artefato
-        id: arquivo
+        id: tipos
         with:
           tipo: tipos-next
           partes: '1'
           pasta: ${{ runner.temp }}/tipos-next/
+      - uses: ./.github/actions/publicar-artefato
+        id: ferramenta
+        with:
+          tipo: ferramenta-navegador
+          partes: '1'
+          pasta: ${{ runner.temp }}/ferramenta-navegador/
 
   qualidade:
     name: qualidade / ${{ matrix.comando }} / ${{ matrix.grupo }}
-    needs: [dependencias_qualidade, tipos_next]
+    needs: dependencias_qualidade
     runs-on: ubuntu-24.04
     timeout-minutes: 1
     strategy:
@@ -214,7 +195,7 @@ jobs:
       - if: matrix.comando == 'typecheck'
         uses: ./.github/actions/preparar-artefatos
         with:
-          ids: ${{ needs.tipos_next.outputs.artifact_id }}
+          ids: ${{ needs.dependencias_qualidade.outputs.artifact_id_tipos }}
           tipos: tipos-next
       - if: matrix.comando == 'typecheck'
         run: npm run typecheck

@@ -25,9 +25,11 @@ do Node no consumidor.
 
 Tipos e lint recebem `dependencias-qualidade`, derivado do arquivo completo
 validado da mesma execução/tentativa. Apenas binários nativos e WebAssembly
-ficam fora: código JavaScript e declarações TypeScript são idênticos. O job
-`tipos_next` usa as dependências completas, inclusive SWC, executa `next typegen`
-e publica `.next/types`/`next-env.d.ts` no artefato `tipos-next`. O TypeScript
+ficam fora: código JavaScript e declarações TypeScript são idênticos. O produtor
+usa as dependências completas, inclusive SWC, executa `next typegen` e publica
+`.next/types`/`next-env.d.ts` no artefato `tipos-next`, além da CLI mínima do
+navegador. Uma única restauração completa gera os três artefatos; os consumidores
+de tipos e da CLI não repetem o download do motor nativo. O TypeScript
 recebe esses tipos verificados antes de rodar `tsc`; lint conserva seus comandos.
 Build, testes e imagem usam o pacote completo. Cada variante tem seu próprio
 tipo, manifesto e SHA-256. Não há nova instalação nem reúso de outro run.
