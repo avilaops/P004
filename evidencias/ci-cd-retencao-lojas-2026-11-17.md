@@ -42,6 +42,13 @@ imagem no registro. O job de preparação foi cancelado durante o `docker pull`
 preservando a validação por revisão, run e tentativa. Não houve build ou teste
 local ou no servidor.
 
+Após a segunda tentativa também ser cancelada no download, o proprietário
+determinou: “retire esse bloqueio de um minuto”. Os workflows do Lojas passam
+a dez minutos por job, incluindo preparação, entrega, deploy e fumaça.
+O teste de política confere todos os workflows versionados; os demais testes,
+gates e verificações de publicação permanecem. A retenção continua limitada
+às duas imagens do Lojas, sem limpeza dos outros aplicativos.
+
 ## Estado do servidor antes da nova entrega
 
 Leitura por SSH em 17/11/2026, aproximadamente às 16:43 UTC:

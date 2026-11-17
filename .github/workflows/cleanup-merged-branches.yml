@@ -14,6 +14,7 @@ jobs:
   cleanup:
     if: github.event_name == 'push' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Delete merged internal PR branches
         env:
