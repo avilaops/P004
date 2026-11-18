@@ -13,12 +13,26 @@
   ],
   "tasks": [
     {
+      "id": "PAINEL-PEDIDOS-CONSULTA-20261117",
+      "title": "Pedidos • buscar por telefone e filtrar as situações finais",
+      "objective": "Evitar falha ao pesquisar um celular e disponibilizar na interface todas as situações aceitas pela consulta do lojista.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "No banco de teste, um celular de 11 dígitos com ou sem máscara encontra o mesmo pedido e retorna HTTP 200. Um número de pedido válido continua pesquisável.",
+        "Em 1440, 390 e 360 px, Entregues, Cancelados e Estornados são selecionáveis. Abrir a ficha e voltar restaura a busca e a fila Cancelados."
+      ],
+      "environment": "Loja Demo em produção para a reprodução • GitHub CI com pedido sintético para o aceite",
+      "evidence": "Linear • Auditoria do painel, seção Continuação. Na versão d92a595, a busca pelo celular de teste retornou HTTP 500. A faixa tinha 606 px de conteúdo em 310 px disponíveis a 360 px."
+    },
+    {
       "id": "PAINEL-AUDITORIA-P2-P3-20261117",
       "title": "Painel • cadastro de clientes e melhorias operacionais",
       "objective": "Implementar os itens 03 a 10 da auditoria do painel. O proprietário aprovou o cadastro antes da compra por quem gerencia clientes.",
       "assignee": "codex",
       "priority": "normal",
-      "status": "em-revisao",
+      "status": "concluida",
       "acceptanceCriteria": [
         "SKU sem contagem leva ao campo de saldo. Variações e validação do preço recebem foco. Filtros do catálogo ficam acessíveis em 360 px.",
         "A ficha de pedido e o navegador retornam à consulta original. A contagem de cupons aplica a vigência da linha.",
@@ -26,7 +40,7 @@
         "Dono e Gerente cadastram contatos por loja, com duplicidade de e-mail tratada. Balcão conserva acesso de consulta."
       ],
       "environment": "GitHub CI • painel autenticado com dados sintéticos",
-      "evidence": "PR 279 e documento da auditoria no projeto Lojas do Linear. A revisão também verifica gravação e releitura de preços com milhares, validação do preço de referência e navegação entre consultas pelo histórico."
+      "evidence": "PR 279 e documento da auditoria no projeto Lojas do Linear. CI 44203495355 aprovado. Produção d92a595, execução 44204799388. A Loja Demo confirmou o formulário de clientes e o histórico de buscas em 1440 e 390 px."
     },
     {
       "id": "PAINEL-AUDITORIA-P1-20261117",
@@ -34,14 +48,14 @@
       "objective": "Explicar o alcance da validação local do Pix e recuperar a consulta de pedidos após falhas de leitura.",
       "assignee": "codex",
       "priority": "alta",
-      "status": "em-revisao",
+      "status": "concluida",
       "acceptanceCriteria": [
         "Com chave fictícia válida, orientar a conferir o recebedor no banco. Chave ausente impede salvar.",
         "Falhas HTTP e de rede encerram o carregamento. Tentar novamente preserva a consulta e recupera os pedidos.",
         "Quando já houver resultados, identificá-los como anteriores e mantê-los visíveis durante a falha."
       ],
       "environment": "GitHub CI • tenant de teste isolado • painel desktop e mobile",
-      "evidence": "Backlog e aceite no projeto Lojas no Linear. Regressões em packages/checkout/src/providers/pix-manual.test.ts e tests/helpers/painel-pedidos-pix.ts."
+      "evidence": "Aceite no projeto Lojas no Linear. Regressões de Pix e leitura de pedidos aprovadas no CI 44203495355. PR 279 publicada na execução 44204799388, commit d92a595."
     },
     {
       "id": "BERETA-CARBON-AMARELO-20261117",

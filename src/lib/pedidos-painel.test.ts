@@ -37,6 +37,19 @@ test("telefone só entra com quatro dígitos ou mais", () => {
   assert.deepEqual(w.OR?.find((c) => c.clienteTelefone), { clienteTelefone: { contains: "169931" } });
 });
 
+test("celular com ou sem máscara busca pelo telefone sem exceder o inteiro do banco", () => {
+  for (const q of ["11900000000", "(11) 90000-0000"]) {
+    const { OR } = filtroDePedidos({ tenantId: LOJA, q });
+    assert.deepEqual(OR?.find(c => c.clienteTelefone), { clienteTelefone: { contains: "11900000000" } });
+    assert.equal(OR?.some(c => "numero" in c), false);
+  }
+  const limite = filtroDePedidos({ tenantId: LOJA, q: "#2147483647" });
+  assert.ok(limite.OR?.some(c => c.numero === 2_147_483_647));
+  const acima = filtroDePedidos({ tenantId: LOJA, q: "2147483648" });
+  assert.equal(acima.OR?.some(c => "numero" in c), false);
+  assert.ok(acima.OR?.some(c => c.referencia));
+});
+
 test("situação só filtra quando é uma situação real", () => {
   assert.equal(filtroDePedidos({ tenantId: LOJA, situacao: "PAGO" }).status, "PAGO");
   assert.equal(filtroDePedidos({ tenantId: LOJA, situacao: "'; drop" }).status, undefined);

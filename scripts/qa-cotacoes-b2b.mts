@@ -9,7 +9,7 @@ import { emitirToken, gerarHashSenha } from "../src/lib/sessao.ts";
 import { salvarProdutoNoCatalogo } from "../src/lib/catalogo-escrita.ts";
 import { registrarCheckCotacao } from "../tests/helpers/mlops-evidence.ts";
 import { verificarPublicacaoTextoHttp } from "../tests/helpers/publicacao-texto-http.ts";
-import { verificarFormatoPix, verificarRecuperacaoPedidos } from "../tests/helpers/painel-pedidos-pix.ts";
+import { verificarConsultaPedidos, verificarFormatoPix, verificarRecuperacaoPedidos } from "../tests/helpers/painel-pedidos-pix.ts";
 import { verificarAtendimento, verificarCatalogo } from "../tests/helpers/painel-atendimento.ts";
 
 const database = new URL(process.env.DATABASE_URL ?? "http://invalid");
@@ -207,6 +207,14 @@ try {
   await registrarCheckCotacao("jornada", { assertions: { desktopJourney: true, mobileJourney: true, buyerApproval: true, orderOpened: true, noHorizontalOverflow: true, noPageError: true }, metrics: { viewports: 2 } });
   await prisma.tenant.update({ where: { id: tenant.id }, data: { recursos: { push: ["recebimento_v2", "pagamentos_pix_manual"] } } });
   const pedidoAuditado = await prisma.pedido.findUniqueOrThrow({ where: { id: ultimoPedido }, select: { id: true, numero: true, status: true } });
+  const cancelado = await prisma.pedido.create({
+    data: {
+      tenantId: tenant.id, referencia: `qa-cancelado-${randomUUID()}`, status: "CANCELADO",
+      clienteNome: "Cliente QA", clienteEmail: "fila@example.invalid", clienteTelefone: "11900000000",
+      clienteDocumento: "", freteNome: "Retirada", freteCentavos: 0, subtotalCentavos: 100, totalCentavos: 100, meioPagamento: "pix",
+    },
+    select: { id: true, clienteTelefone: true },
+  });
   await salvarProdutoNoCatalogo(tenant.id, null, { nome: "Caneca QA", slug: "qa-sem-contagem", sku: "QA-SEM-CONTAGEM", estoque: null, precoCentavos: 1200, imagens: [] });
   await prisma.cupom.createMany({ data: ["QA-ATUAL", "QA-ANTIGO-1", "QA-ANTIGO-2"].map((codigo, i) => ({
     tenantId: tenant.id, codigo, tipo: "PERCENTUAL" as const, valor: 10, validoAte: i > 0 ? new Date("2000-01-01") : null,
@@ -217,6 +225,8 @@ try {
     await page.setViewportSize({ width, height: width === 1440 ? 900 : 844 });
     stage = `pedidos-recuperacao-${width}`;
     await verificarRecuperacaoPedidos(page, painel, pedidoAuditado, capturar);
+    stage = `pedidos-consulta-${width}`;
+    await verificarConsultaPedidos(page, painel, cancelado, capturar);
     stage = `pix-formato-${width}`;
     await verificarFormatoPix(page, painel, capturar);
     stage = `catalogo-auditoria-${width}`;
