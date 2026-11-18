@@ -1,0 +1,123 @@
+{
+  "tenant": "Loja Demo",
+  "perfil": "Dono",
+  "observadoEm": "2026-11-18T01:56:24.815Z",
+  "gravacoes": 0,
+  "resultados": [
+    {
+      "largura": 390,
+      "item": "02 e 04 • recuperação da lista e retorno da ficha",
+      "resultado": "passou"
+    },
+    {
+      "largura": 390,
+      "item": "03 • SKU sem contagem abre o saldo",
+      "resultado": "passou"
+    },
+    {
+      "largura": 390,
+      "item": "05 • editor de variações e retorno do foco",
+      "resultado": "passou"
+    },
+    {
+      "largura": 390,
+      "item": "09 • validação de preço com foco no campo",
+      "resultado": "passou"
+    },
+    {
+      "largura": 390,
+      "item": "08 • último filtro móvel e retorno a Todos",
+      "resultado": "passou"
+    },
+    {
+      "largura": 390,
+      "item": "06 • abrir e cancelar pré-cadastro",
+      "resultado": "passou"
+    },
+    {
+      "largura": 390,
+      "item": "07 • evidência de teste e atividade da conexão",
+      "resultado": "passou"
+    },
+    {
+      "largura": 390,
+      "item": "10 • quantidade de cupons ativos e linhas vencidas",
+      "resultado": "passou"
+    },
+    {
+      "largura": 360,
+      "item": "02 e 04 • recuperação da lista e retorno da ficha",
+      "resultado": "passou"
+    },
+    {
+      "largura": 360,
+      "item": "03 • SKU sem contagem abre o saldo",
+      "resultado": "passou"
+    },
+    {
+      "largura": 360,
+      "item": "05 • editor de variações e retorno do foco",
+      "resultado": "passou"
+    },
+    {
+      "largura": 360,
+      "item": "09 • validação de preço com foco no campo",
+      "resultado": "passou"
+    },
+    {
+      "largura": 360,
+      "item": "08 • último filtro móvel e retorno a Todos",
+      "resultado": "passou"
+    },
+    {
+      "largura": 360,
+      "item": "06 • abrir e cancelar pré-cadastro",
+      "resultado": "passou"
+    },
+    {
+      "largura": 360,
+      "item": "07 • evidência de teste e atividade da conexão",
+      "resultado": "passou"
+    },
+    {
+      "largura": 360,
+      "item": "10 • quantidade de cupons ativos e linhas vencidas",
+      "resultado": "passou"
+    },
+    {
+      "largura": 1440,
+      "item": "02 e 04 • recuperação da lista e retorno da ficha",
+      "resultado": "passou"
+    },
+    {
+      "largura": 1440,
+      "item": "03 • SKU sem contagem abre o saldo",
+      "resultado": "passou"
+    },
+    {
+      "largura": 1440,
+      "item": "05 • editor de variações e retorno do foco",
+      "resultado": "passou"
+    },
+    {
+      "largura": 1440,
+      "item": "09 • validação de preço com foco no campo",
+      "resultado": "passou"
+    },
+    {
+      "largura": 1440,
+      "item": "06 • abrir e cancelar pré-cadastro",
+      "resultado": "passou"
+    },
+    {
+      "largura": 1440,
+      "item": "07 • evidência de teste e atividade da conexão",
+      "resultado": "passou"
+    },
+    {
+      "largura": 1440,
+      "item": "10 • quantidade de cupons ativos e linhas vencidas",
+      "resultado": "passou"
+    }
+  ]
+}

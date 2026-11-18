@@ -13,6 +13,28 @@
   ],
   "tasks": [
     {
+      "id": "BRILHAX-TELEFONE-20261117",
+      "title": "Brilhax • atualizar telefone público e WhatsApp",
+      "objective": "Atualizar o contato de brilhax.com para +5516993856612 pelo cadastro administrativo da loja.",
+      "assignee": "codex",
+      "priority": "normal",
+      "status": "concluida",
+      "acceptanceCriteria": ["Telefone público (16) 99385-6612.", "Links WhatsApp apontam para 5516993856612.", "Cadastro e páginas públicas verificados em produção."],
+      "environment": "Produção • API administrativa Lojas e brilhax.com",
+      "evidence": "PATCH administrativo HTTP200 em2026-11-17T16:51:22.334Z. Releitura autenticada confirmou telefone (16) 99385-6612 e WhatsApp5516993856612. GETs públicos de /, /contato e /produtos retornaram200 com novo telefone e links wa.me/5516993856612; /contato também contém tel:+5516993856612. Nenhum dos dois números antigos apareceu nessas três páginas. Navegador Playwright indisponível por EPERM ao criar C:/Users/.playwright-mcp; verificação pública realizada diretamente no HTML de produção. Sem alteração de código ou deploy."
+    },
+    {
+      "id": "BERETA-PAGES-DOMINIOS-20261116",
+      "title": "Bereta • institucional no Pages e loja em subdomínio",
+      "objective": "Publicar o institucional em beretarodas.com no Cloudflare Pages e preservar a loja em loja.beretarodas.com com descoberta pública e consentimento Zaraz.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": ["Domínios HTTPS e canonicals corretos.", "Rotas públicas com HTML, MDX, SEO, previews e favicons.", "Sitemaps canônicos de URLs e imagens, llms e rastreadores públicos liberados.", "Consentimento Zaraz e sitemaps atualizados no Search Console.", "CI, publicação e navegação desktop/mobile verificadas."],
+      "environment": "Cloudflare Pages e loja Next.js no servidor applications",
+      "evidence": "Institucional avilaops/bereta PR2, versão publicada9fe01d0ec16fd5e0c3a43d0deb599eb1e1c624c0. CI43874930478 aprovada:23HTML/MDX,24imagens únicas, redirects301,404real e quatro User-Agents de busca200/robots allow. Pages e três domínios ativos. Loja HTTPS200/canonical loja.beretarodas.com, cadastro pelo escritor administrativo normal e backup no servidor. Quatro sitemaps processados no Search Console sem erros/avisos. Zaraz nativo pt, aceitar/rejeitar/reabrir/revogar comprovados; GA4 confirmou page_view e whatsapp_click de teste. Serviço institucional antigo desabilitado/inativo. Evidência em docs/evidencias/bereta-pages-20261116/README.md."
+    },
+    {
       "id": "FISCAL-EMISSAO-DIRETA-20261116",
       "title": "Emitir NF-e diretamente pelo Lojas",
       "objective": "Gerar documento de venda revisado ou importar rascunho, assinar com A1 e transmitir/consultar diretamente na SEFAZ, sem dependência de escrita ERP.",

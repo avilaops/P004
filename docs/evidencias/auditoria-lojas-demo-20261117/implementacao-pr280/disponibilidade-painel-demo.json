@@ -1,0 +1,439 @@
+{
+  "tenant": "Loja Demo",
+  "perfil": "Dono",
+  "observadoEm": "2026-11-18T01:52:16.679Z",
+  "verificacoes": [
+    {
+      "largura": 1440,
+      "rota": "/painel",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/analises",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/analises/atribuicao",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/analises/funil",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/avaliacoes",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/clientes",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/conexoes",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/configuracoes",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/configuracoes/assinatura",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/configuracoes/automacoes",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/configuracoes/campos",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/configuracoes/canais",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/configuracoes/conta",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/configuracoes/descoberta",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/configuracoes/dominio",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/configuracoes/entrega",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/configuracoes/equipe",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/configuracoes/fiscal",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/configuracoes/marca",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/configuracoes/politicas",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/configuracoes/recebimento",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/cotacoes",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/estoque",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/ia",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/marketing",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/marketing/anuncios",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/marketing/blog",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/pedidos",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/pedidos/[id]",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/pedidos/pix",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/previa",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/produtos",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/produtos/[id]",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/produtos/categorias",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/produtos/etiquetas",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 1440,
+      "rota": "/painel/promocoes",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/analises",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/analises/atribuicao",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/analises/funil",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/avaliacoes",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/clientes",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/conexoes",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/configuracoes",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/configuracoes/assinatura",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/configuracoes/automacoes",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/configuracoes/campos",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/configuracoes/canais",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/configuracoes/conta",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/configuracoes/descoberta",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/configuracoes/dominio",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/configuracoes/entrega",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/configuracoes/equipe",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/configuracoes/fiscal",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/configuracoes/marca",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/configuracoes/politicas",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/configuracoes/recebimento",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/cotacoes",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/estoque",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/ia",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/marketing",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/marketing/anuncios",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/marketing/blog",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/pedidos",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/pedidos/[id]",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/pedidos/pix",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/previa",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/produtos",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/produtos/[id]",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/produtos/categorias",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/produtos/etiquetas",
+      "http": 200,
+      "estado": "abriu"
+    },
+    {
+      "largura": 390,
+      "rota": "/painel/promocoes",
+      "http": 200,
+      "estado": "abriu"
+    }
+  ]
+}

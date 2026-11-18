@@ -1,0 +1,188 @@
+{
+  "pages": [
+    {
+      "url": "https://beretarodas.com/",
+      "html": 200,
+      "mdx": 200,
+      "canonical": true
+    },
+    {
+      "url": "https://beretarodas.com/sobre",
+      "html": 200,
+      "mdx": 200,
+      "canonical": true
+    },
+    {
+      "url": "https://beretarodas.com/projetos",
+      "html": 200,
+      "mdx": 200,
+      "canonical": true
+    },
+    {
+      "url": "https://beretarodas.com/contato",
+      "html": 200,
+      "mdx": 200,
+      "canonical": true
+    },
+    {
+      "url": "https://beretarodas.com/produto/alloy-camaro-z28",
+      "html": 200,
+      "mdx": 200,
+      "canonical": true
+    },
+    {
+      "url": "https://beretarodas.com/produto/azad-aro-22",
+      "html": 200,
+      "mdx": 200,
+      "canonical": true
+    },
+    {
+      "url": "https://beretarodas.com/produto/projeto-mustang-gt-20",
+      "html": 200,
+      "mdx": 200,
+      "canonical": true
+    },
+    {
+      "url": "https://beretarodas.com/produto/vorsteiner-vff-107",
+      "html": 200,
+      "mdx": 200,
+      "canonical": true
+    },
+    {
+      "url": "https://beretarodas.com/produto/monaco-diplomata-se",
+      "html": 200,
+      "mdx": 200,
+      "canonical": true
+    },
+    {
+      "url": "https://beretarodas.com/produto/str-aro-22",
+      "html": 200,
+      "mdx": 200,
+      "canonical": true
+    },
+    {
+      "url": "https://beretarodas.com/produto/cinco-raios-labio-branco",
+      "html": 200,
+      "mdx": 200,
+      "canonical": true
+    },
+    {
+      "url": "https://beretarodas.com/produto/offroad-multi-raios",
+      "html": 200,
+      "mdx": 200,
+      "canonical": true
+    },
+    {
+      "url": "https://beretarodas.com/produto/prz-4x4",
+      "html": 200,
+      "mdx": 200,
+      "canonical": true
+    },
+    {
+      "url": "https://beretarodas.com/produto/concava-prata",
+      "html": 200,
+      "mdx": 200,
+      "canonical": true
+    },
+    {
+      "url": "https://beretarodas.com/produto/offroad-centro-vermelho",
+      "html": 200,
+      "mdx": 200,
+      "canonical": true
+    },
+    {
+      "url": "https://beretarodas.com/produto/hr-deep",
+      "html": 200,
+      "mdx": 200,
+      "canonical": true
+    },
+    {
+      "url": "https://beretarodas.com/produto/xd-preto",
+      "html": 200,
+      "mdx": 200,
+      "canonical": true
+    },
+    {
+      "url": "https://beretarodas.com/produto/cinco-raios-prata",
+      "html": 200,
+      "mdx": 200,
+      "canonical": true
+    },
+    {
+      "url": "https://beretarodas.com/produto/malha-centro-vermelho",
+      "html": 200,
+      "mdx": 200,
+      "canonical": true
+    },
+    {
+      "url": "https://beretarodas.com/produto/multi-raios-bronze",
+      "html": 200,
+      "mdx": 200,
+      "canonical": true
+    },
+    {
+      "url": "https://beretarodas.com/produto/cinco-raios-usinado",
+      "html": 200,
+      "mdx": 200,
+      "canonical": true
+    },
+    {
+      "url": "https://beretarodas.com/produto/malha-grafite",
+      "html": 200,
+      "mdx": 200,
+      "canonical": true
+    },
+    {
+      "url": "https://beretarodas.com/produto/bbs-preto",
+      "html": 200,
+      "mdx": 200,
+      "canonical": true
+    }
+  ],
+  "redirects": [
+    {
+      "url": "https://beretarodas.com/loja",
+      "status": 301,
+      "location": "https://loja.beretarodas.com/"
+    },
+    {
+      "url": "https://www.beretarodas.com/sobre",
+      "status": 301,
+      "location": "https://beretarodas.com/sobre"
+    },
+    {
+      "url": "https://bereta.avilaops.com/contato",
+      "status": 301,
+      "location": "https://beretarodas.com/contato"
+    },
+    {
+      "url": "https://beretarodas.com/produtos/exemplo",
+      "status": 301,
+      "location": "https://loja.beretarodas.com/produtos/exemplo"
+    }
+  ],
+  "bots": [
+    {
+      "userAgent": "Googlebot",
+      "home": 200,
+      "robots": "allow"
+    },
+    {
+      "userAgent": "Googlebot-Image",
+      "home": 200,
+      "robots": "allow"
+    },
+    {
+      "userAgent": "OAI-SearchBot",
+      "home": 200,
+      "robots": "allow"
+    },
+    {
+      "userAgent": "Claude-SearchBot",
+      "home": 200,
+      "robots": "allow"
+    }
+  ],
+  "uniqueImages": 24,
+  "notFound": 404
+}

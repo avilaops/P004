@@ -1,0 +1,11 @@
+User-Agent: *
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
+Allow: /
+Disallow: /api/
+Disallow: /painel
+Disallow: /entrar
+Disallow: /recuperar
+Disallow: /redefinir
+
+Sitemap: https://lojas.avilaops.com/sitemap.xml
+Sitemap: https://lojas.avilaops.com/sitemap-lojas.xml
