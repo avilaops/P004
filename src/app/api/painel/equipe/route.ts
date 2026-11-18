@@ -18,7 +18,7 @@ const Novo = z.object({
   email: z.string().email(),
   // Em branco, a pessoa recebe o convite por e-mail e cria a senha no login único.
   senha: z.string().min(8).optional().or(z.literal("").transform(() => undefined)),
-  papel: z.enum(["GERENTE", "OPERADOR"]),
+  papel: z.enum(["DONO", "GERENTE", "OPERADOR"]),
 });
 
 async function dono() {

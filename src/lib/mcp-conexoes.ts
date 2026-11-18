@@ -2,6 +2,7 @@ import type { Tenant } from "@prisma/client";
 import { prisma } from "./db";
 import { escolhaDosEscopos, escoposQuePode, limitarAoTeto, resumoDoAcesso, type EscolhaDeAcesso } from "./mcp-permissoes";
 import { permite, type Papel } from "./operadores";
+import { papelDe } from "./papel";
 import {
   gerarSegredo,
   hashDoSegredo,
@@ -142,7 +143,7 @@ export function tetoDoPapel(papel: Papel): string[] {
   return escoposQuePode((o_que) => permite(papel, o_que));
 }
 
-const papelDoOperador = (papel: string): Papel => (papel === "GERENTE" ? "GERENTE" : "OPERADOR");
+const papelDoOperador = (papel: string): Papel => papelDe(papel);
 
 /** De quanto em quanto tempo o uso é anotado: escrever a cada chamada seria um UPDATE por ferramenta. */
 const ANOTAR_USO_MS = 5 * 60_000;
