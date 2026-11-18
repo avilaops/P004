@@ -43,7 +43,7 @@ export async function GET(request: Request) {
   if (situacao === "esgotado") where.estoque = 0;
   else if (situacao === "baixo") where.estoque = { gt: 0, lte: baixo };
 
-  const [total, itens, esgotados, comBaixo, todos] = await Promise.all([
+  const [total, itens, esgotados, comBaixo, todos, semContagem] = await Promise.all([
     prisma.produto.count({ where }),
     prisma.produto.findMany({
       where,
@@ -56,9 +56,15 @@ export async function GET(request: Request) {
     prisma.produto.count({ where: { ...base, estoque: 0 } }),
     prisma.produto.count({ where: { ...base, estoque: { gt: 0, lte: baixo } } }),
     prisma.produto.count({ where: base }),
+    busca ? prisma.produto.findFirst({
+      where: { ...base, estoque: null, sku: { equals: busca, mode: "insensitive" } },
+      select: { id: true, nome: true, sku: true },
+      orderBy: { id: "asc" },
+    }) : null,
   ]);
 
   return Response.json({
+    semContagem,
     total,
     pagina,
     porPagina: POR_PAGINA,

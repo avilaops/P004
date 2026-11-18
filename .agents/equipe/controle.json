@@ -13,6 +13,37 @@
   ],
   "tasks": [
     {
+      "id": "PAINEL-AUDITORIA-P2-P3-20261117",
+      "title": "Painel • cadastro de clientes e melhorias operacionais",
+      "objective": "Implementar os itens 03 a 10 da auditoria do painel. O proprietário aprovou o cadastro antes da compra por quem gerencia clientes.",
+      "assignee": "codex",
+      "priority": "normal",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "SKU sem contagem leva ao campo de saldo. Variações e validação do preço recebem foco. Filtros do catálogo ficam acessíveis em 360 px.",
+        "A ficha de pedido e o navegador retornam à consulta original. A contagem de cupons aplica a vigência da linha.",
+        "A Central informa separadamente configuração, teste datado e atividade.",
+        "Dono e Gerente cadastram contatos por loja, com duplicidade de e-mail tratada. Balcão conserva acesso de consulta."
+      ],
+      "environment": "GitHub CI • painel autenticado com dados sintéticos",
+      "evidence": "PR 279 e documento da auditoria no projeto Lojas do Linear. A revisão também verifica gravação e releitura de preços com milhares, validação do preço de referência e navegação entre consultas pelo histórico."
+    },
+    {
+      "id": "PAINEL-AUDITORIA-P1-20261117",
+      "title": "Painel • validação do Pix direto e recuperação da lista de pedidos",
+      "objective": "Explicar o alcance da validação local do Pix e recuperar a consulta de pedidos após falhas de leitura.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Com chave fictícia válida, orientar a conferir o recebedor no banco. Chave ausente impede salvar.",
+        "Falhas HTTP e de rede encerram o carregamento. Tentar novamente preserva a consulta e recupera os pedidos.",
+        "Quando já houver resultados, identificá-los como anteriores e mantê-los visíveis durante a falha."
+      ],
+      "environment": "GitHub CI • tenant de teste isolado • painel desktop e mobile",
+      "evidence": "Backlog e aceite no projeto Lojas no Linear. Regressões em packages/checkout/src/providers/pix-manual.test.ts e tests/helpers/painel-pedidos-pix.ts."
+    },
+    {
       "id": "BERETA-CARBON-AMARELO-20261117",
       "title": "Bereta • trocar os destaques vermelhos por amarelo",
       "objective": "Aplicar amarelo na loja Bereta preservando Carbon, banner dourado, catálogo e domínio principal; remover cores vermelhas fixas da composição.",

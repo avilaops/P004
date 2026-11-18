@@ -351,6 +351,7 @@ model Tenant {
   cobrancaEventos        CobrancaEvento[]
   cupons                 Cupom[]
   compradores            Comprador[]
+  contatosAtendimento    ContatoAtendimento[]
   empresasB2B            EmpresaB2B[]
   unidadesEmpresaB2B     UnidadeEmpresaB2B[]
   compradoresEmpresaB2B  CompradorEmpresaB2B[]
@@ -1652,6 +1653,18 @@ model Avaliacao {
 
   @@index([produtoId, aprovada])
   @@index([tenantId, aprovada, criadoEm])
+}
+
+/// Contato do lojista para atendimento antes da compra. Não concede acesso à vitrine.
+model ContatoAtendimento {
+  tenantId String
+  email    String
+  nome     String
+  telefone String?
+  criadoEm DateTime @default(now())
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@id([tenantId, email])
 }
 
 /// Conta do comprador NA LOJA (não é o lojista). Escopo por tenant: o mesmo

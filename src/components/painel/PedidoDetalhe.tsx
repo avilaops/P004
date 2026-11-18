@@ -40,7 +40,8 @@ const COR: Record<string, string> = {
  * mandar a alguém. Aqui `/painel/pedidos/<id>` abre direto, recarrega, volta e
  * pode ser mandado por WhatsApp para quem vai embalar.
  */
-export default function PedidoDetalhe({ pedido, loja, podeConferirFiscal = false }: {
+export default function PedidoDetalhe({ pedido, loja, fila = "/painel/pedidos", podeConferirFiscal = false }: {
+  fila?: string;
   pedido: PedidoView & { cotacoesFrete?: unknown };
   loja: { nome: string; razaoSocial: string | null; cnpj: string | null };
   podeConferirFiscal?: boolean;
@@ -95,7 +96,7 @@ export default function PedidoDetalhe({ pedido, loja, podeConferirFiscal = false
   return (
     <div className="grid gap-6">
       <div className="flex flex-wrap items-center gap-3">
-        <Link href="/painel/pedidos" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:underline">
+        <Link href={fila} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:underline">
           <ArrowLeft size={15} /> Pedidos
         </Link>
         <span className={`rounded-full px-3 py-1 text-xs font-semibold ${COR[pedido.status] ?? "bg-muted"}`}>{PEDIDO[pedido.status] ?? pedido.status}</span>

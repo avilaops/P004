@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { IdentidadeLoja } from "@/lib/identidade";
+import { precoDoCatalogoEmCentavos } from "@/lib/valor-em-centavos";
 import { Campo, Secao, brl, inputClasse } from "./campos";
 import { PLANOS, mensalidade } from "@/lib/planos";
 import Marca from "./Marca";
@@ -300,11 +301,13 @@ export default function PainelLoja({ secao, loja, contagens, cupons, categorias,
 
 
   function salvarProduto() {
-    const preco = centavos(novo.preco);
-    if (!novo.nome.trim() || !Number.isFinite(preco)) return setErro("Nome e preço são obrigatórios.");
-    const precoDe = novo.precoDe ? centavos(novo.precoDe) : undefined;
+    const preco = precoDoCatalogoEmCentavos(novo.preco);
+    const precoDe = precoDoCatalogoEmCentavos(novo.precoDe);
+    if (!novo.nome.trim()) return setErro("Informe o nome do produto.");
+    if (preco === null) return setErro("Informe um preço válido em reais.");
+    if (novo.precoDe.trim() && precoDe === null) return setErro("Informe um preço de referência válido em reais ou deixe em branco.");
     chamar("/api/painel/produtos", "PUT", [{
-      nome: novo.nome, precoCentavos: preco, ...(precoDe && Number.isFinite(precoDe) ? { precoDeCentavos: precoDe } : {}),
+      nome: novo.nome, precoCentavos: preco, ...(precoDe !== null ? { precoDeCentavos: precoDe } : {}),
       categoria: novo.categoria || undefined, sku: novo.sku || undefined, descricaoCurta: novo.descricaoCurta || undefined,
       imagens: novo.imagem ? [novo.imagem] : undefined, destaque: novo.destaque, ...(novo.pesoKg ? { pesoKg: Number.parseFloat(novo.pesoKg.replace(",", ".")) } : {}), ...(novo.estoque.trim() ? { estoque: Number(novo.estoque) } : {}),
     }], "Produto salvo.").then(() => setNovo({ nome: "", preco: "", precoDe: "", categoria: "", sku: "", descricaoCurta: "", imagem: "", destaque: false, pesoKg: "", estoque: "" }));

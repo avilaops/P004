@@ -13,6 +13,10 @@ test("o dono pode tudo", () => {
   }
 });
 
+test("dono e gerente podem pré-cadastrar clientes no atendimento", () => {
+  assert.deepEqual([...PODE.gerenciarClientes], ["DONO", "GERENTE"]);
+});
+
 test("gerente cuida da loja, mas não da cobrança", () => {
   assert.equal(permite("GERENTE", "catalogo"), true);
   assert.equal(permite("GERENTE", "pedidos"), true);

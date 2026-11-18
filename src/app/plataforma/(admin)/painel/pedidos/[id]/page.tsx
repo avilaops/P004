@@ -5,12 +5,14 @@ import { sessaoDoPainel } from "@/lib/sessao";
 import { permite } from "@/lib/operadores";
 import CabecalhoSecao from "@/components/painel/CabecalhoSecao";
 import PedidoDetalhe from "@/components/painel/PedidoDetalhe";
+import { sufixoFilaPedidos } from "@/lib/pedidos-painel";
 
 export const metadata: Metadata = { title: "Pedido | Painel", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
-export default async function Pagina({ params }: { params: Promise<{ id: string }> }) {
-  const [{ id }, sessao] = await Promise.all([params, sessaoDoPainel()]);
+export default async function Pagina({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const [{ id }, sessao, filtros] = await Promise.all([params, sessaoDoPainel(), searchParams]);
+  const valor = (campo: string) => typeof filtros[campo] === "string" ? filtros[campo] : null;
   if (!sessao) redirect("/entrar");
   const loja = sessao.tenant;
 
@@ -33,6 +35,7 @@ export default async function Pagina({ params }: { params: Promise<{ id: string 
     <>
       <CabecalhoSecao titulo={`Pedido #${pedido.numero}`} descricao={pedido.clienteNome} />
       <PedidoDetalhe
+        fila={`/painel/pedidos${sufixoFilaPedidos(valor("q"), valor("situacao"), valor("pagina"))}`}
         podeConferirFiscal={permite(sessao.papel, "fiscal") && permite(sessao.papel, "pedidos")}
         loja={{ nome: loja.nome, razaoSocial: loja.razaoSocial, cnpj: loja.cnpj }}
         pedido={{

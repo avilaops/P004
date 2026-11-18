@@ -24,6 +24,7 @@ type Resposta = {
   total: number; pagina: number; paginas: number; porPagina: number;
   resumo: { todos: number; esgotados: number; baixo: number; limiteBaixo: number };
   itens: Item[];
+  semContagem: Pick<Item, "id" | "nome" | "sku"> | null;
 };
 
 export default function Inventario({
@@ -51,22 +52,29 @@ export default function Inventario({
     return () => { if (relogio.current) clearTimeout(relogio.current); };
   }, [busca]);
 
-  const carregar = useCallback(async () => {
+  const carregar = useCallback(async (signal?: AbortSignal) => {
     setCarregando(true);
     const p = new URLSearchParams({ pagina: String(pagina) });
     if (aplicada) p.set("q", aplicada);
     if (situacao) p.set("situacao", situacao);
     try {
-      const r = await fetch(`/api/painel/estoque?${p}`);
-      if (r.ok) setDados((await r.json()) as Resposta);
+      const r = await fetch(`/api/painel/estoque?${p}`, { signal });
+      if (r.ok) {
+        const resposta: Resposta = await r.json();
+        if (!signal?.aborted) setDados(resposta);
+      }
     } catch {
       // Falha de rede não apaga a lista que já está na tela.
     } finally {
-      setCarregando(false);
+      if (!signal?.aborted) setCarregando(false);
     }
   }, [pagina, aplicada, situacao]);
 
-  useEffect(() => { void carregar(); }, [carregar]);
+  useEffect(() => {
+    const controle = new AbortController();
+    void carregar(controle.signal);
+    return () => controle.abort();
+  }, [carregar]);
 
   async function salvar(item: Item) {
     const valor = rascunho[item.id];
@@ -121,7 +129,7 @@ export default function Inventario({
         ativa={situacao}
         aoEscolher={(v) => { setSituacao(v); setPagina(1); }}
         fichas={[
-          { valor: "", rotulo: r ? `Todos (${r.todos.toLocaleString("pt-BR")})` : "Todos" },
+          { valor: "", rotulo: r ? `Com estoque controlado (${r.todos.toLocaleString("pt-BR")})` : "Com estoque controlado" },
           { valor: "esgotado", rotulo: r ? `Esgotados (${r.esgotados.toLocaleString("pt-BR")})` : "Esgotados" },
           { valor: "baixo", rotulo: r ? `Acabando (${r.baixo.toLocaleString("pt-BR")})` : "Acabando" },
         ]}
@@ -129,6 +137,11 @@ export default function Inventario({
 
       {dados && (
         <>
+          {dados.semContagem && !carregando && <Vazio
+            titulo="Estoque ainda não controlado"
+            texto={`${dados.semContagem.nome} • ${dados.semContagem.sku}. Informe o saldo físico para iniciar a contagem.`}
+            acao={{ rotulo: "Informar saldo", href: `/painel/produtos/${dados.semContagem.id}#catalogo-estoque` }}
+          />}
           <ListaDeRegistros
             itens={dados.itens}
             carregando={carregando}
@@ -150,7 +163,7 @@ export default function Inventario({
               { rotulo: "Ajustar", celula: (i) => ajuste(i), largura: "w-44", numero: true },
             ]}
             vazio={
-              <Vazio
+              dados.semContagem ? null : <Vazio
                 titulo={filtrando ? "Nenhum produto com esse filtro." : "Nenhum produto com estoque contado."}
                 texto={
                   filtrando
@@ -162,7 +175,7 @@ export default function Inventario({
             }
           />
 
-          <Paginacao
+          {dados.total > 0 && <Paginacao
             pagina={dados.pagina}
             paginas={dados.paginas}
             total={dados.total}
@@ -170,7 +183,7 @@ export default function Inventario({
             ocupado={carregando || ocupado}
             aoMudar={setPagina}
             substantivo="produtos"
-          />
+          />}
         </>
       )}
     </Secao>

@@ -1,4 +1,4 @@
-export type EstadoSaudeCanal = "saudavel" | "atencao" | "erro" | "desconectado" | "indisponivel"
+export type EstadoSaudeCanal = "saudavel" | "configurado" | "atencao" | "erro" | "desconectado" | "indisponivel"
 export type CapacidadeCanal = "operacional" | "parcial" | "somente_conexao"
 
 export type AlertaSaudeCanal = {
@@ -28,6 +28,7 @@ export type EntradaSaudeCanal = {
   expiraEm: Date | null
   refreshExpiraEm: Date | null
   ultimaAtividadeEm: Date | null
+  ultimoTeste?: { ocorridoEm: Date; mensagem: string } | null
   cadenciaEsperadaMs: number | null
   possuiCargaOperacional: boolean
   rotina?: { ultimaEm: Date | null; falhasSeguidas: number; ultimoErro: string | null } | null
@@ -79,6 +80,7 @@ export function avaliarSaudeCanal(entrada: EntradaSaudeCanal, agora = new Date()
     expiraEm: entrada.expiraEm,
     refreshExpiraEm: entrada.refreshExpiraEm,
     ultimaAtividadeEm: entrada.ultimaAtividadeEm,
+    ultimoTeste: entrada.ultimoTeste ?? null,
     cadenciaEsperadaMs: entrada.cadenciaEsperadaMs,
     possuiCargaOperacional: entrada.possuiCargaOperacional,
     webhooks,
@@ -130,7 +132,7 @@ export function avaliarSaudeCanal(entrada: EntradaSaudeCanal, agora = new Date()
   const alertas = [...erros, ...atencoes]
   return {
     ...base,
-    estado: erros.length ? "erro" : atencoes.length ? "atencao" : "saudavel",
+    estado: erros.length ? "erro" : atencoes.length ? "atencao" : entrada.ultimaAtividadeEm ? "saudavel" : "configurado",
     atrasoMs,
     limitacao: entrada.capacidade === "somente_conexao" ? "Somente conexão; catálogo e pedidos ainda não operam por aqui." : null,
     alertas,
@@ -145,6 +147,7 @@ const MENSAGENS_SEGURAS = {
   limite_temporario: "A conexão já foi testada no último minuto. Aguarde para testar novamente.",
   falha_externa: "O provedor recusou ou não concluiu o teste. Tente novamente.",
   conexao_confirmada: "Conexão confirmada.",
+  formato_pix_valido: "Formato válido. Confira no aplicativo do banco se a chave Pix pertence ao recebedor informado.",
 } as const
 
 export type CodigoSeguroSaude = keyof typeof MENSAGENS_SEGURAS
@@ -278,9 +281,10 @@ export async function saudeDosCanais(tenantId: string, agora = new Date()): Prom
       conectado: c.status !== "pendente", capacidade: "operacional", conta: c.conta,
       autenticacao: c.tipoConexao, escopos: ["recebimentos"], conectadoEm: c.criadoEm,
       expiraEm: c.provedor === "mercadopago" ? tenant.mpExpiraEm : null, refreshExpiraEm: null,
-      ultimaAtividadeEm: c.testadoEm, cadenciaEsperadaMs: null, possuiCargaOperacional: false,
+      ultimaAtividadeEm: null, cadenciaEsperadaMs: null, possuiCargaOperacional: false,
+      ultimoTeste: c.testadoEm ? { ocorridoEm: c.testadoEm, mensagem: c.status === "erro" ? "Falha no teste." : c.status === "pendente" ? "Verificação pendente." : c.provedor === "pix_manual" ? "Formato da chave válido." : "Conexão confirmada." } : null,
       rotina: c.provedor === "mercadopago" ? rotina("mercadopago.renovar") : null,
-      erro: erroTestado(`pagamento:${c.provedor}`, c.criadoEm, c.status === "erro" ? { codigo: "falha_externa", mensagem: "A credencial precisa ser testada novamente." } : null),
+      erro: erroTestado(`pagamento:${c.provedor}`, c.testadoEm ?? c.criadoEm, c.status === "erro" ? { codigo: "falha_externa", mensagem: "A credencial precisa ser testada novamente." } : null),
       webhooks: [],
     })),
     {
@@ -302,7 +306,13 @@ export async function saudeDosCanais(tenantId: string, agora = new Date()): Prom
       }),
     },
   ]
-  return { canais: entradas.map((entrada) => avaliarSaudeCanal(entrada, agora)), historico, atualizadoEm: agora }
+  const canais = entradas.map((entrada) => {
+    const desde = entrada.ultimoTeste?.ocorridoEm ?? entrada.conectadoEm;
+    const evento = ultimosTestes.find(e => e.canal === entrada.id && (!desde || e.ocorridoEm >= desde));
+    const ultimoTeste = evento ? { ocorridoEm: evento.ocorridoEm, mensagem: evento.mensagem } : entrada.ultimoTeste;
+    return avaliarSaudeCanal({ ...entrada, ultimoTeste }, agora);
+  });
+  return { canais, historico, atualizadoEm: agora }
 }
 
 const CANAIS_TESTAVEIS = new Set(["mercadolivre", "amazon", "shopee", "magalu", "melhor-envio"])
@@ -349,8 +359,10 @@ export async function testarCanal(tenantId: string, canal: string, ator: string,
     // Cada cliente aplica AbortSignal.timeout na própria chamada. Assim não
     // respondemos timeout enquanto uma renovação de token continua ao fundo.
     await teste()
-    resultado = { codigo: "conexao_confirmada", mensagem: MENSAGENS_SEGURAS.conexao_confirmada }
+    const codigo = pagamento === "pix_manual" ? "formato_pix_valido" : "conexao_confirmada"
+    resultado = { codigo, mensagem: MENSAGENS_SEGURAS[codigo] }
   } catch (erro) { resultado = mensagemSegura(erro) }
-  await prisma.eventoSaudeCanal.create({ data: { tenantId, canal, tipo: "teste", resultado: resultado.codigo === "conexao_confirmada" ? "sucesso" : "erro", codigo: resultado.codigo, mensagem: resultado.mensagem, ator: ator.slice(0, 160) } })
-  return { ok: resultado.codigo === "conexao_confirmada", ...resultado }
+  const ok = resultado.codigo === "conexao_confirmada" || resultado.codigo === "formato_pix_valido"
+  await prisma.eventoSaudeCanal.create({ data: { tenantId, canal, tipo: "teste", resultado: ok ? "sucesso" : "erro", codigo: resultado.codigo, mensagem: resultado.mensagem, ator: ator.slice(0, 160) } })
+  return { ok, ...resultado }
 }

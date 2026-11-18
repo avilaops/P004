@@ -9,6 +9,7 @@ import { PRINCIPIOS_COMUNS, TARJAS, TIPOS_MEDICAMENTO, pendenciasDe } from "@/li
 import { AJUDA_TIPO, lerDefinicoes, lerValores, type CampoPersonalizado } from "@/lib/campos-personalizados";
 import { ORIGENS_DE_IMAGEM, SELO_IMAGEM, declaracaoDaImagem } from "@/lib/imagem-origem";
 import { detalharErro } from "@/lib/erro-de-formulario";
+import { precoDoCatalogoEmCentavos } from "@/lib/valor-em-centavos";
 
 /** Campo vazio não vira 0: sem medida, o frete usa a caixa padrão da loja. */
 const medida = (chave: string, valor: string) =>
@@ -53,6 +54,7 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
   /** O que esta loja pergunta além do padrão. Vem junto do produto no GET. */
   const [definicoes, setDefinicoes] = useState<CampoPersonalizado[]>([]);
   const [erro, setErro] = useState<string | null>(null);
+  const [campoInvalido, setCampoInvalido] = useState<"nome" | "preco" | "precoDe" | null>(null);
   const [ocupado, setOcupado] = useState(false);
 
   useEffect(() => {
@@ -79,6 +81,12 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
   }, [produtoId]);
 
   const sujo = Boolean(f && inicial && JSON.stringify(f) !== JSON.stringify(inicial));
+  const carregado = f !== null;
+  useEffect(() => {
+    if (carregado && window.location.hash === "#catalogo-estoque") {
+      document.getElementById("catalogo-estoque")?.focus();
+    }
+  }, [carregado, produtoId]);
 
   // Fechar a aba com preço alterado e não salvo é perder o trabalho sem aviso.
   // Só o navegador pergunta; a navegação interna continua livre, e a barra de
@@ -90,12 +98,22 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
     return () => window.removeEventListener("beforeunload", avisar);
   }, [sujo]);
 
-  const centavos = (v: string) => Math.round(Number.parseFloat(v.replace(/[^\d,.-]/g, "").replace(",", ".")) * 100);
-
   async function salvar() {
     if (!f) return;
-    const preco = centavos(f.preco);
-    if (!f.nome.trim() || !Number.isFinite(preco)) return setErro("Nome e preço são obrigatórios.");
+    const preco = precoDoCatalogoEmCentavos(f.preco);
+    const precoDe = precoDoCatalogoEmCentavos(f.precoDe);
+    let invalido: typeof campoInvalido = null;
+    if (!f.nome.trim()) invalido = "nome";
+    else if (!f.temVariacoes && preco === null) invalido = "preco";
+    else if (!f.temVariacoes && f.precoDe.trim() && precoDe === null) invalido = "precoDe";
+    setCampoInvalido(invalido);
+    if (invalido) {
+      setErro(null);
+      const campo = document.getElementById(`catalogo-${invalido}`);
+      campo?.focus({ preventScroll: true });
+      campo?.scrollIntoView({ block: "center" });
+      return;
+    }
     // O banco recusaria isso com um 422 genérico. A cobrança tem que ser aqui,
     // dizendo para que serve: sem a série não há como achar todos os produtos
     // que usam a foto no dia em que ela for trocada.
@@ -103,12 +121,11 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
       return setErro("Diga de que série a foto veio — é o que permite trocar a imagem de toda a família depois.");
     setErro(null); setOcupado(true);
     try {
-      const precoDe = f.precoDe.trim() ? centavos(f.precoDe) : undefined;
       const r = await fetch("/api/painel/produtos", {
         method: "PATCH", headers: { "content-type": "application/json" },
         body: JSON.stringify({
           id: produtoId, versaoCatalogo:f.versaoCatalogo, mpn:f.temVariacoes?undefined:(f.mpn||null), identificadoresEstado:f.temVariacoes?undefined:f.identificadoresEstado, googleProductCategory:f.googleProductCategory.trim() || null, nome: f.nome, categoria: f.categoria, marca: f.marca || undefined, sku: f.temVariacoes?undefined:f.sku, gtin:f.temVariacoes?undefined:f.gtin.trim(), precoCentavos:f.temVariacoes?undefined:preco,
-          ...(!f.temVariacoes ? { precoDeCentavos: precoDe ?? null } : {}),
+          ...(!f.temVariacoes ? { precoDeCentavos: precoDe } : {}),
           ncm: f.ncm.trim() || null, cest: f.cest.trim() || null,
           descricaoCurta: f.descricaoCurta || undefined, descricao: f.descricao || undefined, imagens: f.imagens, destaque: f.destaque, ativo: f.ativo,
           // A regra de o que pode ser declarado mora no lib, com o resto da
@@ -149,7 +166,10 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
   }
 
   if (!f) return <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground sm:p-6">{erro ?? "Carregando…"}</div>;
-  const set = (k: keyof Form, v: unknown) => setF({ ...f, [k]: v });
+  const set = (k: keyof Form, v: unknown) => {
+    if (campoInvalido === k) setCampoInvalido(null);
+    setF({ ...f, [k]: v });
+  };
   const setImagens = (imagens: string[]) => setF({ ...f, imagens, imagemConfirmada: false, correspondenciaImagem: "nao_confirmada" });
 
   // O que falta aparece na linha fechada do bloco: recolher não pode esconder
@@ -172,11 +192,11 @@ export default function EditarProduto({ produtoId, segmento = "geral", aoSalvar 
       {/* Aberto: o que se mexe todo dia. O resto entra em bloco fechado, na
           ordem em que o lojista precisa, não na ordem do banco. */}
       <div className="grid min-w-0 gap-4 sm:grid-cols-2">
-        <Campo label="Nome"><input id="catalogo-nome" className={inputClasse} value={f.nome} onChange={(e) => set("nome", e.target.value)} /></Campo>
+        <Campo label="Nome" erro={campoInvalido === "nome" ? "Informe o nome do produto." : undefined}><input id="catalogo-nome" aria-invalid={campoInvalido === "nome"} className={inputClasse} value={f.nome} onChange={(e) => set("nome", e.target.value)} /></Campo>
         <Campo label="Categoria"><input id="catalogo-categoria" className={inputClasse} value={f.categoria} onChange={(e) => set("categoria", e.target.value)} /></Campo>
         <Campo label="Categoria Google (opcional)" ajuda="Use o ID ou caminho completo da taxonomia oficial. Vazio mantém a classificação automática do Google."><input id="catalogo-google-category" className={inputClasse} value={f.googleProductCategory} onChange={(e) => set("googleProductCategory", e.target.value)} placeholder="ID ou caminho oficial confirmado" /></Campo>
-        <Campo label="Preço (R$)"><input id="catalogo-preco" readOnly={f.temVariacoes} className={inputClasse} value={f.preco} onChange={(e) => set("preco", e.target.value)} inputMode="decimal" /></Campo>
-        <Campo label="Preço “de” (R$)" ajuda="Riscado na loja, ao lado do preço."><input id="catalogo-precoDe" readOnly={f.temVariacoes} className={inputClasse} value={f.precoDe} onChange={(e) => set("precoDe", e.target.value)} inputMode="decimal" /></Campo>
+        <Campo label="Preço (R$)" erro={campoInvalido === "preco" ? "Informe um preço válido em reais." : undefined}><input id="catalogo-preco" aria-invalid={campoInvalido === "preco"} readOnly={f.temVariacoes} className={inputClasse} value={f.preco} onChange={(e) => set("preco", e.target.value)} inputMode="decimal" /></Campo>
+        <Campo label="Preço “de” (R$)" ajuda="Riscado na loja, ao lado do preço." erro={campoInvalido === "precoDe" ? "Informe um preço de referência válido em reais ou deixe em branco." : undefined}><input id="catalogo-precoDe" aria-invalid={campoInvalido === "precoDe"} readOnly={f.temVariacoes} className={inputClasse} value={f.precoDe} onChange={(e) => set("precoDe", e.target.value)} inputMode="decimal" /></Campo>
         <Campo label="Estoque físico" ajuda="Quantidade física; as reservas são descontadas automaticamente. Vazio = não controla."><input id="catalogo-estoque" readOnly={f.temVariacoes} className={inputClasse} value={f.estoque} onChange={(e) => set("estoque", e.target.value)} inputMode="numeric" /></Campo>
         <Campo label="Disponibilidade">
           <select id="catalogo-disponibilidade" disabled={f.temVariacoes} className={inputClasse} value={f.disponibilidade} onChange={(e) => set("disponibilidade", e.target.value)}><option value="in_stock">Em estoque</option><option value="backorder">Sob encomenda</option><option value="out_of_stock">Esgotado</option></select>

@@ -32,6 +32,8 @@ export const PODE = {
   fiscal: ["DONO"],
   /** Cadastrar e editar produto, preço, categoria, promoção. */
   catalogo: ["DONO", "GERENTE"],
+  /** Pré-cadastrar contatos da loja. A consulta do balcão continua independente. */
+  gerenciarClientes: ["DONO", "GERENTE"],
   /** Ver pedido, mudar situação, despachar. É o balcão. */
   pedidos: ["DONO", "GERENTE", "OPERADOR"],
   /** Marca, domínio, entrega, recebimento, canais de venda. */
