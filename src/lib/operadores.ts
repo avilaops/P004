@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import type { OperadorLoja, Tenant } from "@prisma/client";
 import type { ResultadoDoConvite } from "./convite-equipe";
 import { prisma } from "./db";
+import { type Papel, papelDe } from "./papel";
 import { conferirSenha, gerarHashSenha } from "./sessao";
 
 /**
@@ -12,14 +13,17 @@ import { conferirSenha, gerarHashSenha } from "./sessao";
  * mesma: ninguém sabe quem despachou o quê, e quando alguém sai da empresa a
  * senha muda para todo mundo ao mesmo tempo.
  *
- * **O dono não está nesta tabela.** Ele é o `Tenant.loginEmail`, não aparece na
- * lista e não pode ser removido pela tela. É de propósito: é o caminho de volta
- * se a equipe se trancar fora da própria loja, e é quem responde pela
- * assinatura.
+ * **O dono principal não está nesta tabela.** Ele é o `Tenant.loginEmail`, não
+ * aparece na lista e não pode ser removido pela tela. É de propósito: é o
+ * caminho de volta se a equipe se trancar fora da própria loja, e é quem
+ * responde pela assinatura.
+ *
+ * Sócios entram aqui com o papel `DONO` (acesso total). Eles podem mexer em
+ * qualquer acesso da equipe, mas nunca no dono principal.
  */
 
 /** O que cada papel pode fazer. */
-export type Papel = "DONO" | "GERENTE" | "OPERADOR";
+export type { Papel };
 
 /**
  * Permissões, por papel.
@@ -51,7 +55,7 @@ export function permite(papel: Papel, o_que: Permissao): boolean {
   return (PODE[o_que] as readonly Papel[]).includes(papel);
 }
 
-export const PAPEIS: Array<{ valor: Exclude<Papel, "DONO">; rotulo: string; explica: string }> = [
+export const PAPEIS: Array<{ valor: Papel; rotulo: string; explica: string }> = [
   {
     valor: "GERENTE",
     rotulo: "Gerente",
@@ -61,6 +65,11 @@ export const PAPEIS: Array<{ valor: Exclude<Papel, "DONO">; rotulo: string; expl
     valor: "OPERADOR",
     rotulo: "Balcão",
     explica: "Vê e despacha pedidos. Não altera preço, produto nem configuração.",
+  },
+  {
+    valor: "DONO",
+    rotulo: "Dono",
+    explica: "Acesso total, igual ao do dono da loja: assinatura, notas fiscais e quem tem acesso. Use só para sócios.",
   },
 ];
 
@@ -129,7 +138,7 @@ export async function criarOperador(
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new ErroOperador("E-mail inválido.");
   if (dados.senha) conferirForcaDaSenha(dados.senha);
 
-  const papel = dados.papel === "GERENTE" ? "GERENTE" : "OPERADOR";
+  const papel = papelDe(dados.papel);
 
   // O dono é o `Tenant.loginEmail`. Deixar alguém criar um operador com o
   // mesmo e-mail criaria duas senhas para a mesma pessoa, e a entrada ficaria
@@ -190,7 +199,7 @@ export async function atualizarOperador(
     if (nome.length < 2) throw new ErroOperador("Informe o nome.");
     mudanca.nome = nome;
   }
-  if (dados.papel != null) mudanca.papel = dados.papel === "GERENTE" ? "GERENTE" : "OPERADOR";
+  if (dados.papel != null) mudanca.papel = papelDe(dados.papel);
   if (dados.ativo != null) mudanca.ativo = dados.ativo;
   if (dados.senha) {
     conferirForcaDaSenha(dados.senha);
@@ -244,7 +253,7 @@ export async function autenticar(loja: Tenant, email: string, senha: string): Pr
   await prisma.operadorLoja.update({ where: { id: op.id }, data: { ultimoAcessoEm: new Date() } });
   return {
     tenant: loja,
-    papel: op.papel === "GERENTE" ? "GERENTE" : "OPERADOR",
+    papel: papelDe(op.papel),
     operador: { id: op.id, nome: op.nome, email: op.email },
   };
 }
@@ -273,7 +282,7 @@ export async function identificarPorEmail(email: string): Promise<QuemEntrou | n
   await prisma.operadorLoja.update({ where: { id: op.id }, data: { ultimoAcessoEm: new Date() } });
   return {
     tenant: op.tenant,
-    papel: op.papel === "GERENTE" ? "GERENTE" : "OPERADOR",
+    papel: papelDe(op.papel),
     operador: { id: op.id, nome: op.nome, email: op.email },
   };
 }

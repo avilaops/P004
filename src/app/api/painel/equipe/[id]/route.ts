@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 const Mudanca = z.object({
   nome: z.string().min(2).optional(),
-  papel: z.enum(["GERENTE", "OPERADOR"]).optional(),
+  papel: z.enum(["DONO", "GERENTE", "OPERADOR"]).optional(),
   ativo: z.boolean().optional(),
   senha: z.string().min(8).optional(),
 });

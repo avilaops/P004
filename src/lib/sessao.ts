@@ -2,6 +2,7 @@ import { createHmac, randomBytes, scryptSync, timingSafeEqual } from "node:crypt
 import { cookies, headers } from "next/headers";
 import type { Tenant } from "@prisma/client";
 import { prisma } from "./db";
+import { papelDe } from "./papel";
 
 /**
  * Sessão do lojista no painel (lojas.avilaops.com/painel).
@@ -125,7 +126,7 @@ export function resolverSessaoDoPainel(tenant: Tenant | null, operadorId: string
   if (!op) return null;
   return {
     tenant,
-    papel: op.papel === "GERENTE" ? "GERENTE" as const : "OPERADOR" as const,
+    papel: papelDe(op.papel),
     operador: { id: op.id, nome: op.nome, email: op.email },
   };
 }

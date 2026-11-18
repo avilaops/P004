@@ -1,6 +1,7 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
 import { conferirForcaDaSenha, ErroOperador, normalizarEmail, PAPEIS, PODE, permite } from "./operadores";
+import { papelDe } from "./papel";
 
 /**
  * As regras de quem pode o quê. É onde um erro passa despercebido e vira
@@ -51,10 +52,21 @@ test("todo papel enxerga pedido: é o trabalho do dia", () => {
   assert.equal(permite("OPERADOR", "pedidos"), true);
 });
 
-test("a tela não oferece criar outro dono", () => {
-  // O dono é o Tenant.loginEmail, e não um operador: oferecer o papel na tela
-  // criaria duas contas donas da mesma loja, sem dizer qual manda.
-  assert.deepEqual(PAPEIS.map((p) => p.valor).sort(), ["GERENTE", "OPERADOR"]);
+test("a tela oferece Dono para sócios, além de Gerente e Balcão", () => {
+  // O dono principal continua sendo o Tenant.loginEmail (fora da tabela, e sem
+  // botão de desligar). Sócios entram como operadores com papel DONO.
+  assert.deepEqual(PAPEIS.map((p) => p.valor).sort(), ["DONO", "GERENTE", "OPERADOR"]);
+});
+
+test("papel gravado vira papel de sessão, e o desconhecido cai no menor", () => {
+  assert.equal(papelDe("DONO"), "DONO");
+  assert.equal(papelDe("GERENTE"), "GERENTE");
+  assert.equal(papelDe("OPERADOR"), "OPERADOR");
+  // Lixo ou papel antigo nunca pode abrir mais acesso do que o combinado.
+  assert.equal(papelDe("dono"), "OPERADOR");
+  assert.equal(papelDe("ADMIN"), "OPERADOR");
+  assert.equal(papelDe(null), "OPERADOR");
+  assert.equal(papelDe(undefined), "OPERADOR");
 });
 
 test("cada papel oferecido explica o que faz", () => {

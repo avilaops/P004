@@ -1,0 +1,18 @@
+User-Agent: *
+Content-Signal: search=yes, ai-input=yes, ai-train=no
+Allow: /
+Disallow: /carrinho
+Disallow: /checkout
+Disallow: /pedido/
+Disallow: /conta$
+Disallow: /conta/
+Disallow: /api/
+
+User-Agent: GPTBot
+User-Agent: Google-Extended
+User-Agent: ClaudeBot
+User-Agent: CCBot
+Content-Signal: search=yes, ai-input=yes, ai-train=no
+Disallow: /
+
+Sitemap: https://pkvedacoes.com.br/sitemap.xml

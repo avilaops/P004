@@ -41,6 +41,7 @@ type Convite = { situacao: string; detalhe: string };
 const PAPEL: Record<string, { rotulo: string; explica: string }> = {
   GERENTE: { rotulo: "Gerente", explica: "Produtos, preços, pedidos e configurações" },
   OPERADOR: { rotulo: "Balcão", explica: "Vê e despacha pedidos" },
+  DONO: { rotulo: "Dono", explica: "Acesso total: assinatura, notas fiscais e quem tem acesso. Use só para sócios" },
 };
 
 const quando = (iso: string | null) =>
@@ -157,6 +158,24 @@ export default function Equipe({
                 {linhaDoConvite(o) && <span className="block text-xs text-muted-foreground">{linhaDoConvite(o)}</span>}
               </span>
 
+              <select
+                aria-label={`Cargo de ${o.nome}`}
+                className="h-9 rounded-lg border border-border bg-background px-2 text-xs"
+                disabled={ocupado || !o.ativo}
+                value={o.papel}
+                onChange={(e) => {
+                  const novo = PAPEL[e.target.value]?.rotulo ?? e.target.value;
+                  if (confirm(`Mudar o cargo de ${o.nome} para ${novo}?`)) {
+                    chamar(`/api/painel/equipe/${o.id}`, { method: "PATCH", body: JSON.stringify({ papel: e.target.value }) });
+                  }
+                }}
+                title="Mudar o cargo desta pessoa"
+              >
+                {Object.entries(PAPEL).map(([valor, p]) => (
+                  <option key={valor} value={valor}>{p.rotulo}</option>
+                ))}
+              </select>
+
               {conviteLigado && o.ativo && (
                 <button
                   className="btn-secundario inline-flex h-9 items-center gap-1.5 px-3 text-xs"
@@ -271,7 +290,7 @@ export default function Equipe({
                 </label>
               ))}
               <small className="text-xs text-muted-foreground">
-                Assinatura e acessos ficam só com você.
+                Assinatura, notas fiscais e acessos ficam só com o Dono.
               </small>
             </fieldset>
 
