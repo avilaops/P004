@@ -60,10 +60,18 @@ export default function Filtros({
         {extra}
       </div>
 
+      {fichas && fichas.length > 5 && aoEscolher && (
+        <label className="grid gap-1 text-sm font-medium sm:hidden">
+          Todos os filtros
+          <select className="h-11 w-full rounded-lg border border-border bg-background px-3 text-base" value={ativa ?? ""} onChange={(e) => aoEscolher(e.target.value)}>
+            {fichas.map((f) => <option key={f.valor} value={f.valor}>{f.rotulo}</option>)}
+          </select>
+        </label>
+      )}
       {fichas && fichas.length > 0 && aoEscolher && (
         // Rola de lado sem barra: a ficha ativa fica destacada e o toque tem
         // 40px de altura, não os 17px do link sublinhado que havia antes.
-        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className={`-mx-1 ${fichas.length > 5 ? "hidden sm:flex" : "flex"} gap-2 overflow-x-auto px-1 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}>
           {fichas.map((f) => {
             const escolhida = (ativa ?? "") === f.valor;
             return (

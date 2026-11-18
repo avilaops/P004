@@ -22,24 +22,25 @@ export interface ClienteDaLoja {
   pedidos: number;
   pedidosPagos: number;
   gastoCentavos: number;
-  primeiraCompra: Date;
-  ultimaCompra: Date;
+  primeiraCompra: Date | null;
+  ultimaCompra: Date | null;
   endereco: string;
 }
 
 export async function clientesDaLoja(tenantId: string): Promise<ClienteDaLoja[]> {
-  const [compradores, pedidos] = await Promise.all([
+  const [compradores, pedidos, contatos] = await Promise.all([
     prisma.comprador.findMany({ where: { tenantId }, include: { enderecos: true }, orderBy: { criadoEm: "asc" } }),
     prisma.pedido.findMany({
       where: { tenantId },
       select: { clienteEmail: true, clienteNome: true, clienteTelefone: true, clienteDocumento: true, totalCentavos: true, status: true, criadoEm: true },
     }),
+    prisma.contatoAtendimento.findMany({ where: { tenantId }, select: { nome: true, email: true, telefone: true } }),
   ]);
 
   const porEmail = new Map<string, ClienteDaLoja>();
 
   for (const p of pedidos) {
-    const chave = p.clienteEmail.toLowerCase();
+    const chave = p.clienteEmail.trim().toLowerCase();
     const conta = STATUS_VENDA.includes(p.status as (typeof STATUS_VENDA)[number]);
     const atual = porEmail.get(chave);
     if (atual) {
@@ -48,8 +49,8 @@ export async function clientesDaLoja(tenantId: string): Promise<ClienteDaLoja[]>
         atual.pedidosPagos += 1;
         atual.gastoCentavos += p.totalCentavos;
       }
-      if (p.criadoEm < atual.primeiraCompra) atual.primeiraCompra = p.criadoEm;
-      if (p.criadoEm > atual.ultimaCompra) atual.ultimaCompra = p.criadoEm;
+      if (!atual.primeiraCompra || p.criadoEm < atual.primeiraCompra) atual.primeiraCompra = p.criadoEm;
+      if (!atual.ultimaCompra || p.criadoEm > atual.ultimaCompra) atual.ultimaCompra = p.criadoEm;
     } else {
       porEmail.set(chave, {
         email: chave,
@@ -68,7 +69,7 @@ export async function clientesDaLoja(tenantId: string): Promise<ClienteDaLoja[]>
   }
 
   for (const c of compradores) {
-    const chave = c.email.toLowerCase();
+    const chave = c.email.trim().toLowerCase();
     const e = c.enderecos[0];
     const endereco = e ? `${e.logradouro}, ${e.numero} - ${e.bairro}, ${e.cidade}/${e.uf} ${e.cep}` : "";
     const atual = porEmail.get(chave);
@@ -86,12 +87,24 @@ export async function clientesDaLoja(tenantId: string): Promise<ClienteDaLoja[]>
         pedidos: 0,
         pedidosPagos: 0,
         gastoCentavos: 0,
-        primeiraCompra: c.criadoEm,
-        ultimaCompra: c.criadoEm,
+        primeiraCompra: null,
+        ultimaCompra: null,
         endereco,
       });
     }
   }
 
+  for (const contato of contatos) {
+    const atual = porEmail.get(contato.email);
+    if (atual) {
+      if (!atual.telefone) atual.telefone = contato.telefone ?? "";
+    } else {
+      porEmail.set(contato.email, {
+        email: contato.email, nome: contato.nome, telefone: contato.telefone ?? "", documento: "",
+        temConta: false, pedidos: 0, pedidosPagos: 0, gastoCentavos: 0,
+        primeiraCompra: null, ultimaCompra: null, endereco: "",
+      });
+    }
+  }
   return [...porEmail.values()].sort((a, b) => b.gastoCentavos - a.gastoCentavos);
 }

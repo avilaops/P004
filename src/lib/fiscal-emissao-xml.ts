@@ -49,20 +49,22 @@ export function validarRascunhoNfe(xml: string, cnpj: string) {
   return { chave, cnpj, uf, ambiente: ide.tpAmb, serie, numero, total, destinatario: texto(destinatario.CNPJ ?? destinatario.CPF), nomeDestinatario: texto(destinatario.xNome), itens: itens.length };
 }
 
-export function assinarNfe(xml: string, key: string, cert: string) {
+function assinarDocumentoFiscal(xml: string, key: string, cert: string, raiz: "NFe" | "evento", alvo: "infNFe" | "infEvento") {
   const assinatura = new SignedXml({ privateKey: key, publicCert: cert, canonicalizationAlgorithm: "http://www.w3.org/TR/2001/REC-xml-c14n-20010315", signatureAlgorithm: "http://www.w3.org/2000/09/xmldsig#rsa-sha1" });
-  assinatura.addReference({ xpath: `/*[local-name()='NFe' and namespace-uri()='${NFE_NS}']/*[local-name()='infNFe' and namespace-uri()='${NFE_NS}']`, digestAlgorithm: "http://www.w3.org/2000/09/xmldsig#sha1", transforms: ["http://www.w3.org/2000/09/xmldsig#enveloped-signature", "http://www.w3.org/TR/2001/REC-xml-c14n-20010315"] });
+  assinatura.addReference({ xpath: `/*[local-name()='${raiz}' and namespace-uri()='${NFE_NS}']/*[local-name()='${alvo}' and namespace-uri()='${NFE_NS}']`, digestAlgorithm: "http://www.w3.org/2000/09/xmldsig#sha1", transforms: ["http://www.w3.org/2000/09/xmldsig#enveloped-signature", "http://www.w3.org/TR/2001/REC-xml-c14n-20010315"] });
   assinatura.computeSignature(xml, { location: { reference: "/*", action: "append" } });
   const xmlAssinado = assinatura.getSignedXml().replace(/^<\?xml[^?]*\?>\s*/, "");
   const verificacao = new SignedXml({ publicCert: cert });
   verificacao.loadSignature(assinatura.getSignatureXml());
   if (!verificacao.checkSignature(xmlAssinado) || verificacao.getSignedReferences().length !== 1) throw new ErroFiscal("Não foi possível conferir a assinatura da NF-e preparada.");
-  const digest = texto(bloco(bloco(bloco(bloco(lerXmlNfe(xmlAssinado).NFe).Signature).SignedInfo).Reference).DigestValue);
+  const digest = texto(bloco(bloco(bloco(bloco(lerXmlNfe(xmlAssinado)[raiz]).Signature).SignedInfo).Reference).DigestValue);
   if (!digest) throw new ErroFiscal("Assinatura fiscal sem digest.");
   return { xmlAssinado, digest, resumoHash: createHash("sha256").update(xmlAssinado).digest("hex") };
 }
+export const assinarNfe = (xml: string, key: string, cert: string) => assinarDocumentoFiscal(xml, key, cert, "NFe", "infNFe");
+export const assinarEventoNfe = (xml: string, key: string, cert: string) => assinarDocumentoFiscal(xml, key, cert, "evento", "infEvento");
 
-type Operacao = "autorizar" | "consultar";
+type Operacao = "autorizar" | "consultar" | "cancelar";
 /** Catálogo oficial consultado em16/11/2026. Nunca recebe URL do navegador. */
 export function destinoNfe(uf: string, ambiente: string, operacao: Operacao): string {
   if (!UFS_FISCAIS[uf] || !["1", "2"].includes(ambiente)) throw new ErroFiscal("UF ou ambiente fiscal inválido.");
@@ -80,9 +82,12 @@ export function destinoNfe(uf: string, ambiente: string, operacao: Operacao): st
     MA: [prod ? "https://www.sefazvirtual.fazenda.gov.br" : "https://hom.sefazvirtual.fazenda.gov.br", "NFeAutorizacao4/NFeAutorizacao4.asmx", "NFeConsultaProtocolo4/NFeConsultaProtocolo4.asmx"],
   };
   const proprio = simples[uf];
-  if (proprio) return `${proprio[0]}/${proprio[operacao === "autorizar" ? 1 : 2]}`;
+  if (proprio) {
+    const eventos: Record<string, string> = { SP: "nferecepcaoevento4.asmx", AM: "RecepcaoEvento4", MT: "RecepcaoEvento4", BA: "NFeRecepcaoEvento4/NFeRecepcaoEvento4.asmx", MA: "NFeRecepcaoEvento4/NFeRecepcaoEvento4.asmx" };
+    return `${proprio[0]}/${operacao === "cancelar" ? eventos[uf] ?? "NFeRecepcaoEvento4" : proprio[operacao === "autorizar" ? 1 : 2]}`;
+  }
   const host = uf === "RS" ? (prod ? "nfe.sefazrs.rs.gov.br" : "nfe-homologacao.sefazrs.rs.gov.br") : (prod ? "nfe.svrs.rs.gov.br" : "nfe-homologacao.svrs.rs.gov.br");
-  return `https://${host}/ws/${operacao === "autorizar" ? "NfeAutorizacao/NFeAutorizacao4.asmx" : "NfeConsulta/NfeConsulta4.asmx"}`;
+  return `https://${host}/ws/${operacao === "cancelar" ? "recepcaoevento/recepcaoevento4.asmx" : operacao === "autorizar" ? "NfeAutorizacao/NFeAutorizacao4.asmx" : "NfeConsulta/NfeConsulta4.asmx"}`;
 }
 
 export function envelopeEmissao(xml: string, chave: string) {
@@ -110,11 +115,12 @@ export function lerRespostaNfe(xml: string, esperado: { chave: string; ambiente:
   const prot = retorno.protNFe === undefined ? null : bloco(retorno.protNFe);
   const inf = prot ? bloco(prot.infProt) : retorno;
   if (prot && (inf.chNFe !== esperado.chave || inf.tpAmb !== esperado.ambiente)) throw new ErroFiscal("Protocolo de outra chave ou ambiente fiscal.");
-  const codigo = texto(inf.cStat), motivo = texto(inf.xMotivo).slice(0, 400);
+  const cancelada = ["101", "151"].includes(texto(retorno.cStat));
+  const codigo = texto(cancelada ? retorno.cStat : inf.cStat), motivo = texto(cancelada ? retorno.xMotivo : inf.xMotivo).slice(0, 400);
   if (!/^\d{3}$/.test(codigo)) throw new ErroFiscal("Resposta fiscal sem código válido.");
-  const autorizada = prot && ["100", "150"].includes(codigo);
+  const autorizada = prot && ["100", "150"].includes(texto(inf.cStat));
   if (["101", "151"].includes(codigo) && retorno.chNFe !== esperado.chave) throw new ErroFiscal("Cancelamento sem confirmação da mesma chave fiscal.");
   if (autorizada && (inf.digVal !== esperado.digest || !/^\d{15}$/.test(texto(inf.nProt)))) throw new ErroFiscal("Protocolo sem digest ou identificação correspondente.");
-  const status = autorizada ? "AUTORIZADA" : ["101", "151"].includes(codigo) ? "CANCELADA" : ["110", "205", "301", "302", "303"].includes(codigo) ? "DENEGADA" : ["103", "104", "105", "106", "108", "109", "204", "217", "539", "656", "999"].includes(codigo) ? "PENDENTE_CONFERENCIA" : "REJEITADA";
-  return { status, codigo, motivo, protocolo: autorizada ? texto(inf.nProt) : null, protocoloXml: autorizada ? builder.build({ protNFe: { ...prot, "@_xmlns": NFE_NS, "@_versao": "4.00" } }) as string : null };
+  const status = cancelada || ["101", "151"].includes(codigo) ? "CANCELADA" : autorizada ? "AUTORIZADA" : ["110", "205", "301", "302", "303"].includes(codigo) ? "DENEGADA" : ["103", "104", "105", "106", "108", "109", "204", "217", "539", "656", "999"].includes(codigo) ? "PENDENTE_CONFERENCIA" : "REJEITADA";
+  return { status, codigo, motivo, protocolo: autorizada && !cancelada ? texto(inf.nProt) : null, protocoloXml: autorizada && !cancelada ? builder.build({ protNFe: { ...prot, "@_xmlns": NFE_NS, "@_versao": "4.00" } }) as string : null };
 }

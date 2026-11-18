@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { PALETA_ATELIE } from "@/lib/atelie";
+import { ehTemplateRodas, mudarModoTemplateRodas, selecionarTemplateRodas } from "@/lib/templates-rodas";
 import { LAYOUTS, type TemaLoja } from "@/lib/tema";
 import { LIMITE_RASCUNHO, codificarRascunho } from "@/lib/previa-tema";
 import { criarDirecaoVisual, PERSONALIDADES, SEGMENTOS, type IdentidadeLoja } from "@/lib/identidade";
@@ -240,7 +241,7 @@ export default function Marca({
         <Secao titulo={BLOCOS.visual.titulo} descricao="O que dá a cara da loja. Troque e veja na loja na hora.">
           <div className="grid gap-4 sm:grid-cols-2">
             <Campo label="Cor principal"><div className="flex gap-2"><input type="color" aria-label="Escolher cor principal" value={tema.corPrimaria} onChange={(e) => setTema({ ...tema, corPrimaria: e.target.value })} className="h-11 w-14 rounded-lg border border-border" /><input className={inputClasse} value={tema.corPrimaria} onChange={(e) => setTema({ ...tema, corPrimaria: e.target.value })} /></div></Campo>
-            <Campo label="Modo"><select className={inputClasse} value={tema.modo} onChange={(e) => setTema({ ...tema, modo: e.target.value as TemaLoja["modo"] })}>{Object.entries(MODO).map(([v, n]) => <option value={v} key={v}>{n}</option>)}</select></Campo>
+            <Campo label="Modo"><select className={inputClasse} value={tema.modo} onChange={(e) => { const modo = e.target.value as TemaLoja["modo"]; setTema(ehTemplateRodas(tema.layout) ? mudarModoTemplateRodas(tema, modo) : { ...tema, modo }); }}>{Object.entries(MODO).map(([v, n]) => <option value={v} key={v}>{n}</option>)}</select></Campo>
             <Campo label="Fonte"><select className={inputClasse} value={tema.fonte} onChange={(e) => setTema({ ...tema, fonte: e.target.value as TemaLoja["fonte"] })}>{FONTES.map((f) => <option value={f.valor} key={f.valor}>{f.rotulo}</option>)}</select></Campo>
             <Campo label="Cantos"><select className={inputClasse} value={tema.raio} onChange={(e) => setTema({ ...tema, raio: e.target.value as TemaLoja["raio"] })}>{Object.entries(RAIO).map(([v, n]) => <option value={v} key={v}>{n}</option>)}</select></Campo>
           </div>
@@ -262,7 +263,7 @@ export default function Marca({
                 <p className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">O Ateliê está desligado neste ambiente. A loja publicada usa o Clássico até a bandeira ser ligada. O tema salvo não muda.</p>
               )}
               {layouts.map((l) => (
-                <button key={l.valor} type="button" aria-pressed={tema.layout === l.valor} onClick={() => setTema(l.valor === "atelie" && tema.layout !== "atelie" ? { ...tema, ...PALETA_ATELIE, layout: "atelie" } : { ...tema, layout: l.valor })} className={`min-h-[44px] rounded-xl border p-3 text-left text-sm ${tema.layout === l.valor ? "border-foreground bg-muted" : "border-border"}`}>
+                <button key={l.valor} type="button" aria-pressed={tema.layout === l.valor} onClick={() => setTema(ehTemplateRodas(l.valor) && tema.layout !== l.valor ? selecionarTemplateRodas(tema, l.valor) : l.valor === "atelie" && tema.layout !== "atelie" ? { ...tema, ...PALETA_ATELIE, layout: "atelie" } : { ...tema, layout: l.valor })} className={`min-h-[44px] rounded-xl border p-3 text-left text-sm ${tema.layout === l.valor ? "border-foreground bg-muted" : "border-border"}`}>
                   <span className="block font-semibold">{l.rotulo}</span>
                   <span className="text-xs text-muted-foreground">{l.descricao}</span>
                 </button>
@@ -301,7 +302,13 @@ export default function Marca({
               </div>
             </Campo>
           </div>
-          {(tema.layout === "distribuidora" || tema.layout === "automotivo" || tema.layout === "atelie") && <fieldset className="mt-6 grid gap-4 rounded-xl border border-border p-4">
+          {ehTemplateRodas(tema.layout) && <fieldset className="mt-6 grid gap-4 rounded-xl border border-border p-4">
+            <legend className="px-2 text-sm font-semibold">Conteúdo do template de rodas</legend>
+            <p className="text-sm text-muted-foreground">A seleção aplica a paleta inicial da referência. Você pode ajustar as cores em Visual antes de salvar. A imagem principal usa o banner cadastrado acima.</p>
+            <Campo label="Título principal"><input className={inputClasse} maxLength={120} value={tema.heroTitulo ?? ""} onChange={e => setTema({ ...tema, heroTitulo: e.target.value })} /></Campo>
+            <Campo label="Texto principal"><textarea className={inputClasse} maxLength={220} value={tema.heroTexto ?? ""} onChange={e => setTema({ ...tema, heroTexto: e.target.value })} /></Campo>
+          </fieldset>}
+          {(ehTemplateRodas(tema.layout) || tema.layout === "distribuidora" || tema.layout === "automotivo" || tema.layout === "atelie") && <fieldset className="mt-6 grid gap-4 rounded-xl border border-border p-4">
             <legend className="px-2 text-sm font-semibold">Carrossel de campanhas em imagem</legend>
             <p className="text-sm text-muted-foreground">A chamada e qualquer condição comercial devem estar dentro da arte. Use apenas preço e desconto aprovados para a campanha.</p>
             {campanhas.map((campanha, indice) => <div key={indice} className="grid gap-3 rounded-lg border border-border p-3 sm:grid-cols-2">

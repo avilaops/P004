@@ -77,8 +77,10 @@ test("testar conexão só confere a chave e o nome, em português", async () => 
   assert.equal(nome.ok, false);
   assert.match(nome.ok ? "" : nome.mensagem, /nome de quem recebe/);
 
-  const ok = await definicaoPixManual.testarConexao({ segredos: {}, publicos: { chavePix: " Loja@Exemplo.com ", nomeRecebedor: NOME } });
+  const ok = await definicaoPixManual.testarConexao({ segredos: {}, publicos: { chavePix: " Loja@Exemplo.invalid ", nomeRecebedor: NOME } });
   assert.equal(ok.ok, true);
+  assert.match(ok.mensagem, /Formato válido/);
+  assert.match(ok.mensagem, /banco.*pertence ao recebedor/);
   assert.equal(ok.ok && ok.conta, NOME);
   assert.ok(ok.avisos.some((a) => /confirmação automática/i.test(a)));
 });

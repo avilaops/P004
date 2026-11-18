@@ -1,0 +1,255 @@
+/* Cada composição é contida pelo mesmo data-layout no storefront e na prévia. */
+[data-layout^="rodas-"] { background: #f7f7f7; color: #252525; font-family: var(--font-sans, Arial, Helvetica, sans-serif); }
+[data-layout^="rodas-"] *, [data-layout^="rodas-"] *::before, [data-layout^="rodas-"] *::after { box-sizing: border-box; }
+.rw-wrap { width: calc(100% - 36px); max-width: 1170px; margin: 0 auto; }
+.rw-header a, .rw-home a, .rw-footer a { text-decoration: none; color: inherit; }
+.rw-announcement { margin: 0; padding: 6px 16px; text-align: center; background: #252527; color: #eee; font-size: 10px; }
+.rw-header a:hover, .rw-home a:hover, .rw-footer a:hover { text-decoration: underline; }
+.rw-header a:focus-visible, .rw-home a:focus-visible, .rw-footer a:focus-visible, .rw-header button:focus-visible, .rw-home button:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.rw-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.rw-top { min-height: 30px; font-size: 10px; text-transform: uppercase; }
+.rw-top > div { display: flex; justify-content: space-between; align-items: center; min-height: 30px; gap: 12px; }
+.rw-top nav { display: flex; gap: 20px; }
+.rw-header-main { display: flex; align-items: center; justify-content: space-between; gap: 30px; min-height: 126px; }
+.rw-logo { display: flex; align-items: center; gap: 12px; min-width: 0; max-width: 40%; }
+.rw-logo img { max-width: 210px; max-height: 72px; object-fit: contain; }
+.rw-logo strong { display: block; overflow-wrap: anywhere; font-size: 35px; font-weight: 900; font-style: italic; line-height: .95; text-transform: uppercase; letter-spacing: -1px; }
+.rw-logo > span { display: block; margin-top: 5px; font-size: 17px; font-style: italic; font-weight: 700; }
+.rw-wordmark { min-width: 0; }
+.rw-wordmark small { display: block; margin-top: 5px; font-size: .7em; font-weight: 600; }
+.rw-header-right { width: 56%; max-width: 560px; }
+.rw-account { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 20px; margin-bottom: 18px; font-size: 10px; text-transform: uppercase; }
+.rw-cart { display: inline-flex; align-items: center; gap: 6px; }
+.rw-header-search { display: flex; align-items: center; justify-content: flex-end; gap: 22px; }
+.rw-header-phone { display: inline-flex; align-items: center; gap: 9px; white-space: nowrap; font-size: 17px; }
+.rw-search { display: flex; align-items: stretch; width: 100%; max-width: 430px; height: 34px; background: #fff; color: #333; border: 1px solid #ccc; }
+.rw-search input { width: 100%; min-width: 0; padding: 0 11px; background: transparent; border: 0; color: #333; font: 12px Arial, sans-serif; }
+.rw-search button { display: grid; width: 40px; flex: none; place-items: center; border: 0; cursor: pointer; color: #fff; background: #222; }
+.rw-nav { display: flex; background: #252527; color: #fff; min-height: 60px; overflow-x: auto; }
+.rw-nav a { display: flex; flex: 1 0 110px; justify-content: center; align-items: center; padding: 12px 18px; border-right: 1px solid #414144; font-size: 11px; line-height: 1.35; font-weight: 700; text-transform: uppercase; text-align: center; }
+.rw-nav a:first-child { background: var(--primary); color: var(--primary-foreground); }
+.rw-home { background: #fff; }
+.rw-hero { position: relative; overflow: hidden; }
+.rw-hero-link { display: block; position: relative; aspect-ratio: 2.55; overflow: hidden; }
+.rw-hero-link > img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rw-hero-copy { position: absolute; top: 8%; right: 7%; max-width: 47%; text-transform: uppercase; }
+.rw-hero-signature { display: block; font-size: clamp(25px, 4vw, 56px); font-style: italic; line-height: 1; font-weight: 900; letter-spacing: -2px; }
+.rw-hero h1 { margin: 6px 0 0; font-size: clamp(15px, 2vw, 27px); font-weight: 300; line-height: 1.1; color: #666; }
+.rw-hero h1 strong, .rw-hero h1 span { display: block; }
+.rw-hero-prev, .rw-hero-next { position: absolute; top: 45%; display: grid; place-items: center; width: 32px; height: 42px; background: #18181880; border: 0; color: #fff; cursor: pointer; }
+.rw-hero-prev { left: 0; }.rw-hero-next { right: 0; }
+.rw-hero-dots { display: flex; position: absolute; right: 16px; bottom: 16px; padding: 6px 8px; gap: 7px; background: #222; }
+.rw-hero-dots button { height: 10px; width: 10px; padding: 0; border: 0; border-radius: 50%; background: #a4a4a4; cursor: pointer; }
+.rw-hero-dots button[aria-pressed="true"] { background: var(--primary); }
+.rw-brands { display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 18px; min-height: 70px; padding: 15px 24px; background: #fafafa; }
+.rw-brands a { color: #404044; font-size: 19px; font-weight: 800; font-style: italic; text-transform: uppercase; }
+.rw-brands img { display: block; width: 115px; max-width: 100%; height: 36px; object-fit: contain; }
+.rw-main { padding: 0 28px 24px; }
+.rw-section { padding-top: 28px; }
+.rw-section > h2 { margin: 0 0 20px; color: #242424; font-size: 17px; font-weight: 400; text-transform: uppercase; }
+.rw-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 24px; }
+.rw-product { min-width: 0; display: flex; flex-direction: column; position: relative; background: #fff; }
+.rw-product-photo { position: relative; display: flex; align-items: center; justify-content: center; aspect-ratio: 1; overflow: hidden; background: #fff; }
+.rw-product-photo > img { display: block; width: 100%; height: 100%; padding: 9px; object-fit: contain; }
+.rw-no-photo { display: grid; place-items: center; width: 100%; height: 100%; color: #666; font-size: 11px; background: #f5f5f5; }
+.rw-image-label { position: absolute; bottom: 3px; left: 3px; padding: 2px 4px; background: #ffffffdf; color: #555; font-size: 9px; }
+.rw-sale { position: absolute; top: 0; left: 0; padding: 5px 10px; background: var(--primary); color: var(--primary-foreground); font-size: 10px; font-weight: 700; text-transform: uppercase; }
+.rw-product-info { display: flex; flex: 1; flex-direction: column; padding-top: 13px; }
+.rw-product-name { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; min-height: 30px; font-size: 12px; font-weight: 600; line-height: 1.35; }
+.rw-product-description { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; height: 30px; margin: 8px 0 0; color: #777; font-size: 11px; line-height: 1.4; }
+.rw-product-bottom { margin-top: auto; padding-top: 10px; }
+.rw-price { margin: 0 0 10px; font-size: 15px; font-weight: 400; color: #242424; }
+.rw-price del { padding-left: 6px; color: #757575; font-size: 11px; }
+.rw-product-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.rw-add, .rw-view { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 29px; border: 0; padding: 5px 11px; font: 11px Arial, sans-serif; cursor: pointer; }
+.rw-product-actions .rw-view { background: var(--primary); color: var(--primary-foreground); }
+.rw-add { background: var(--primary); color: var(--primary-foreground); }
+.rw-empty { padding: 45px 16px; color: #777; font-size: 13px; }
+.rw-footer { margin-top: 35px; padding: 42px 0 0; color: #555; background: #efefef; }
+.rw-footer-columns { display: grid; grid-template-columns: repeat(3, 1fr) 1.4fr; gap: 30px; }
+.rw-footer h2 { margin: 0 0 18px; color: #222; font-size: 12px; font-weight: 500; text-transform: uppercase; }
+.rw-footer section > a { display: block; width: fit-content; margin-bottom: 10px; font-size: 11px; }
+.rw-footer-contact p, .rw-footer-contact > a { display: flex !important; align-items: start; gap: 12px; font-size: 11px; line-height: 1.5; }
+.rw-footer-contact svg { flex: none; color: var(--primary); }
+.rw-copyright { margin-top: 30px; padding: 20px 0; font-size: 10px; }
+
+/* 1 • Cabeçalho vermelho, banner claro e duas vitrines de cinco produtos. */
+[data-layout="rodas-street"] .rw-header { color: var(--primary-foreground); background: var(--primary); }
+[data-layout="rodas-street"] .rw-top { background: color-mix(in srgb, var(--primary), #000 12%); }
+[data-layout="rodas-street"] .rw-section > h2 { color: var(--primary); }
+[data-layout="rodas-street"] .rw-section { padding-top: 30px; }
+[data-layout="rodas-street"] .rw-header-main { min-height: 178px; }
+[data-layout="rodas-street"] .rw-logo strong { font-size: 44px; }
+[data-layout="rodas-street"] .rw-hero-link { aspect-ratio: 2.3; }
+[data-layout="rodas-street"] .rw-brands { min-height: 100px; }
+[data-layout="rodas-street"] .rw-product-name { font-size: 14px; min-height: 36px; }
+[data-layout="rodas-street"] .rw-product-description { font-size: 12px; height: 34px; }
+[data-layout="rodas-street"] .rw-main { padding-bottom: 34px; }
+[data-layout="rodas-street"] .rw-product { border: 0; }
+
+/* 2 • Moldura preta, cabeçalho amarelo e cartões com rodapé preto. */
+[data-layout="rodas-racing"] { background: #202020; }
+[data-layout="rodas-racing"] .rw-wrap { max-width: 1100px; }
+[data-layout="rodas-racing"] .rw-header { color: var(--primary-foreground); background: var(--primary); padding-bottom: 26px; }
+[data-layout="rodas-racing"] .rw-top { background: color-mix(in srgb, var(--primary), #000 6%); }
+[data-layout="rodas-racing"] .rw-header-main { min-height: 168px; }
+[data-layout="rodas-racing"] .rw-logo strong { font-size: 44px; }
+[data-layout="rodas-racing"] .rw-hero { margin-top: -26px; }
+[data-layout="rodas-racing"] .rw-hero-link { aspect-ratio: 2.65; }
+[data-layout="rodas-racing"] .rw-hero-copy { top: 32%; right: 9%; max-width: 42%; }
+[data-layout="rodas-racing"] .rw-hero-signature { font-size: 36px; }
+[data-layout="rodas-racing"] .rw-hero h1 { font-size: 34px; font-style: italic; font-weight: 900; color: #171717; text-shadow: 1px 1px #fff; }
+[data-layout="rodas-racing"] .rw-hero h1 strong { font-size: 24px; }
+[data-layout="rodas-racing"] .rw-main { padding: 0; }
+[data-layout="rodas-racing"] .rw-section { padding: 28px 36px 34px; border-top: 5px solid #222; }
+[data-layout="rodas-racing"] .rw-section h2 { font-size: 19px; font-weight: 900; font-style: italic; }
+[data-layout="rodas-racing"] .rw-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; }
+[data-layout="rodas-racing"] .rw-product { border: 1px solid #e5e5e5; }
+[data-layout="rodas-racing"] .rw-product-info { padding: 13px; color: #eee; background: #141414; }
+[data-layout="rodas-racing"] .rw-product-name { text-transform: uppercase; font-size: 11px; color: #e4e4e4; }
+[data-layout="rodas-racing"] .rw-product-description { display: none; }
+[data-layout="rodas-racing"] .rw-product-bottom { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 8px; }
+[data-layout="rodas-racing"] .rw-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px; color: #e4e4e4; font-size: 17px; margin-bottom: 0; }
+[data-layout="rodas-racing"] .rw-price del { padding-left: 0; }
+[data-layout="rodas-racing"] .rw-view { display: none; }
+[data-layout="rodas-racing"] .rw-product-actions { justify-content: end; }
+[data-layout="rodas-racing"] .rw-add { min-height: 25px; padding: 4px; background: #fff; color: #141414; }
+[data-layout="rodas-racing"] .rw-add span { display: none; }
+[data-layout="rodas-racing"] .rw-brands { min-height: 95px; background: #121212; }
+[data-layout="rodas-racing"] .rw-brands a { color: #919191; }
+[data-layout="rodas-racing"] .rw-brands img { filter: grayscale(1); opacity: .65; }
+[data-layout="rodas-racing"] .rw-footer { margin-top: 0; color: #aaa; background: #111; }
+[data-layout="rodas-racing"] .rw-footer h2 { color: #eee; }
+
+/* 3 • Preto e amarelo, três coleções e grade de quatro produtos. */
+[data-layout="rodas-night"] { background: #191a1d; color: #aaa; }
+[data-layout="rodas-night"] .rw-wrap { max-width: 1000px; }
+[data-layout="rodas-night"] .rw-header { color: #aaa; background: #191a1d; }
+[data-layout="rodas-night"] .rw-top { background: #202124; }
+[data-layout="rodas-night"] .rw-header-main { min-height: 154px; }
+[data-layout="rodas-night"] .rw-header-phone { color: var(--primary); }
+[data-layout="rodas-night"] .rw-nav { margin-bottom: 0; background: transparent; min-height: 48px; }
+[data-layout="rodas-night"] .rw-nav a { flex: initial; border: 0; color: #b8b8b8; background: transparent; font-size: 10px; }
+[data-layout="rodas-night"] .rw-nav a:first-child { color: var(--primary); }
+[data-layout="rodas-night"] .rw-home { background: #191a1d; }
+[data-layout="rodas-night"] .rw-hero-link { aspect-ratio: 2.1; }
+[data-layout="rodas-night"] .rw-hero-copy { top: 22%; left: 10%; right: auto; max-width: 65%; }
+[data-layout="rodas-night"] .rw-hero h1 { color: #fff; font-style: italic; font-size: 55px; font-weight: 200; letter-spacing: -2px; }
+[data-layout="rodas-night"] .rw-hero h1 strong { color: var(--primary); font-size: 76px; font-weight: 900; }
+.rw-visual-categories { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; padding: 35px 0; }
+.rw-visual-categories a { position: relative; display: flex; align-items: end; min-height: 150px; padding: 15px; overflow: hidden; color: #fff; }
+.rw-visual-categories img { position: absolute; inset: 0; height: 100%; width: 100%; object-fit: cover; filter: grayscale(1) brightness(.45); }
+.rw-visual-categories span { position: relative; font-size: 30px; font-weight: 200; font-style: italic; text-transform: uppercase; }
+.rw-visual-categories svg { position: absolute; bottom: 0; right: 0; width: 35px; height: 35px; padding: 9px; color: var(--primary-foreground); background: var(--primary); }
+.rw-visual-categories .rw-category-icon { position: static; width: 46px; height: 46px; padding: 0; background: transparent; color: #999; }
+[data-layout="rodas-night"] .rw-main { padding: 0; }
+[data-layout="rodas-night"] .rw-section { padding-top: 0; }
+[data-layout="rodas-night"] .rw-section h2 { padding: 16px 20px; background: #363c42; color: #eee; font-size: 14px; }
+[data-layout="rodas-night"] .rw-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 42px 26px; }
+[data-layout="rodas-night"] .rw-product { background: transparent; }
+[data-layout="rodas-night"] .rw-product-photo { background: #25262a; }
+[data-layout="rodas-night"] .rw-product-name { margin-top: 5px; color: #eee; font-size: 11px; text-transform: uppercase; }
+[data-layout="rodas-night"] .rw-product-description { color: #a0a0a0; }
+[data-layout="rodas-night"] .rw-price { color: var(--primary); font-size: 19px; }
+[data-layout="rodas-night"] .rw-view { display: none; }
+[data-layout="rodas-night"] .rw-add { color: #eee; background: #363c42; }
+[data-layout="rodas-night"] .rw-add > svg { padding: 5px; width: 27px; height: 27px; margin: -5px 0 -5px -11px; color: var(--primary-foreground); background: var(--primary); }
+[data-layout="rodas-night"] .rw-brands { background: transparent; margin-top: 25px; }
+[data-layout="rodas-night"] .rw-brands a { color: #a0a0a0; }
+.rw-bottom-banner { display: flex; align-items: center; min-height: 160px; margin: 32px 0; padding: 28px; color: #fff !important; background: #111 url('/media/templates-rodas/night-hero.png') center/cover; }
+.rw-bottom-banner span { font-size: 33px; font-weight: 300; font-style: italic; }.rw-bottom-banner strong { display: block; font-size: 50px; font-weight: 200; color: var(--primary); }
+[data-layout="rodas-night"] .rw-footer { background: #202124; color: #aaa; }
+[data-layout="rodas-night"] .rw-footer h2 { color: #eee; }
+
+/* 4 • Vitrine branca com coluna lateral e cenário automotivo ao redor. */
+[data-layout="rodas-carbon"] { --rw-link: color-mix(in srgb, var(--primary), #000 50%); background: #fff url('/media/templates-rodas/carbon-background.png') center top/100% auto no-repeat; }
+[data-layout="rodas-carbon"] .rw-wrap { max-width: 1000px; }
+[data-layout="rodas-carbon"] .rw-header { background: #262629; color: #eee; }
+[data-layout="rodas-carbon"] .rw-top { background: #111113; }
+[data-layout="rodas-carbon"] .rw-header-main { min-height: 90px; }
+[data-layout="rodas-carbon"] .rw-nav { min-height: 44px; }
+[data-layout="rodas-carbon"] .rw-nav a { font-size: 11px; text-transform: none; }
+[data-layout="rodas-carbon"] .rw-hero { border-top: 18px solid #fff; }
+[data-layout="rodas-carbon"] .rw-hero-link { aspect-ratio: 3.8; }
+[data-layout="rodas-carbon"] .rw-hero-copy { left: 7%; right: auto; top: 33%; max-width: 50%; }
+[data-layout="rodas-carbon"] .rw-hero h1 { font-size: 31px; font-weight: 200; color: #fff; }
+[data-layout="rodas-carbon"] .rw-hero h1 strong { color: color-mix(in srgb, var(--primary), #fff 30%); font-weight: 300; }
+.rw-catalog-layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 26px; padding: 24px; }
+.rw-sidebar { min-width: 0; }.rw-sidebar section { margin-bottom: 24px; }.rw-sidebar h2 { margin: 0; padding: 14px; background: #29292c; color: #fff; font-size: 13px; text-transform: uppercase; font-weight: 400; }
+.rw-sidebar nav a { display: block; padding: 9px 10px; border-bottom: 1px solid #ddd; color: #666; font-size: 12px; }
+.rw-mini-product { display: flex; gap: 10px; padding-top: 18px; font-size: 11px; line-height: 1.45; }.rw-mini-product > img { width: 70px; height: 80px; object-fit: contain; }.rw-mini-product strong { display: block; margin-top: 4px; font-size: 14px; font-weight: 400; }
+.rw-sidebar-promo { position: relative; display: block; min-height: 210px; overflow: hidden; background: #151515; color: #fff !important; }.rw-sidebar-promo > img { width: 100%; filter: brightness(.5); }.rw-sidebar-promo > span { position: absolute; top: 15px; left: 12px; z-index: 1; font-size: 27px; font-weight: 700; }
+.rw-catalog-main { min-width: 0; }
+[data-layout="rodas-carbon"] .rw-section { padding-top: 0; margin-bottom: 24px; }
+[data-layout="rodas-carbon"] .rw-section > h2 { border-bottom: 1px solid var(--primary); padding: 12px 0; font-size: 13px; }
+[data-layout="rodas-carbon"] .rw-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+[data-layout="rodas-carbon"] .rw-product { border: 1px solid #ddd; text-align: center; }
+[data-layout="rodas-carbon"] .rw-product-photo { aspect-ratio: 1.2; }
+[data-layout="rodas-carbon"] .rw-product-info { padding: 13px 9px 0; }
+[data-layout="rodas-carbon"] .rw-product-name { color: var(--rw-link); font-size: 12px; font-weight: 400; }
+[data-layout="rodas-carbon"] .rw-product-actions { justify-content: center; padding: 11px 3px; margin: 0 -9px; background: #f0f0f0; border-top: 1px solid #ddd; }
+[data-layout="rodas-carbon"] .rw-product-actions .rw-view { background: #454548; color: #fff; }
+[data-layout="rodas-carbon"] .rw-add span { font-size: 10px; }
+[data-layout="rodas-carbon"] .rw-add svg { display: none; }
+.rw-editorial { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; padding: 0 24px 30px; }.rw-editorial section { min-width: 0; border: 1px solid #ddd; padding: 20px; font-size: 12px; line-height: 1.5; }.rw-editorial h2 { font-size: 13px; text-transform: uppercase; margin-bottom: 20px; }.rw-editorial a { display: block; color: var(--rw-link, var(--primary)); padding: 5px 0; }.rw-editorial p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5; overflow: hidden; }
+[data-layout="rodas-carbon"] .rw-brands { display: none; }
+[data-layout="rodas-carbon"] .rw-footer { margin: 0 auto; max-width: 1000px; background: #161618; color: #aaa; padding-left: 25px; padding-right: 25px; }
+[data-layout="rodas-carbon"] .rw-footer h2 { color: #eee; }
+[data-layout="rodas-carbon"] .barra-inferior-aba[data-ativo] { color: var(--rw-link); }
+[data-layout="rodas-racing"] #conteudo-loja:not(:has(.rw-home)) { width: calc(100% - 36px); max-width: 1100px; margin: auto; background: #fff; }
+[data-layout="rodas-carbon"] #conteudo-loja:not(:has(.rw-home)) { width: calc(100% - 36px); max-width: 1000px; margin: auto; background: #fff; }
+[data-layout="rodas-racing"] #conteudo-loja > :not(.rw-home), [data-layout="rodas-carbon"] #conteudo-loja > :not(.rw-home) { background: #fff; }
+
+/* A paleta inicial reproduz a referência; o modo continua sendo editável. */
+[data-modo="escuro"] [data-layout="rodas-carbon"] { --rw-link: color-mix(in srgb, var(--primary), #fff 30%); }
+[data-modo="escuro"] [data-layout^="rodas-"] { color: var(--foreground, #fafafa); }
+[data-modo="escuro"] [data-layout^="rodas-"] .rw-home,
+[data-modo="escuro"] [data-layout^="rodas-"] .rw-product,
+[data-modo="escuro"] [data-layout^="rodas-"] #conteudo-loja:not(:has(.rw-home)),
+[data-modo="escuro"] [data-layout^="rodas-"] #conteudo-loja > :not(.rw-home) { background: var(--background, #191a1d); color: var(--foreground, #fafafa); }
+[data-modo="escuro"] [data-layout^="rodas-"] .rw-section > h2,
+[data-modo="escuro"] [data-layout^="rodas-"] .rw-product-name { color: var(--foreground, #fafafa); }
+[data-modo="escuro"] [data-layout="rodas-street"] .rw-price,
+[data-modo="escuro"] [data-layout="rodas-carbon"] .rw-price { color: var(--foreground, #fafafa); }
+[data-modo="claro"] [data-layout="rodas-night"],
+[data-modo="claro"] [data-layout="rodas-night"] .rw-home,
+[data-modo="claro"] [data-layout="rodas-night"] .rw-header { background: var(--background, #fff); color: var(--foreground, #252525); }
+[data-modo="claro"] [data-layout="rodas-night"] .rw-product-name { color: var(--foreground, #252525); }
+[data-modo="claro"] [data-layout="rodas-night"] .rw-price { color: var(--foreground, #252525); }
+[data-modo="claro"] [data-layout="rodas-night"] .rw-product-description { color: #666; }
+[data-modo="claro"] [data-layout="rodas-night"] .rw-top { color: #b8b8b8; }
+[data-modo="claro"] [data-layout="rodas-night"] .rw-nav a,
+[data-modo="claro"] [data-layout="rodas-night"] .rw-header-phone { color: var(--foreground, #252525); }
+[data-modo="claro"] [data-layout="rodas-night"] .rw-nav a:first-child { color: var(--foreground, #252525); border-bottom: 2px solid var(--primary); }
+[data-modo="escuro"] [data-layout^="rodas-"] .rw-footer { background: var(--muted, #202124); color: var(--muted-foreground, #aaa); }
+[data-modo="escuro"] [data-layout^="rodas-"] .rw-footer h2 { color: var(--foreground, #eee); }
+
+@media (max-width: 760px) {
+  .rw-wrap { width: calc(100% - 24px); }
+  .rw-header-main { min-height: 100px; gap: 16px; }.rw-logo { max-width: 43%; }.rw-logo strong { font-size: 24px; }.rw-logo > span { font-size: 12px; }.rw-logo img { max-width: 140px; max-height: 55px; }
+  .rw-header-right { width: 54%; }.rw-account { gap: 8px; font-size: 9px; margin-bottom: 12px; }.rw-account > span, .rw-header-phone { display: none; }
+  .rw-nav { min-height: 48px; }.rw-nav a { flex-basis: 100px; padding: 9px; font-size: 10px; }
+  .rw-main { padding: 0 16px 24px; }.rw-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+  .rw-product-name { font-size: 11px; }.rw-product-description { font-size: 10px; }.rw-price { font-size: 13px; }
+  .rw-footer-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+  [data-layout="rodas-racing"] .rw-section { padding: 20px; }[data-layout="rodas-racing"] .rw-grid { gap: 12px; }
+  [data-layout="rodas-night"] .rw-hero h1 { font-size: 32px; }[data-layout="rodas-night"] .rw-hero h1 strong { font-size: 44px; }
+  .rw-visual-categories { gap: 12px; padding: 20px 0; }.rw-visual-categories a { min-height: 100px; padding: 10px; }.rw-visual-categories span { font-size: 19px; }
+  .rw-catalog-layout { grid-template-columns: 160px minmax(0, 1fr); gap: 15px; padding: 18px; }[data-layout="rodas-carbon"] .rw-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  [data-layout="rodas-carbon"] .rw-hero h1 { font-size: 21px; }.rw-mini-product > img { width: 50px; height: 60px; }.rw-editorial { gap: 12px; padding: 0 18px 20px; }.rw-editorial section { padding: 12px; }
+}
+@media (max-width: 480px) {
+  .rw-top nav { gap: 10px; }.rw-top > div > span { display: none; }.rw-header-main { min-height: 100px; }.rw-logo strong { font-size: 19px; }.rw-logo > span { font-size: 10px; }.rw-logo img { max-width: 100px; }
+  .rw-search { height: 36px; }.rw-search input { font-size: 16px; }.rw-search button { width: 32px; }.rw-account > a { font-size: 9px; }.rw-account > a:not(.rw-cart) { display: none; }
+  [data-layout="rodas-street"] .rw-logo strong, [data-layout="rodas-racing"] .rw-logo strong { font-size: 24px; }
+  .rw-hero-signature { font-size: 23px; letter-spacing: -1px; }.rw-hero h1 { font-size: 12px; }.rw-hero-copy { top: 10%; right: 5%; }
+  .rw-grid, [data-layout="rodas-racing"] .rw-grid, [data-layout="rodas-night"] .rw-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 14px; }
+  .rw-product-name { font-size: 12px; }.rw-product-actions > a, .rw-add { min-height: 44px; }.rw-section > h2 { font-size: 15px; }.rw-brands { gap: 14px; padding: 16px; min-height: 60px; }.rw-brands a { font-size: 14px; }
+  [data-layout="rodas-racing"] .rw-section { padding: 18px; }[data-layout="rodas-racing"] .rw-hero-signature { font-size: 16px; }[data-layout="rodas-racing"] .rw-hero h1 { font-size: 18px; }[data-layout="rodas-racing"] .rw-hero h1 strong { font-size: 12px; }
+  [data-layout="rodas-racing"] .rw-add { min-height: 44px; min-width: 36px; }
+  [data-layout="rodas-carbon"] .rw-product-actions > * { flex: 1; padding: 5px; }
+  [data-layout="rodas-night"] .rw-hero-copy { left: 7%; top: 24%; }[data-layout="rodas-night"] .rw-hero h1 { font-size: 22px; letter-spacing: -1px; }[data-layout="rodas-night"] .rw-hero h1 strong { font-size: 30px; }
+  .rw-visual-categories { gap: 8px; }.rw-visual-categories a { min-height: 80px; }.rw-visual-categories span { font-size: 14px; }.rw-visual-categories svg { width: 24px; height: 24px; padding: 5px; }.rw-bottom-banner { min-height: 120px; padding: 15px; }.rw-bottom-banner span { font-size: 20px; }.rw-bottom-banner strong { font-size: 28px; }
+  .rw-catalog-layout { display: block; padding: 14px; }.rw-sidebar { display: none; }[data-layout="rodas-carbon"] .rw-hero h1 { font-size: 13px; }.rw-editorial { grid-template-columns: 1fr; }
+  .rw-footer { padding-top: 28px; }.rw-footer-columns { gap: 18px; }.rw-footer h2 { font-size: 11px; }.rw-footer section > a { font-size: 11px; line-height: 1.5; margin-bottom: 12px; }
+}

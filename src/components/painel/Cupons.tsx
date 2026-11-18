@@ -5,6 +5,7 @@ import { Plus, X } from "lucide-react";
 import { Campo, Secao, brl, inputClasse } from "./campos";
 import ListaDeRegistros from "@/components/aplicacao/ListaDeRegistros";
 import Vazio from "@/components/aplicacao/Vazio";
+import { estadoCupom } from "@/lib/vigencia-cupom";
 
 /**
  * Os cupons da loja.
@@ -63,14 +64,16 @@ export default function Cupons({
 
   /** O estado do cupom na língua de quem vende, não a coluna do banco. */
   const estado = (c: CupomView) => {
-    if (!c.ativo) return <span className="text-muted-foreground">desativado</span>;
-    if (c.validoAte && new Date(c.validoAte) < new Date()) return <span className="text-muted-foreground">venceu em {dia(c.validoAte)}</span>;
-    if (c.usosMax && c.usos >= c.usosMax) return <span className="text-muted-foreground">limite atingido</span>;
+    const situacao = estadoCupom(c, agora);
+    if (situacao === "inativo") return <span className="text-muted-foreground">desativado</span>;
+    if (situacao === "vencido" && c.validoAte) return <span className="text-muted-foreground">venceu em {dia(c.validoAte)}</span>;
+    if (situacao === "esgotado") return <span className="text-muted-foreground">limite atingido</span>;
     if (c.validoAte) return <span className="text-emerald-700">vale até {dia(c.validoAte)}</span>;
     return <span className="text-emerald-700">no ar</span>;
   };
 
-  const ativos = cupons.filter((c) => c.ativo);
+  const agora = new Date();
+  const ativos = cupons.filter((c) => estadoCupom(c, agora) === "vigente");
 
   return (
     <>

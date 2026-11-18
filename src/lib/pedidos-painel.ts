@@ -17,6 +17,14 @@ import type { PedidoStatus, Prisma } from "@prisma/client";
 
 export const POR_PAGINA_PEDIDOS = 25;
 
+export function sufixoFilaPedidos(q: string | null, situacao: string | null, pagina: string | null) {
+  const filtros = new URLSearchParams();
+  if (q) filtros.set("q", q);
+  if (situacao) filtros.set("situacao", situacao);
+  if (pagina) filtros.set("pagina", String(paginaValida(pagina)));
+  return filtros.size ? `?${filtros}` : "";
+}
+
 export const SITUACOES_DE_PEDIDO = ["AGUARDANDO_PAGAMENTO", "PAGO", "EM_SEPARACAO", "ENVIADO", "ENTREGUE", "CANCELADO", "ESTORNADO"] as const satisfies readonly PedidoStatus[];
 
 export function filtroDePedidos(params: { tenantId: string; q?: string | null; situacao?: string | null }): Prisma.PedidoWhereInput {

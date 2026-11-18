@@ -65,14 +65,15 @@ test("canal somente conexão não inventa atraso nem operação completa", () =>
     possuiCargaOperacional: false,
   }), AGORA)
 
-  assert.equal(retrato.estado, "saudavel")
+  assert.equal(retrato.estado, "configurado")
   assert.equal(retrato.atrasoMs, null)
   assert.equal(retrato.limitacao, "Somente conexão; catálogo e pedidos ainda não operam por aqui.")
 })
 
 test("loja sem carga operacional não fica atrasada por nunca ter sincronizado", () => {
   const retrato = avaliarSaudeCanal(entrada({ ultimaAtividadeEm: null, possuiCargaOperacional: false }), AGORA)
-  assert.equal(retrato.estado, "saudavel")
+  assert.equal(retrato.estado, "configurado")
+  assert.equal(retrato.ultimoTeste, null)
   assert.equal(retrato.atrasoMs, null)
 })
 

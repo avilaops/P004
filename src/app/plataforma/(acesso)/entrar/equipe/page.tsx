@@ -30,7 +30,7 @@ export default async function EntrarComoEquipePage() {
   const base = (process.env.LOJAS_BASE_DOMAIN ?? "lojas.avilaops.com").toLowerCase();
   const lojas = await prisma.tenant.findMany({
     where: { status: { not: "CANCELADA" } },
-    select: { slug: true, nome: true, status: true, dominioPrincipal: true },
+    select: { slug: true, nome: true, status: true, dominioPrincipal: true, faviconUrl: true },
     orderBy: { nome: "asc" },
   });
 

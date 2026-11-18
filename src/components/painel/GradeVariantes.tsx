@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Campo, inputClasse } from "./campos";
+import { precoDoCatalogoEmCentavos } from "@/lib/valor-em-centavos";
 
 interface Linha { id?: string; valores: Record<string, string>; sku: string; gtin: string; mpn: string; preco: string; estoque: string; pesoKg: string; alturaCm: string; larguraCm: string; comprimentoCm: string; imagem: string; imagemAlterada?: boolean; estoqueAlterado?: boolean }
 
@@ -16,6 +17,11 @@ export default function GradeVariantes({ produtoId, produtoNome, aoFechar, aoSal
   const [erro, setErro] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const [carregado, setCarregado] = useState(false);
+  const titulo = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    titulo.current?.focus({ preventScroll: true });
+    titulo.current?.scrollIntoView({ block: "start" });
+  }, []);
   const [versao, setVersao] = useState<number>();
 
   useEffect(() => {
@@ -48,11 +54,17 @@ export default function GradeVariantes({ produtoId, produtoNome, aoFechar, aoSal
   async function salvar() {
     setErro(null); setOcupado(true);
     try {
-      const centavos = (v: string) => (v.trim() ? Math.round(Number.parseFloat(v.replace(/[^\d,.-]/g, "").replace(",", ".")) * 100) : null);
+      const precos = linhas.map(linha => precoDoCatalogoEmCentavos(linha.preco));
+      const invalida = precos.indexOf(null);
+      if (invalida >= 0) {
+        document.getElementById("preco-variante-" + invalida)?.focus();
+        setErro("Informe um preço válido em reais para " + Object.values(linhas[invalida].valores).join(" • ") + ".");
+        return;
+      }
       const corpo = {
         produtoId, versaoCatalogo:versao,
         opcoes: linhas.length?opcoesValidas.map((o) => o.nome):[],
-        variantes: linhas.map((l) => ({ id: l.id, valores: l.valores, sku: l.sku || null, gtin:l.gtin||null, mpn:l.mpn||null, alturaCm:l.alturaCm?Number(l.alturaCm.replace(",", ".")):null, larguraCm:l.larguraCm?Number(l.larguraCm.replace(",", ".")):null, comprimentoCm:l.comprimentoCm?Number(l.comprimentoCm.replace(",", ".")):null, precoCentavos: centavos(l.preco), estoque: l.estoqueAlterado ? (l.estoque.trim() ? Number(l.estoque) : null) : undefined, pesoKg: l.pesoKg.trim() ? Number.parseFloat(l.pesoKg.replace(",", ".")) : null, imagem: l.imagemAlterada ? l.imagem || null : undefined })),
+        variantes: linhas.map((l, i) => ({ id: l.id, valores: l.valores, sku: l.sku || null, gtin:l.gtin||null, mpn:l.mpn||null, alturaCm:l.alturaCm?Number(l.alturaCm.replace(",", ".")):null, larguraCm:l.larguraCm?Number(l.larguraCm.replace(",", ".")):null, comprimentoCm:l.comprimentoCm?Number(l.comprimentoCm.replace(",", ".")):null, precoCentavos: precos[i], estoque: l.estoqueAlterado ? (l.estoque.trim() ? Number(l.estoque) : null) : undefined, pesoKg: l.pesoKg.trim() ? Number.parseFloat(l.pesoKg.replace(",", ".")) : null, imagem: l.imagemAlterada ? l.imagem || null : undefined })),
       };
       const r = await fetch("/api/painel/variantes", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(corpo) });
       const d = await r.json();
@@ -73,7 +85,7 @@ export default function GradeVariantes({ produtoId, produtoNome, aoFechar, aoSal
     <div className="rounded-2xl border border-primary/40 bg-card p-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="font-semibold">Variações de {produtoNome}</h3>
+          <h3 id="titulo-grade-variantes" className="scroll-mt-20 font-semibold" ref={titulo} tabIndex={-1}>Variações de {produtoNome}</h3>
           <p className="text-sm text-muted-foreground">Ex.: Tamanho: P, M, G · Cor: Preto, Branco. Depois clique em “Gerar grade”, preencha estoque e salve.</p>
         </div>
         <button className="btn-secundario h-9 px-3 text-xs" onClick={aoFechar}>Fechar</button>
@@ -106,7 +118,7 @@ export default function GradeVariantes({ produtoId, produtoNome, aoFechar, aoSal
                       <td><input className={`${inputClasse} h-9`} value={l.sku} onChange={(e) => atualizar(i, "sku", e.target.value)} /></td>
                       <td><input aria-label="GTIN da variação" className={`${inputClasse} h-9`} value={l.gtin} onChange={e=>atualizar(i,"gtin",e.target.value)} /></td>
                       <td><input aria-label="MPN da variação" className={`${inputClasse} h-9`} value={l.mpn} onChange={e=>atualizar(i,"mpn",e.target.value)} /></td>
-                      <td><input className={`${inputClasse} h-9`} placeholder="Obrigatório" value={l.preco} onChange={(e) => atualizar(i, "preco", e.target.value)} /></td>
+                      <td><input id={`preco-variante-${i}`} aria-label={`Preço da variação ${Object.values(l.valores).join(" • ")}`} inputMode="decimal" className={`${inputClasse} h-9`} placeholder="Obrigatório" value={l.preco} onChange={(e) => atualizar(i, "preco", e.target.value)} /></td>
                       <td><input className={`${inputClasse} h-9`} placeholder="∞" value={l.estoque} onChange={(e) => atualizar(i, "estoque", e.target.value)} inputMode="numeric" /></td>
                       <td><input className={`${inputClasse} h-9`} value={l.pesoKg} onChange={(e) => atualizar(i, "pesoKg", e.target.value)} /></td>
                       <td><div className="flex min-w-40 gap-1">{(["alturaCm","larguraCm","comprimentoCm"] as const).map(k=><input key={k} aria-label={k} className={`${inputClasse} h-9 min-w-12`} value={l[k]} onChange={e=>atualizar(i,k,e.target.value)} />)}</div></td>

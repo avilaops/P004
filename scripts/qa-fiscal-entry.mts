@@ -8,6 +8,8 @@ import { salvarProdutoNoCatalogo } from "../src/lib/catalogo-escrita";
 import { emitirToken } from "../src/lib/sessao";
 import forge from "node-forge";
 import { selarCertificado } from "../src/lib/fiscal-certificado";
+import { emitirNfe } from "../src/lib/fiscal-emissao";
+import { cancelarNfe } from "../src/lib/fiscal-cancelamento";
 
 assert.equal(process.env.CI, "true");
 process.env.LOJAS_CERT_SECRET ??= "ab".repeat(32);
@@ -19,7 +21,7 @@ const chave = /<chNFe>(\d{44})<\/chNFe>/.exec(xml)![1];
 const loja = await prisma.tenant.create({ data: { slug: `qa-receber-${randomUUID()}`, nome: "Loja QA Fiscal", status: "ATIVA", cnpj: "11222333000181" } });
 const outra = await prisma.tenant.create({ data: { slug: `qa-receber-outra-${randomUUID()}`, nome: "Outra loja QA", status: "ATIVA" } });
 const browser = await chromium.launch();
-const server = spawn(process.execPath, [".next/standalone/server.js"], { env: { ...process.env, PORT: "3108", HOSTNAME: "0.0.0.0", LOJAS_BASE_DOMAIN: "localhost", ROTINAS_AGENDADOR: "0", LOJAS_INDEXNOW_ENABLED: "false" }, stdio: "inherit" });
+const server = spawn(process.execPath, ["--import", "./scripts/qa-fiscal-sem-sefaz.mjs", ".next/standalone/server.js"], { env: { ...process.env, PORT: "3108", HOSTNAME: "0.0.0.0", LOJAS_BASE_DOMAIN: "localhost", ROTINAS_AGENDADOR: "0", LOJAS_INDEXNOW_ENABLED: "false" }, stdio: "inherit" });
 const cookie = `lojas_sessao=${emitirToken(loja.slug)}`;
 const erros: string[] = [];
 try {
@@ -284,6 +286,56 @@ try {
   }
   const protegidaNfe = await prisma.emissaoFiscalLoja.findUniqueOrThrow({ where: { id: preparadaNfe.id } });
   assert.equal(protegidaNfe.status, "PREPARADA"); assert.equal(protegidaNfe.enviadoEm, null);
+  // Autoriza e cancela exclusivamente pela camada de serviço com transporte
+  // sintético. O servidor compilado bloqueia conexões fiscais externas.
+  await emitirNfe({ tenantId: loja.id, id: preparadaNfe.id, ambiente: "2", resumoHash: preparadaNfe.resumoHash }, async () => `<retEnviNFe><tpAmb>2</tpAmb><cStat>104</cStat><protNFe versao="4.00"><infProt><tpAmb>2</tpAmb><chNFe>${protegidaNfe.chave}</chNFe><digVal>${protegidaNfe.digest}</digVal><nProt>135260000099999</nProt><cStat>100</cStat></infProt></protNFe></retEnviNFe>`);
+  const pedidoAntesCancelamento = await prisma.pedido.findUniqueOrThrow({ where: { id: pedido.id } });
+  const autorizadaAntesCancelamento = await prisma.emissaoFiscalLoja.findUniqueOrThrow({ where: { id: preparadaNfe.id } });
+  const cancelamentoPath = `/api/painel/fiscal/emissoes/${preparadaNfe.id}/cancelamento`;
+  const comandoCancelamento = { confirmacao: true, ambiente: "2", resumoHash: preparadaNfe.resumoHash, justificativa: "Cancelamento exclusivamente sintético de homologação QA." };
+  for (const [credencial, status] of [[undefined, 401], [cookieGerente, 403], [cookieOutra, 404]] as const) {
+    const resposta = await fetch(base + cancelamentoPath, { headers: credencial ? { cookie: credencial } : {} });
+    assert.equal(resposta.status, status); assert.match(resposta.headers.get("cache-control") ?? "", /no-store/);
+  }
+  assert.equal((await fetch(base + `${cancelamentoPath}?formato=xml`, { headers: { cookie } })).status, 409);
+  assert.equal((await fetch(base + cancelamentoPath, { method: "POST", headers: { cookie, origin: "https://other.example", "content-type": "application/json" }, body: JSON.stringify(comandoCancelamento) })).status, 403);
+  assert.equal((await fetch(base + cancelamentoPath, { method: "POST", headers: { cookie, origin: "https://localhost", "content-type": "application/json" }, body: JSON.stringify({ ...comandoCancelamento, confirmacao: false }) })).status, 422);
+  assert.equal((await fetch(base + cancelamentoPath, { method: "POST", headers: { cookie: cookieOutra, origin: "https://localhost", "content-type": "application/json" }, body: JSON.stringify(comandoCancelamento) })).status, 404);
+  let cancelamentosEnviados = 0;
+  await page.route(`**${cancelamentoPath}`, async route => {
+    if (route.request().method() !== "POST") return route.continue();
+    const requestHeaders = await route.request().allHeaders();
+    assert.ok(requestHeaders.cookie?.includes("lojas_sessao="));
+    const corpo = route.request().postDataJSON();
+    const resultado = await cancelarNfe({ ...corpo, tenantId: loja.id, emissaoId: preparadaNfe.id, autor: "qa@example.test" }, async req => {
+      cancelamentosEnviados++; assert.equal(req.operacao, "cancelar");
+      return `<retEnvEvento><tpAmb>2</tpAmb><cStat>128</cStat><retEvento versao="1.00"><infEvento><tpAmb>2</tpAmb><chNFe>${protegidaNfe.chave}</chNFe><tpEvento>110111</tpEvento><nSeqEvento>1</nSeqEvento><nProt>135260000088888</nProt><cStat>135</cStat><xMotivo>QA sintético</xMotivo></infEvento></retEvento></retEnvEvento>`;
+    });
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(resultado) });
+  });
+  await page.reload();
+  await page.getByRole("button", { name: "Conferir dados fiscais", exact: true }).click();
+  await page.getByRole("button", { name: "Revisar NF-e 123", exact: true }).first().click();
+  const cancelamentoUi = page.getByRole("region", { name: "Cancelamento fiscal da NF-e" });
+  await cancelamentoUi.getByText("Solicitar cancelamento desta NF-e", { exact: true }).click();
+  await cancelamentoUi.getByLabel("Justificativa do cancelamento", { exact: true }).fill(comandoCancelamento.justificativa);
+  assert.equal(await cancelamentoUi.getByRole("button", { name: "Cancelar NF-e em homologação", exact: true }).isDisabled(), true);
+  await cancelamentoUi.getByLabel("Confirmo o cancelamento desta NF-e na SEFAZ e a justificativa informada.").check();
+  await cancelamentoUi.getByRole("button", { name: "Cancelar NF-e em homologação", exact: true }).click();
+  await cancelamentoUi.getByRole("status").filter({ hasText: "Cancelamento aceito pela SEFAZ" }).waitFor();
+  assert.equal(cancelamentosEnviados, 1);
+  const comprovante = await fetch(base + `${cancelamentoPath}?formato=xml`, { headers: { cookie } });
+  assert.equal(comprovante.status, 200); assert.match(comprovante.headers.get("cache-control") ?? "", /no-store/); assert.match(await comprovante.text(), /<procEventoNFe/);
+  for (const width of [393, 1440]) {
+    await page.setViewportSize({ width, height: 1100 });
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), `Cancelamento sem overflow em ${width}px`);
+    await page.screenshot({ path: `${output}/cancelamento-direto-${width}.png`, fullPage: true });
+  }
+  const pedidoAposCancelamento = await prisma.pedido.findUniqueOrThrow({ where: { id: pedido.id } });
+  assert.equal(pedidoAposCancelamento.status, pedidoAntesCancelamento.status);
+  assert.equal(pedidoAposCancelamento.pagamentoStatus, pedidoAntesCancelamento.pagamentoStatus);
+  assert.equal(pedidoAposCancelamento.atualizadoEm.getTime(), pedidoAntesCancelamento.atualizadoEm.getTime());
+  assert.equal((await prisma.emissaoFiscalLoja.findUniqueOrThrow({ where: { id: preparadaNfe.id } })).xmlAutorizado, autorizadaAntesCancelamento.xmlAutorizado);
   assert.equal(await prisma.comandoEstoque.count({ where: { tenantId: loja.id } }), comandosAntes);
   assert.equal(erros.length, 0, erros.join("; "));
   console.log(JSON.stringify({ fiscalEntryBrowser: "pass", duplicateEntry: "prevented", tenantIsolation: "pass" }));

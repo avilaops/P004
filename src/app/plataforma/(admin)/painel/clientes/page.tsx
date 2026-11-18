@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { lojistaAtual } from "@/lib/sessao";
+import { sessaoDoPainel } from "@/lib/sessao";
+import { permite } from "@/lib/operadores";
 import { clientesDaLoja } from "@/lib/clientes";
 import Clientes from "@/components/painel/Clientes";
 import CabecalhoSecao from "@/components/painel/CabecalhoSecao";
@@ -9,18 +10,19 @@ export const metadata: Metadata = { title: "Clientes | Painel", robots: { index:
 export const dynamic = "force-dynamic";
 
 export default async function Pagina() {
-  const loja = await lojistaAtual();
-  if (!loja) redirect("/entrar");
-  const clientes = await clientesDaLoja(loja.id);
+  const sessao = await sessaoDoPainel();
+  if (!sessao) redirect("/entrar");
+  const clientes = await clientesDaLoja(sessao.tenant.id);
   return (
     <>
-      <CabecalhoSecao titulo="Clientes" descricao="Quem já comprou, quanto gastou e como falar com a pessoa." />
+      <CabecalhoSecao titulo="Clientes" descricao="Contatos da loja e histórico de compras." />
       <div className="grid gap-6">
         <Clientes
+          podeCadastrar={permite(sessao.papel, "gerenciarClientes")}
           clientes={clientes.map((c) => ({
             ...c,
-            primeiraCompra: c.primeiraCompra.toISOString(),
-            ultimaCompra: c.ultimaCompra.toISOString(),
+            primeiraCompra: c.primeiraCompra?.toISOString() ?? null,
+            ultimaCompra: c.ultimaCompra?.toISOString() ?? null,
           }))}
         />
       </div>

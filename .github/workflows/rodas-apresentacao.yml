@@ -1,0 +1,88 @@
+name: Rodas • fidelidade visual
+on:
+  push:
+    branches: [feat/templates-rodas]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  componentes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+      - name: Preparar somente dependências da apresentação pelo lockfile
+        run: |
+          node --input-type=module -e 'import fs from "node:fs";const l=JSON.parse(fs.readFileSync("package-lock.json"));const deps=Object.fromEntries(["react","react-dom","next","lucide-react","zod","tsx","esbuild","playwright"].map(n=>[n,l.packages["node_modules/"+n].version]));fs.mkdirSync(process.env.RUNNER_TEMP+"/rodas-deps",{recursive:true});fs.writeFileSync(process.env.RUNNER_TEMP+"/rodas-deps/package.json",JSON.stringify({private:true,dependencies:deps}));'
+          npm install --prefix "$RUNNER_TEMP/rodas-deps" --ignore-scripts --no-audit --no-fund
+          ln -s "$RUNNER_TEMP/rodas-deps/node_modules" node_modules
+      - run: node --import tsx scripts/gerar-apresentacao-rodas.mts
+      - name: Arquivar apresentação e dependências mínimas
+        run: |
+          mkdir -p "$RUNNER_TEMP/rodas-build"
+          tar --exclude='node_modules/next' --exclude='node_modules/@next' --exclude='node_modules/@img' --exclude='node_modules/sharp' -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/rodas-build/preview.tar.zst" artifacts/rodas-fiel/site -C "$RUNNER_TEMP/rodas-deps" node_modules
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: rodas-apresentacao-${{ github.sha }}
+          path: ${{ runner.temp }}/rodas-build/
+          compression-level: 0
+  navegador:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+      - run: |
+          npm install --prefix "$RUNNER_TEMP/browser" --no-audit --no-fund "playwright-core@$(node -p 'JSON.parse(require("fs").readFileSync("package-lock.json")).packages["node_modules/playwright-core"].version')"
+          node "$RUNNER_TEMP/browser/node_modules/playwright-core/cli.js" install --only-shell chromium
+          tar -I 'zstd -T0 -1' -cf "$RUNNER_TEMP/browser.tar.zst" -C "$HOME/.cache/ms-playwright" .
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: rodas-navegador-${{ github.sha }}
+          path: ${{ runner.temp }}/browser.tar.zst
+          compression-level: 0
+  capturas:
+    needs: [componentes, navegador]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        layout: [street, racing, night, carbon]
+    env:
+      RODAS_LAYOUT: ${{ matrix.layout }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: rodas-apresentacao-${{ github.sha }}
+          path: ${{ runner.temp }}/apresentacao
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: rodas-navegador-${{ github.sha }}
+          path: ${{ runner.temp }}/browser
+      - run: |
+          tar --zstd -xf "$RUNNER_TEMP/apresentacao/preview.tar.zst"
+          mkdir -p "$HOME/.cache/ms-playwright"
+          tar --zstd -xf "$RUNNER_TEMP/browser/browser.tar.zst" -C "$HOME/.cache/ms-playwright"
+          RODAS_CHROMIUM=$(find "$HOME/.cache/ms-playwright" -name chrome-headless-shell -type f -print -quit)
+          test -n "$RODAS_CHROMIUM"
+          if ldd "$RODAS_CHROMIUM" | rg 'not found'; then
+            node node_modules/playwright-core/cli.js install-deps chromium
+          fi
+          fc-match Arial
+      - run: node --import tsx scripts/qa-rodas-apresentacao.mts
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: rodas-comparacao-${{ matrix.layout }}-${{ github.sha }}
+          path: artifacts/rodas-fiel/
+          compression-level: 0

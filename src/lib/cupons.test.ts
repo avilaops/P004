@@ -3,6 +3,7 @@ import test from "node:test";
 import type { Cupom } from "@prisma/client";
 import type { ItemCarrinho } from "@avilaops/checkout";
 import { descontoDoCupom, normalizarCodigo } from "./cupons";
+import { estadoCupom } from "./vigencia-cupom";
 
 /**
  * Cupom é onde errar custa dinheiro do lojista na hora: um desconto calculado
@@ -40,6 +41,14 @@ function itens(...precos: Array<[preco: number, quantidade: number]>): ItemCarri
 test("código chega bagunçado e é normalizado", () => {
   assert.equal(normalizarCodigo(" bem vindo 10 "), "BEMVINDO10");
   assert.equal(normalizarCodigo("Frete\tGrátis"), "FRETEGRÁTIS");
+});
+
+test("vigência considera ativação, vencimento e limite de usos no mesmo instante", () => {
+  const agora = new Date("2026-11-17T12:00:00Z");
+  assert.equal(estadoCupom(cupom({ validoAte: agora }), agora), "vigente");
+  assert.equal(estadoCupom(cupom({ validoAte: new Date(+agora - 1) }), agora), "vencido");
+  assert.equal(estadoCupom(cupom({ usos: 2, usosMax: 2 }), agora), "esgotado");
+  assert.equal(estadoCupom(cupom({ ativo: false }), agora), "inativo");
 });
 
 test("percentual desconta sobre o subtotal, em centavos inteiros", () => {

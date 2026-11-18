@@ -18,6 +18,7 @@ import Vitrine from "./Vitrine";
 import HomePremium from "@/components/templates/automotivo-premium/Home";
 import { dadosPublicosDaHome } from "./dados-publicos";
 import DomiRio from "./DomiRio";
+import Rodas from "./rodas/Home";
 
 /**
  * Layout → composição da home.
@@ -27,6 +28,10 @@ import DomiRio from "./DomiRio";
  * `Record` sobre o enum do tema faz o typecheck falhar se algum ficar de fora.
  */
 const HOMES: Record<TemaLoja["layout"], ComponentType<DadosHome>> = {
+  "rodas-street": Rodas,
+  "rodas-racing": Rodas,
+  "rodas-carbon": Rodas,
+  "rodas-night": Rodas,
   "automotivo-premium": HomePremium,
   spotlight: Spotlight,
   mercado: Mercado,

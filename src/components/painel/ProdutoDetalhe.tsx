@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import EditarProduto from "./EditarProduto";
 import GradeVariantes from "./GradeVariantes";
@@ -28,6 +28,16 @@ export default function ProdutoDetalhe({ id, nome, urlNaLoja, temVariacoes, segm
 }) {
   const router = useRouter();
   const [grade, setGrade] = useState(false);
+  const acionador = useRef<HTMLElement | null>(null);
+  function abrirGrade(origem: Element | null = document.activeElement) {
+    if (origem instanceof HTMLElement) acionador.current = origem;
+    setGrade(true);
+    if (grade) document.getElementById("titulo-grade-variantes")?.focus();
+  }
+  function fecharGrade() {
+    setGrade(false);
+    acionador.current?.focus();
+  }
   const [ok, setOk] = useState<string | null>(null);
   const [revisao, setRevisao] = useState(0);
 
@@ -45,20 +55,20 @@ export default function ProdutoDetalhe({ id, nome, urlNaLoja, temVariacoes, segm
           </a>
         )}
         <Link href={`/painel/produtos/etiquetas?produtoId=${id}`} className="btn-secundario ml-auto h-9 px-3 text-xs">Gerar etiquetas</Link>
-        <button className="btn-secundario h-9 px-3 text-xs" onClick={() => setGrade(true)}>
+        <button className="btn-secundario h-9 px-3 text-xs" aria-expanded={grade} onClick={(e) => abrirGrade(e.currentTarget)}>
           {temVariacoes ? "Grade de variações" : "Criar variações"}
         </button>
       </div>
 
       {ok && <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">{ok}</p>}
-      <QualidadeProduto produtoId={id} revisao={revisao} temVariacoes={temVariacoes} aoAbrirVariantes={()=>setGrade(true)} />
+      <QualidadeProduto produtoId={id} revisao={revisao} temVariacoes={temVariacoes} aoAbrirVariantes={abrirGrade} />
 
       {grade && (
         <GradeVariantes
           produtoId={id}
           produtoNome={nome}
-          aoFechar={() => setGrade(false)}
-          aoSalvar={(m) => { setOk(m); setGrade(false); setRevisao(r=>r+1); router.refresh(); }}
+          aoFechar={fecharGrade}
+          aoSalvar={(m) => { setOk(m); fecharGrade(); setRevisao(r=>r+1); router.refresh(); }}
         />
       )}
 

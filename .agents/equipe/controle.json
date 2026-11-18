@@ -35,15 +35,93 @@
       "evidence": "Institucional avilaops/bereta PR2, versão publicada9fe01d0ec16fd5e0c3a43d0deb599eb1e1c624c0. CI43874930478 aprovada:23HTML/MDX,24imagens únicas, redirects301,404real e quatro User-Agents de busca200/robots allow. Pages e três domínios ativos. Loja HTTPS200/canonical loja.beretarodas.com, cadastro pelo escritor administrativo normal e backup no servidor. Quatro sitemaps processados no Search Console sem erros/avisos. Zaraz nativo pt, aceitar/rejeitar/reabrir/revogar comprovados; GA4 confirmou page_view e whatsapp_click de teste. Serviço institucional antigo desabilitado/inativo. Evidência em docs/evidencias/bereta-pages-20261116/README.md."
     },
     {
+      "id": "PAINEL-AUDITORIA-P2-P3-20261117",
+      "title": "Painel • cadastro de clientes e melhorias operacionais",
+      "objective": "Implementar os itens 03 a 10 da auditoria do painel. O proprietário aprovou o cadastro antes da compra por quem gerencia clientes.",
+      "assignee": "codex",
+      "priority": "normal",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "SKU sem contagem leva ao campo de saldo. Variações e validação do preço recebem foco. Filtros do catálogo ficam acessíveis em 360 px.",
+        "A ficha de pedido e o navegador retornam à consulta original. A contagem de cupons aplica a vigência da linha.",
+        "A Central informa separadamente configuração, teste datado e atividade.",
+        "Dono e Gerente cadastram contatos por loja, com duplicidade de e-mail tratada. Balcão conserva acesso de consulta."
+      ],
+      "environment": "GitHub CI • painel autenticado com dados sintéticos",
+      "evidence": "PR 279 e documento da auditoria no projeto Lojas do Linear. A revisão também verifica gravação e releitura de preços com milhares, validação do preço de referência e navegação entre consultas pelo histórico."
+    },
+    {
+      "id": "PAINEL-AUDITORIA-P1-20261117",
+      "title": "Painel • validação do Pix direto e recuperação da lista de pedidos",
+      "objective": "Explicar o alcance da validação local do Pix e recuperar a consulta de pedidos após falhas de leitura.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "em-revisao",
+      "acceptanceCriteria": [
+        "Com chave fictícia válida, orientar a conferir o recebedor no banco. Chave ausente impede salvar.",
+        "Falhas HTTP e de rede encerram o carregamento. Tentar novamente preserva a consulta e recupera os pedidos.",
+        "Quando já houver resultados, identificá-los como anteriores e mantê-los visíveis durante a falha."
+      ],
+      "environment": "GitHub CI • tenant de teste isolado • painel desktop e mobile",
+      "evidence": "Backlog e aceite no projeto Lojas no Linear. Regressões em packages/checkout/src/providers/pix-manual.test.ts e tests/helpers/painel-pedidos-pix.ts."
+    },
+    {
+      "id": "BERETA-CARBON-AMARELO-20261117",
+      "title": "Bereta • trocar os destaques vermelhos por amarelo",
+      "objective": "Aplicar amarelo na loja Bereta preservando Carbon, banner dourado, catálogo e domínio principal; remover cores vermelhas fixas da composição.",
+      "assignee": "codex",
+      "priority": "normal",
+      "status": "concluida",
+      "acceptanceCriteria": ["Destaques e botões seguem amarelo com texto escuro.", "Linhas e links editoriais seguem a paleta configurada.", "Textos em fundos claros e escuros permanecem legíveis.", "CI e produção verificadas sem alterar outras lojas ou o catálogo."],
+      "environment": "producao • beretarodas.com • builds e testes somente GitHub CI",
+      "evidence": "PR 277 integrada em 874c5999f42fe0beb7e16fc9f00bdbae1ce99072. CI de produção 44165079446 integralmente aprovada, incluindo entrega, deploy e fumaça. Paleta #f5c518 com texto #17181b salva pela API administrativa somente na Bereta. Releitura confirma demais campos do tema e banner preservados. Navegador em 1440 px e 390 px confirmou botões, navegação e linha amarela, links em tom escuro legível e checkout com a mesma paleta; home, catálogo e carrinho sem overflow ou exceções. Container saudável e duas imagens mantidas. Evidência: evidencias/bereta-carbon-amarelo-2026-11-17.md.",
+      "review": "Revisão estática independente sem bloqueadores. CSS escopado ao Carbon; navegação móvel e modos claro/escuro conservam legibilidade. CI integral e inspeção visual real aprovadas."
+    },
+    {
+      "id": "BERETA-TEMPLATES-RODAS-20261117",
+      "title": "Bereta • implementar e ativar o Carbon aprovado",
+      "objective": "Concluir a integração real, publicar e ativar Carbon em beretarodas.com, conforme escolha explícita do proprietário; preservar as demais opções e lojas.",
+      "assignee": "codex",
+      "priority": "normal",
+      "status": "concluida",
+      "acceptanceCriteria": ["Quatro composições inspiradas nas imagens enviadas pelo proprietário.", "Prévia não publica nem altera dados.", "Mobile, desktop, modos claro e escuro e catálogo vazio verificados no CI.", "Preços e disponibilidade usam os componentes compartilhados."],
+      "environment": "producao • beretarodas.com • builds e testes somente GitHub CI",
+      "evidence": "PR 274 integrou Carbon em TypeScript e Next.js; PR 275 retirou o limite de um minuto por orientação explícita. CI 44133809562 aprovada integralmente, incluindo imagem, entrega, deploy e fumaça; revisão b2d87fd2bc12c78a3ba9bf6a7033824e2306a725. Carbon ativo no domínio principal; aliases públicos retornam 308 preservando caminho e consulta. Inspeção em 1440 px e 390 px sem overflow, nove fotos, categoria, detalhe, busca e carrinho, sem exceções ou pedido real. Novo banner dourado gerado com imagegen a pedido do proprietário, publicado com 71.538 bytes. Catálogo com 8426 produtos e 6473 ativos; seleção de destaques ajustada sem alterar preços, estoque ou fotos. Duas imagens de execução mantidas; limpeza restrita ao Lojas. Evidências: evidencias/bereta-carbon-2026-11-17.md e evidencias/ci-cd-retencao-lojas-2026-11-17.md.",
+      "review": "Revisão independente sem bloqueadores na integração, QA e política de timeout; CI integral e inspeção de produção aprovadas. Fonte e catálogo reais preservados.",
+      "history": [{ "at": "2026-11-17", "status": "concluida", "note": "Carbon publicado e ativado; domínio único e banner dourado aplicados conforme orientação do proprietário. Navegador e retenção de duas releases verificados." }]
+    },
+    {
+      "id": "FAVICONS-SELETOR-LOJAS-20261116",
+      "title": "Exibir a identidade de cada loja no seletor da equipe",
+      "objective": "Usar o pacote de favicon cadastrado por tenant nos cartões da equipe e preservar uma inicial legível quando a loja ainda não tiver pacote próprio.",
+      "assignee": "codex",
+      "priority": "normal",
+      "status": "em-revisao",
+      "acceptanceCriteria": ["A consulta inclui faviconUrl sem misturar dados entre tenants.", "Lojas com pacote exibem apple-touch-icon.png da própria pasta.", "Loja sem pacote ou com arquivo indisponível exibe sua inicial sem imagem quebrada.", "Busca, entrada, responsividade e acessibilidade do seletor permanecem.", "Tipos, lint, testes, build e navegador são verificados exclusivamente no GitHub CI."],
+      "environment": "worktree isolada e GitHub CI; sem testes ou builds locais",
+      "evidence": "PR273, commit c2d7b7d. Estado de produção lido sem mutação: quatro lojas têm pacote próprio e quatro dependem do fallback. Run manual43899735416 comprovou tipos, lint, unitários, PostgreSQL, build e navegador; falhou somente no empacotamento intencionalmente proibido fora da main. Runs de PR43901265910 tentativas1e3 foram cancelados antes dos testes por limites de1min na infraestrutura de dependências; tentativa2 parcial foi rejeitada pelo controle de proveniência FOREIGN_CI_ARTIFACT. Merge e publicação aguardam um run de PR completo."
+    },
+    {
+      "id": "FISCAL-CANCELAMENTO-20261116",
+      "title": "Cancelar NF-e diretamente pelo Lojas",
+      "objective": "Assinar e transmitir evento110111 na SEFAZ com confirmação explícita, intenção imutável e consulta após resultado incerto.",
+      "assignee": "codex",
+      "priority": "alta",
+      "status": "concluida",
+      "acceptanceCriteria": ["Somente dono da loja e NF-e autorizada com protocolo original.", "Concorrência transmite uma vez; incerteza impede reenvio automático.", "Consulta prioriza situação cancelada sobre protocolo original autorizado.", "Recibo exige protocolo de evento válido; XML autorizado, estoque e pagamento preservados.", "CI, navegador e publicação comprovados sem evento fiscal real."],
+      "environment": "GitHub CI isolado e servidor SSH",
+      "evidence": "PR272 integrado e publicado em463380525c1f5ea81cca183fb2e26f6fd318cc6e. RED43885632612 reproduziu consulta incorretamente AUTORIZADA quando situação atual é CANCELADA; CI final43889647698 e produção43891181312 aprovados. Produção na tentativa2 após timeout de1min; backup32.708.239bytes conferido e migração20261116142000_cancelamento_nfe_lojas aplicada. Fumaça oficial aprovada, home200/versão exata, API cancelamento401JSON privado/no-store e health200/banco ok às15:10UTC. Assinatura, concorrência, imutabilidade, revisão de rejeição, incerteza e reconciliação comprovadas com transporte sintético. Navegador393/1440px inspecionado; pedido, pagamento e estoque preservados. Evidência: evidencias/cancelamento-direto-lojas-2026-11-16.md. Nenhum evento fiscal real enviado, alteração no ERP ou homologação real alegada."
+    },
+    {
       "id": "FISCAL-EMISSAO-DIRETA-20261116",
       "title": "Emitir NF-e diretamente pelo Lojas",
       "objective": "Gerar documento de venda revisado ou importar rascunho, assinar com A1 e transmitir/consultar diretamente na SEFAZ, sem dependência de escrita ERP.",
       "assignee": "codex",
       "priority": "alta",
-      "status": "em-andamento",
+      "status": "concluida",
       "acceptanceCriteria": ["Pedido usa fluxo direto do Lojas.", "Ambiente, tributação e numeração revisados explicitamente.", "Preparação não transmite; envio único e consulta após resultado incerto.", "XML autorizado e DANFE exigem protocolo da mesma chave, ambiente e digest.", "Isolamento, CI e publicação comprovados sem emissão real de teste."],
       "environment": "GitHub CI isolado e servidor SSH",
-      "evidence": "Direção corrigida explicitamente pelo proprietário em16/11/2026. PR271 e plano docs/superpowers/plans/2026-11-16-emissao-direta-lojas.md. CI em andamento."
+      "evidence": "PR271 integrado e publicado emcf8970bee5eb52148ebdb1894109805b889cfe2d. CI final43877304871 e produção43880331296 aprovados, produção na tentativa2 após timeout de finalização. Migração20261116123000_emissao_direta_lojas aplicada com backup prévio32.705.884bytes. Home200com versão exata, API emissões401JSON privado/no-store e health200/banco saudável às14:19UTC. Unitários, assinatura verificada, PostgreSQL, tipos, lint, contratos, build e navegador aprovados; prints393/1440px inspecionados. Emissão e consulta nativas A1/SEFAZ, faturamento a prazo, versões imutáveis, correção de rascunho e prevenção de envio duplicado. Evidência: evidencias/emissao-direta-lojas-2026-11-16.md. Nenhuma NF-e real transmitida, alteração no ERP, estoque ou pagamento; homologação real e operações complementares permanecem separadas."
     },
     {
       "id": "FISCAL-MANIFESTACAO-20261116",
@@ -85,7 +163,7 @@
       "assignee": "codex",
       "priority": "alta",
       "status": "em-andamento",
-      "blocker": "Premissa anterior de emissão via ERP revogada pelo proprietário em16/11/2026. Implementação de emissão direta em andamento na tarefa FISCAL-EMISSAO-DIRETA-20261116; homologação real ainda não comprovada.",
+      "blocker": "Emissão direta publicada no PR271 e cancelamento nativo no PR272, sem dependência de escrita ERP. Homologação fiscal real ainda não comprovada; inutilização e carta de correção fora destas entregas.",
       "acceptanceCriteria": [
         "Destinatário, itens, CEST, descontos, despesas e tributos declarados visíveis.",
         "Fornecedor por documento exato e custos preservados no recibo imutável da entrada.",
@@ -94,7 +172,7 @@
         "Emissão direta do Lojas com A1 e SEFAZ, sem dependência de escrita ERP; aceite fiscal real separado das evidências sintéticas."
       ],
       "environment": "GitHub CI isolado e produção SSH; nenhuma operação fiscal ou entrada real de teste",
-      "evidence": "Recebimento entregue no PR265, versão20ddb6603d57da7a7baf62183714835bfc30d971. CI PR43692768983 e produção43693482933 aprovados, produção na tentativa3. Backup pré-migração32.686.040bytes conferido; migração20261115080000_fiscal_fornecedor_cadastro aplicada. Home pública200com versão exata; API nova de custos401JSONsem sessão. Navegador: cadastro sem entrada automática, recebimento idempotente, fornecedor/custos e360/393/768/1280/1440px. Evidências em evidencias/fiscal-e-remocao-render-2026-11-15.md. Emissão continua bloqueada pelo ERP; nenhuma emissão ou manifestação real realizada."
+      "evidence": "Recebimento entregue no PR265, versão20ddb6603d57da7a7baf62183714835bfc30d971. CI43692768983 e produção43693482933 aprovados, backup32.686.040bytes e migração20261115080000_fiscal_fornecedor_cadastro conferidos. Cadastro sem entrada automática, recebimento idempotente, fornecedor/custos e navegador360/393/768/1280/1440px comprovados em evidencias/fiscal-e-remocao-render-2026-11-15.md. Emissão direta publicada no PR271 e cancelamento nativo no PR272, versão463380525c1f5ea81cca183fb2e26f6fd318cc6e; CI43889647698 e produção43891181312 aprovados. Sem dependência de escrita ERP. Evidências adicionais: evidencias/emissao-direta-lojas-2026-11-16.md e evidencias/cancelamento-direto-lojas-2026-11-16.md. Nenhum evento fiscal real realizado no QA; homologação real permanece pendente."
     },
     {
       "id": "ROBOTS-SEM-CONTENT-SIGNAL-20261115",

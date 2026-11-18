@@ -22,12 +22,19 @@ sempre respeitam tenant e permissão fiscal. Nenhum efeito automático em estoqu
 
 ## Execução
 
-- [ ] Contratos puros: XML, chave, assinatura, destinos e retorno SEFAZ.
-- [ ] Persistência por tenant e serviço de preparação/envio/consulta.
-- [ ] API privada, revisão e confirmação no painel.
-- [ ] Integração com pedidos sem dependência ERP.
-- [ ] Testes no GitHub CI com A1 e transporte sintéticos, sem envio fiscal real.
-- [ ] Atualizar Linear, decisões, evidências e publicação.
+- [x] Contratos puros: XML, chave, assinatura, destinos e retorno SEFAZ.
+- [x] Persistência por tenant e serviço de preparação/envio/consulta.
+- [x] API privada, revisão e confirmação no painel.
+- [x] Integração com pedidos sem dependência ERP.
+- [x] Testes no GitHub CI com A1 e transporte sintéticos, sem envio fiscal real.
+- [x] Atualizar Linear, decisões, evidências e publicação.
+
+## Entrega
+
+PR271 integrado e publicado em `cf8970bee5eb52148ebdb1894109805b889cfe2d`.
+CI final `43877304871` e produção `43880331296` aprovados; deploy e fumaça
+na tentativa 2. Evidência:
+[emissão direta](../../../evidencias/emissao-direta-lojas-2026-11-16.md).
 
 ## Fontes
 
@@ -40,6 +47,8 @@ sempre respeitam tenant e permissão fiscal. Nenhum efeito automático em estoqu
 Emissão NF-e modelo 55, modalidade normal, com destinos oficiais por UF.
 O formulário de pedidos atende venda online a consumidor final não contribuinte
 no Simples Nacional, CSOSN 102, PIS/COFINS 07, sem ST, mediante escolha explícita.
+Venda sem intermediador é confirmada; cartão exige dados reais de integração,
+credenciadora e autorização, sem preenchimento presumido.
 CFOP, origem, unidade e GTIN exigem revisão por item. Outros enquadramentos
 entram como XML fiscal revisado, que o Lojas valida quanto à identidade, assina
 e transmite diretamente • não há geração automática de tributação não suportada.

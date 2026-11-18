@@ -10,8 +10,8 @@ export const RESUMO_EMISSAO = { id: true, pedidoId: true, ambiente: true, chave:
 export type ResumoEmissao = Pick<EmissaoFiscalLoja, keyof typeof RESUMO_EMISSAO>;
 const SITUACOES_EMISSAO: PedidoStatus[] = ["APROVADO", "AGUARDANDO_PAGAMENTO", "PAGO", "EM_SEPARACAO", "ENVIADO", "ENTREGUE"];
 
-export async function enviarNfe(dados: { uf: string; ambiente: string; operacao: "autorizar" | "consultar"; corpo: string; pfx: Buffer; senha: string }): Promise<string> {
-  const servico = dados.operacao === "autorizar" ? "NFeAutorizacao4/nfeAutorizacaoLote" : "NFeConsultaProtocolo4/nfeConsultaNF";
+export async function enviarNfe(dados: { uf: string; ambiente: string; operacao: "autorizar" | "consultar" | "cancelar"; corpo: string; pfx: Buffer; senha: string }): Promise<string> {
+  const servico = dados.operacao === "cancelar" ? "NFeRecepcaoEvento4/nfeRecepcaoEvento" : dados.operacao === "autorizar" ? "NFeAutorizacao4/nfeAutorizacaoLote" : "NFeConsultaProtocolo4/nfeConsultaNF";
   return new Promise<string>((resolve, reject) => {
     const req = request(destinoNfe(dados.uf, dados.ambiente, dados.operacao), {
       method: "POST", ...credencialTls(dados.pfx, dados.senha),
@@ -27,7 +27,7 @@ export async function enviarNfe(dados: { uf: string; ambiente: string; operacao:
   });
 }
 
-async function certificado(tenantId: string, cnpjEsperado?: string) {
+export async function certificadoEmissao(tenantId: string, cnpjEsperado?: string) {
   const fiscal = await prisma.fiscalLoja.findUnique({ where: { tenantId }, include: { tenant: { select: { cnpj: true, status: true } } } });
   if (!fiscal || fiscal.tenant.status !== "ATIVA") throw new ErroFiscal("Cadastre o certificado A1 de uma loja ativa antes de emitir.");
   const cnpj = fiscal.tenant.cnpj?.replace(/\D/g, "") ?? "";
@@ -40,7 +40,7 @@ async function certificado(tenantId: string, cnpjEsperado?: string) {
 
 /** Preparação apenas assina e persiste. Não faz requisição externa. */
 export async function prepararEmissao(dados: { tenantId: string; pedidoId?: string; xml: string; autor: string; intencaoHash?: string; substituir?: { id: string; resumoHash: string } }) {
-  const fiscal = await certificado(dados.tenantId);
+  const fiscal = await certificadoEmissao(dados.tenantId);
   try {
     const nota = validarRascunhoNfe(dados.xml, fiscal.cnpj);
     if (nota.uf !== fiscal.uf) throw new ErroFiscal("A UF do emitente diverge do cadastro fiscal.");
@@ -86,7 +86,10 @@ async function registrarResposta(doc: EmissaoFiscalLoja, resposta: string) {
   const xmlAutorizado = retorno.protocoloXml ? `<nfeProc xmlns="${NFE_NS}" versao="4.00">${doc.xmlAssinado}${retorno.protocoloXml}</nfeProc>` : undefined;
   // Uma consulta sem resultado não desfaz protocolo já confirmado.
   const estados = retorno.status === "CANCELADA" ? ["ENVIANDO", "PENDENTE_CONFERENCIA", "AUTORIZADA", "REJEITADA"] : retorno.status === "AUTORIZADA" ? ["ENVIANDO", "PENDENTE_CONFERENCIA", "REJEITADA"] : ["ENVIANDO", "PENDENTE_CONFERENCIA"];
-  await prisma.emissaoFiscalLoja.updateMany({ where: { id: doc.id, tenantId: doc.tenantId, status: { in: estados } }, data: { status: retorno.status, codigo: retorno.codigo, motivo: retorno.motivo, xmlResposta: resposta, ...(retorno.protocolo ? { protocolo: retorno.protocolo } : {}), ...(xmlAutorizado ? { xmlAutorizado } : {}) } });
+  await prisma.$transaction(async tx => {
+    await tx.emissaoFiscalLoja.updateMany({ where: { id: doc.id, tenantId: doc.tenantId, status: { in: estados } }, data: { status: retorno.status, codigo: retorno.codigo, motivo: retorno.motivo, xmlResposta: resposta, ...(retorno.protocolo ? { protocolo: retorno.protocolo } : {}), ...(xmlAutorizado ? { xmlAutorizado } : {}) } });
+    if (retorno.status === "CANCELADA") await tx.cancelamentoEmissaoFiscalLoja.updateMany({ where: { tenantId: doc.tenantId, emissaoId: doc.id, status: { in: ["ENVIANDO", "PENDENTE_CONFERENCIA"] } }, data: { status: "CONFIRMADA_CONSULTA", xmlConsulta: resposta, concluidoEm: new Date() } });
+  });
   return prisma.emissaoFiscalLoja.findFirstOrThrow({ where: { id: doc.id, tenantId: doc.tenantId }, select: RESUMO_EMISSAO });
 }
 
@@ -94,7 +97,7 @@ export async function emitirNfe(dados: { tenantId: string; id: string; resumoHas
   const doc = await documento(dados.tenantId, dados.id);
   if (doc.resumoHash !== dados.resumoHash || doc.ambiente !== dados.ambiente) throw new ErroApi("conflito", "O documento ou ambiente mudou. Confira novamente antes de emitir.");
   if (doc.status !== "PREPARADA") return prisma.emissaoFiscalLoja.findFirstOrThrow({ where: { id: doc.id, tenantId: doc.tenantId }, select: RESUMO_EMISSAO });
-  const fiscal = await certificado(dados.tenantId, doc.cnpj);
+  const fiscal = await certificadoEmissao(dados.tenantId, doc.cnpj);
   try {
     if (doc.pedidoId) {
       const pedido = await prisma.pedido.findFirst({ where: { tenantId: doc.tenantId, id: doc.pedidoId, status: { in: SITUACOES_EMISSAO }, atualizadoEm: doc.pedidoAtualizadoEm ?? undefined } });
@@ -116,7 +119,7 @@ export async function consultarNfe(tenantId: string, id: string, enviar: typeof 
   const doc = await documento(tenantId, id);
   if (doc.status === "SUBSTITUIDA") throw new ErroApi("conflito", "Este rascunho foi substituído. Consulte a versão atual da emissão.");
   if (doc.status === "PREPARADA") throw new ErroApi("conflito", "Este documento ainda não foi enviado.");
-  const fiscal = await certificado(tenantId, doc.cnpj);
+  const fiscal = await certificadoEmissao(tenantId, doc.cnpj);
   try {
     const resposta = await enviar({ uf: doc.uf, ambiente: doc.ambiente, operacao: "consultar", corpo: envelopeConsulta(doc.chave, doc.ambiente), pfx: fiscal.pfx, senha: fiscal.senha });
     return await registrarResposta(doc, resposta);

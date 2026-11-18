@@ -11,10 +11,4 @@ export function DetalhesItemFiscal({ item }: { item: ItemNotaEntrada }) {
   </details>;
 }
 
-/** Conversão decimal exata para o contrato em centavos, sem arredondar entradas. */
-export function centavosInformados(valor: string): number | null {
-  if (!/^\d{1,8}(?:[.,]\d{1,2})?$/.test(valor)) return null;
-  const [inteiro, fracao = ""] = valor.replace(",", ".").split(".");
-  const centavos = Number(inteiro) * 100 + Number(fracao.padEnd(2, "0"));
-  return centavos <= 2_147_483_647 ? centavos : null;
-}
+export { centavosInformados } from "@/lib/valor-em-centavos";

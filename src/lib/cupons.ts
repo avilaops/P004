@@ -1,6 +1,7 @@
 import type { Cupom } from "@prisma/client";
 import type { ItemCarrinho } from "@avilaops/checkout";
 import { prisma } from "./db";
+import { estadoCupom } from "./vigencia-cupom";
 
 /**
  * Cupons. O desconto é sempre calculado no servidor a partir do código; a
@@ -15,9 +16,8 @@ export type MotivoCupom = "nao_encontrado" | "inativo" | "vencido" | "esgotado" 
 export async function buscarCupomValido(tenantId: string, codigo: string, subtotal: number): Promise<{ cupom: Cupom } | { erro: MotivoCupom; minimo?: number }> {
   const c = await prisma.cupom.findUnique({ where: { tenantId_codigo: { tenantId, codigo: normalizarCodigo(codigo) } } });
   if (!c) return { erro: "nao_encontrado" };
-  if (!c.ativo) return { erro: "inativo" };
-  if (c.validoAte && c.validoAte.getTime() < Date.now()) return { erro: "vencido" };
-  if (c.usosMax != null && c.usos >= c.usosMax) return { erro: "esgotado" };
+  const estado = estadoCupom(c);
+  if (estado !== "vigente") return { erro: estado };
   if (subtotal < c.minimoCentavos) return { erro: "minimo", minimo: c.minimoCentavos };
   return { cupom: c };
 }

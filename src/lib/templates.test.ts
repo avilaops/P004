@@ -3,6 +3,7 @@ import test from "node:test";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { VALORES_LAYOUT } from "./tema";
+import { ehTemplateRodas } from "./templates-rodas";
 import { BLOCOS, CONTRATOS, VERSAO_CONTRATO, contratoDo, usaBlocoProprio } from "./templates";
 
 /**
@@ -32,7 +33,7 @@ test("só o premium veste a loja inteira; os outros compõem a home", () => {
   assert.deepEqual(premium.blocos, { cabecalho: "proprio", hero: "proprio", categorias: "proprio", produto: "proprio", carrinho: "proprio", rodape: "compartilhado" });
   for (const c of contratos.filter((c) => c.layout !== "automotivo-premium")) {
     assert.equal(c.escopo, "home", c.layout);
-    assert.deepEqual(BLOCOS.filter((b) => c.blocos[b] === "proprio"), ["hero"], c.layout);
+    assert.deepEqual(BLOCOS.filter((b) => c.blocos[b] === "proprio"), ehTemplateRodas(c.layout) ? ["cabecalho", "hero", "rodape"] : ["hero"], c.layout);
     assert.deepEqual(c.tokens, [], c.layout);
     assert.equal(c.atributoHtml, false, c.layout);
   }

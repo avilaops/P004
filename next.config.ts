@@ -27,6 +27,11 @@ const nextConfig: NextConfig = {
   // O Prisma tem binário nativo; carregado por nome em runtime, não empacotado
   // (sem isto o Turbopack gera um alias com hash que não existe no standalone).
   serverExternalPackages: ["@prisma/client", "onnxruntime-node", "sharp"],
+  // O binding nativo carrega a biblioteca por SONAME, fora do grafo JavaScript.
+  // Incluir a biblioteca e seus links para o standalone funcionar também no CI.
+  outputFileTracingIncludes: {
+    "/*": ["./node_modules/onnxruntime-node/bin/napi-v6/linux/x64/*.so*"],
+  },
   images: {
     // As fotos de produto vivem no nosso storage; qualquer outro host é
     // recusado para uma loja não conseguir apontar imagem para fora.

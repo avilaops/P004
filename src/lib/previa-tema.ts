@@ -1,4 +1,6 @@
 import type { Categoria, Produto, Tenant } from "@prisma/client";
+import { demonstracaoRodas } from "./rodas-demonstracao";
+import { ehTemplateRodas } from "./templates-rodas";
 import { TemaSchema, type TemaLoja } from "./tema";
 
 /**
@@ -224,7 +226,15 @@ export function produtoParaLookDeDemonstracao(slug: string): Produto {
  * peças trazem código, equivalentes, medidas e aplicação para a tabela do
  * `catalogo-tecnico` aparecer com todas as colunas.
  */
-export function catalogoDeDemonstracao(): { categorias: Categoria[]; vitrine: Produto[] } {
+export function catalogoDeDemonstracao(layout?: string): { categorias: Categoria[]; vitrine: Produto[] } {
+  if (layout && ehTemplateRodas(layout)) {
+    const base = catalogoDeDemonstracao();
+    const demo = demonstracaoRodas(layout);
+    return {
+      categorias: demo.loja.categorias.map((c, i) => ({ ...base.categorias[i % base.categorias.length], id: `demo-rodas-cat-${i}`, slug: c.slug, nome: c.nome, imagemUrl: c.imagem })),
+      vitrine: demo.produtos.map((p, i) => ({ ...base.vitrine[i % base.vitrine.length], id: p.id, slug: p.slug, nome: p.nome, descricaoCurta: p.descricao, imagens: p.imagem ? [p.imagem] : [], imagemOrigem: "propria", precoCentavos: p.preco, precoDeCentavos: p.precoAnterior, estoque: 20, marca: null, opcoes: [] })),
+    };
+  }
   const categorias = [
     categoriaDemo(1, "lavagem", "Lavagem", "Shampoos, luvas e baldes para lavar sem riscar."),
     categoriaDemo(2, "polimento", "Polimento", "Compostos e boinas para corrigir a pintura."),

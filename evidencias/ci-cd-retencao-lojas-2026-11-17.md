@@ -1,0 +1,131 @@
+# Lojas • tempo de CI/CD e retenção de releases
+
+## Escopo
+
+Em 17/11/2026, o proprietário pediu a medição do CI/CD e a remoção de releases
+excedentes, mantendo duas. Confirmou explicitamente que a limpeza abrange
+somente o Lojas, sem alterar os demais aplicativos do servidor compartilhado.
+
+## Medição no GitHub
+
+O run de PR [44125994179](https://github.com/avilaops/P004/actions/runs/44125994179)
+foi aprovado integralmente: início às 16:27:33 UTC e conclusão às 16:36:28 UTC,
+total de **8min55s**. O commit da branch era
+`96bf113649e36636fcfeb0743e351835aa7277aa`; o merge de verificação da PR era
+`12f184aa1b50d873193befebe237cbfdce80e785`.
+
+| Etapa | Tempo do job |
+| --- | ---: |
+| Navegador • cotação, HTTP e reinício | 4min04s |
+| Navegador • etiquetas e PDFs | 1min11s |
+| Integração PostgreSQL • parte 1 | 1min09s |
+| Build | 1min00s |
+| Unitários • parte 2 | 1min00s |
+| Lint • componentes | 57s |
+| TypeScript | 56s |
+
+Os tempos incluem preparação e finalização de cada job. As etapas paralelas
+não devem ser somadas para representar a duração total do pipeline.
+
+Os 27 artefatos desse run somam **1.140.205.856 bytes** no GitHub. Entre eles:
+dependências completas com 311.124.632 bytes, build com 205.968.675 bytes,
+contexto de imagem com 215.713.771 bytes e evidência de navegador dos templates
+com 22.160.408 bytes. São artefatos de CI; o publicador baixa no servidor a
+imagem identificada por digest, sem copiar os pacotes de testes e dependências
+da CI para uma pasta de releases.
+
+A primeira tentativa de produção do run
+[44127728346](https://github.com/avilaops/P004/actions/runs/44127728346), revisão
+`f4095c4a3d2f625511fe1e24eb3a176d56c326d1`, aprovou todos os gates e publicou a
+imagem no registro. O job de preparação foi cancelado durante o `docker pull`
+às 16:46:29 UTC, antes de trocar o serviço. A execução completa foi repetida,
+preservando a validação por revisão, run e tentativa. Não houve build ou teste
+local ou no servidor.
+
+Após a segunda tentativa também ser cancelada no download, o proprietário
+determinou: “retire esse bloqueio de um minuto”. Os workflows do Lojas passam
+a dez minutos por job, incluindo preparação, entrega, deploy e fumaça.
+O teste de política confere todos os workflows versionados; os demais testes,
+gates e verificações de publicação permanecem. A retenção continua limitada
+às duas imagens do Lojas, sem limpeza dos outros aplicativos.
+
+## Estado do servidor antes da nova entrega
+
+Leitura por SSH em 17/11/2026, aproximadamente às 16:43 UTC:
+
+- Disco raiz: 38 GB, 94% ocupado, aproximadamente 2,5 GB livres.
+- Repositório `ghcr.io/avilaops/lojas.avilaops.com`: **duas imagens**.
+- Ativa: `36ea7a4162b2…`, revisão `435bb5a8db8c142815609a345c1cdf1c9ecd3909`.
+- Anterior: `161587b7120c…`, revisão `dc0da1612ad42e8f0a0e4cfc04392c3f5e3cbd22`.
+- `docker image ls` informa 894 MB e 892 MB. Esses valores não representam
+  necessariamente espaço recuperável pela soma, pois o Docker compartilha
+  camadas e mantém conteúdo comprimido e snapshots.
+- Estado de publicação `/var/lib/avilaops/deploy/lojas.avilaops.com`: 8 KB.
+- `/opt/lojas/uploads`: 528 MB de dados da loja, preservados.
+- `/opt/lojas/backups`: 40 MB, preservados.
+
+Não havia terceira release do Lojas para exclusão nessa leitura. O acúmulo
+maior de imagens está em outros aplicativos, fora do escopo confirmado.
+
+## Limpeza executada durante a entrega
+
+Uma leitura posterior encontrou três imagens: o pull da tentativa cancelada
+terminou de registrar `8be3f480bd07…` depois da interrupção do job. A imagem
+era da revisão `f4095c4…` e não era usada por nenhum container. Sob a trava
+exclusiva do publicador do Lojas, conferi novamente a imagem ativa e removi
+somente essa imagem excedente por seu digest exato.
+
+Também removi o container `lojas-return-candidate`, parado havia dois dias,
+após conferir estado `exited`, imagem `161587b7120c…` e origem Lojas. A imagem
+de rollback foi preservada. O comando não incluiu exclusão de volumes; os
+bind mounts de uploads e segredos foram preservados.
+
+A releitura confirmou exatamente duas imagens (`36ea7a4162b2…` e
+`161587b7120c…`) e o container ativo saudável. Nenhum outro aplicativo foi
+alterado por essa limpeza.
+
+## Publicação concluída
+
+PR275 integrou a política de dez minutos por job. O run de produção
+[44133809562](https://github.com/avilaops/P004/actions/runs/44133809562) passou
+integralmente, na primeira tentativa: **17:09:20 a 17:21:41 UTC • 12min21s**.
+A PR275 foi aprovada no run 44131854877, em 10min12s.
+
+| Etapa final | Duração |
+| --- | ---: |
+| Build | 56s |
+| Navegador • cotação, HTTP e reinício | 3min12s |
+| Download da imagem no servidor | 39s |
+| Deploy e verificação de saúde | 1min17s |
+| Fumaça pública | 52s |
+
+O deploy de 1min17s comprova por que o antigo limite de um minuto cancelaria
+uma operação normal. O timeout de dez minutos é um teto, não uma espera fixa.
+
+Após a publicação e a conferência final, ficaram exatamente duas imagens:
+
+- Ativa `8a7ad9ccb273…`, revisão
+  `b2d87fd2bc12c78a3ba9bf6a7033824e2306a725` • 976 MB informados pelo Docker.
+- Anterior `36ea7a4162b2…`, revisão
+  `435bb5a8db8c142815609a345c1cdf1c9ecd3909` • 894 MB informados pelo Docker.
+
+O publicador removeu automaticamente a antiga `161587b7120c…`. O container
+ativo foi relido como `healthy`; o disco compartilhado continuou em 94%, com
+cerca de 2,5 GB livres. Não atribuir esse total do servidor ao Lojas nem excluir
+imagens dos demais aplicativos: o proprietário limitou explicitamente o escopo.
+
+O novo banner da Bereta ocupa 71.538 bytes no volume persistente de mídia,
+fora da imagem de execução. A original PNG gerada ocupa 2.061.817 bytes e foi
+preservada no workspace para edição futura.
+
+## Retenção existente
+
+O publicador instalado em `/usr/local/sbin/avila-deploy` já executa
+`prune_old_images` após conferir a saúde e o ID exato do container novo.
+O filtro se limita a `IMAGE_REPOSITORY` desta aplicação e preserva
+`expected_image` e `previous_image`. A exclusão usa `docker image rm`, sem
+forçar a remoção de imagens usadas por outros containers.
+
+Os caminhos ativos e as imagens foram inspecionados antes de qualquer limpeza.
+Não foi executado prune global, exclusão de volumes, uploads ou backups por
+esta auditoria. O build e os testes continuam exclusivamente no GitHub CI.

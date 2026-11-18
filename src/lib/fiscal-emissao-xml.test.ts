@@ -33,6 +33,11 @@ test("chave tem dígito verificador consistente e retorno exige mesmo ambiente e
   assert.match(chave, /^\d{44}$/);
   const protocolo = `<retEnviNFe xmlns="http://www.portalfiscal.inf.br/nfe"><tpAmb>2</tpAmb><cStat>104</cStat><protNFe versao="4.00"><infProt><tpAmb>2</tpAmb><chNFe>${chave}</chNFe><digVal>digest-qa</digVal><nProt>135260000099999</nProt><cStat>100</cStat><xMotivo>QA</xMotivo></infProt></protNFe></retEnviNFe>`;
   assert.equal(lerRespostaNfe(protocolo, { chave, ambiente: "2", digest: "digest-qa" }).status, "AUTORIZADA");
+  const cancelada = protocolo.replace("retEnviNFe", "retConsSitNFe").replace("/retEnviNFe", "/retConsSitNFe").replace("<cStat>104</cStat>", `<chNFe>${chave}</chNFe><cStat>101</cStat><xMotivo>Cancelamento homologado</xMotivo>`);
+  const retornoCancelado = lerRespostaNfe(cancelada, { chave, ambiente: "2", digest: "digest-qa" });
+  assert.equal(retornoCancelado.status, "CANCELADA", "A situação atual prevalece sobre o protocolo original de autorização");
+  assert.equal(retornoCancelado.codigo, "101");
+  assert.equal(retornoCancelado.protocoloXml, null);
   const soap = `<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope"><soap:Body><nfeResultMsg xmlns="http://www.portalfiscal.inf.br/nfe/wsdl/NFeAutorizacao4">${protocolo}</nfeResultMsg></soap:Body></soap:Envelope>`;
   assert.equal(lerRespostaNfe(soap, { chave, ambiente: "2", digest: "digest-qa" }).status, "AUTORIZADA");
   assert.throws(() => lerRespostaNfe(protocolo, { chave, ambiente: "1", digest: "digest-qa" }), /ambiente/);
