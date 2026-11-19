@@ -41,7 +41,10 @@ export function filtroDePedidos(params: { tenantId: string; q?: string | null; s
       { clienteNome: { contains: q, mode: "insensitive" } },
       { clienteEmail: { contains: q, mode: "insensitive" } },
     ];
-    if (digitos && /^#?\d+$/.test(q)) ou.push({ numero: Number(digitos) });
+    // Pedido.numero é um Int do PostgreSQL. Um celular de 11 dígitos só
+    // deve participar das buscas textuais, sem invalidar toda a consulta.
+    const numero = Number(digitos);
+    if (/^#?\d+$/.test(q) && numero <= 2_147_483_647) ou.push({ numero });
     if (digitos.length >= 4) ou.push({ clienteTelefone: { contains: digitos } });
     where.OR = ou;
   }

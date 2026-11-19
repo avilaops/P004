@@ -167,6 +167,9 @@ export default function Pedidos({
     { valor: "EM_SEPARACAO", rotulo: `Separando${n("EM_SEPARACAO")}` },
     { valor: "ENVIADO", rotulo: `Enviados${n("ENVIADO")}` },
     { valor: "AGUARDANDO_PAGAMENTO", rotulo: `Aguardando pagamento${n("AGUARDANDO_PAGAMENTO")}` },
+    { valor: "ENTREGUE", rotulo: `Entregues${n("ENTREGUE")}` },
+    { valor: "CANCELADO", rotulo: `Cancelados${n("CANCELADO")}` },
+    { valor: "ESTORNADO", rotulo: `Estornados${n("ESTORNADO")}` },
   ];
 
   const cliente = (p: Item) => (

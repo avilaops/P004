@@ -52,6 +52,52 @@ export async function verificarRecuperacaoPedidos(page: Page, painel: string, pe
   assert.equal(await busca.inputValue(), "sem-resultado-qa");
 }
 
+export async function verificarConsultaPedidos(page: Page, painel: string, pedido: { id: string; clienteTelefone: string }, capturar: Capturar) {
+  const largura = page.viewportSize()!.width;
+  const movel = largura < 640;
+  const seletor = page.getByRole("combobox", { name: "Todos os filtros" });
+  await page.goto(`${painel}/painel/pedidos`);
+  const busca = page.getByRole("textbox", { name: "Buscar", exact: true });
+  const controles = movel ? seletor.locator("option") : page.locator("button[aria-pressed]:visible");
+  await controles.first().waitFor({ state: "attached" });
+  assert.deepEqual((await controles.allTextContents()).map(texto => texto.replace(/ \([\d.]+\)$/, "")), [
+    "Todos", "A separar", "Separando", "Enviados", "Aguardando pagamento", "Entregues", "Cancelados", "Estornados",
+  ]);
+
+  for (const q of [pedido.clienteTelefone, "(11) 90000-0000"]) {
+    const [resposta] = await Promise.all([
+      page.waitForResponse(r => {
+        const url = new URL(r.url());
+        return url.pathname === "/api/painel/pedidos" && url.searchParams.get("q") === q;
+      }),
+      busca.fill(q),
+    ]);
+    assert.equal(resposta.status(), 200);
+    assert.deepEqual((await resposta.json()).itens.map((item: { id: string }) => item.id), [pedido.id]);
+  }
+
+  for (const [valor, rotulo] of [["ENTREGUE", "Entregues"], ["ESTORNADO", "Estornados"], ["CANCELADO", "Cancelados"]]) {
+    const [resposta] = await Promise.all([
+      page.waitForResponse(r => {
+        const url = new URL(r.url());
+        return url.pathname === "/api/painel/pedidos" && url.searchParams.get("situacao") === valor;
+      }),
+      movel ? seletor.selectOption(valor) : page.getByRole("button", { name: new RegExp(`^${rotulo}\\b`) }).click(),
+    ]);
+    assert.equal(resposta.status(), 200);
+    assert.deepEqual((await resposta.json()).itens.map((item: { id: string }) => item.id), valor === "CANCELADO" ? [pedido.id] : []);
+  }
+  const origem = new URL(page.url());
+  const ficha = page.locator(`a[href^="/painel/pedidos/${pedido.id}?"]:visible`).first();
+  await ficha.click();
+  await page.locator(`a[href="${origem.pathname}${origem.search}"]`).click();
+  await ficha.waitFor();
+  assert.equal(await busca.inputValue(), "(11) 90000-0000");
+  if (movel) assert.equal(await seletor.inputValue(), "CANCELADO");
+  else assert.equal(await page.getByRole("button", { name: /^Cancelados\b/ }).getAttribute("aria-pressed"), "true");
+  await capturar(page, `pedidos-consulta-cancelados-${largura}.png`);
+}
+
 export async function verificarFormatoPix(page: Page, painel: string, capturar: Capturar) {
   await page.goto(`${painel}/painel/configuracoes/recebimento`);
   const cartao = page.locator("article").filter({ has: page.getByRole("heading", { name: "Pix na conta" }) });
